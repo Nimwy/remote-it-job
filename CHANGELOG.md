@@ -1,39 +1,43 @@
-# CHANGELOG
+# Changelog
 
-All notable project changes are documented here.
-
-The project is currently in the initial development stage.
-
----
+All notable project decisions and implementation changes are recorded here.
 
 ## [Unreleased]
 
-### Added
+### Architecture
+- Defined React + TypeScript frontend.
+- Defined FastAPI + Python backend.
+- Defined PostgreSQL as primary database.
+- Defined SQLAlchemy + Alembic.
+- Defined Email/Password + Google OAuth authentication.
+- Defined server-side/session-based authentication direction.
+- Defined HR/Admin roles.
+- Defined HR approval workflow.
+- Defined controlled categories and tags.
+- Defined HR-owned contact information.
+- Defined simple job view counter.
+- Defined PostgreSQL-based search/filter/pagination for MVP.
+- Defined no-CV/no-application scope.
+- Defined zero-cost/open-source-first development policy.
 
-- Initial project documentation
-- Initial architecture definition
-- Initial security requirements
-- Initial AI coding rules
-- Initial project structure documentation
-- Initial project state tracking
-
-### Changed
-
-### Fixed
+### UI
+- Added Google Stitch-generated UI as visual reference.
+- Stitch output is treated as presentation reference, not business-logic source.
 
 ### Security
+- Defined password hashing requirement.
+- Defined Google subject identity handling.
+- Defined backend authorization and ownership checks.
+- Defined secure cookie/session direction.
+- Defined secret handling and dependency license checks.
 
-- Defined initial security requirements for Google authentication.
-- Defined authorization requirements for private user and recruitment data.
-- Defined protection requirements for resume files.
-- Defined rules for handling secrets and sensitive logs.
+## Initial project documentation
 
----
-
-## [0.1.0] - 2026-08-04
-
-### Added
-
-- Initialized project repository.
-- Added initial documentation structure.
-- Added GitHub repository integration.
+- Created README.md.
+- Created AI_CONTEXT.md.
+- Created ARCHITECTURE.md.
+- Created DATABASE_SCHEMA.md.
+- Created API_SPEC.md.
+- Created SECURITY.md.
+- Created PROJECT_MAP.md.
+- Created PROJECT_STATE.md.

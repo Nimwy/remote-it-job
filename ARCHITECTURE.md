@@ -1,222 +1,71 @@
-# Remote IT Job Platform — Architecture
+# System Architecture
 
-## 1. Purpose
-
-Remote IT Job Platform is a web application for connecting candidates with companies offering remote IT jobs.
-
-The initial version focuses on a reliable recruitment workflow:
-
-- Candidate registration and profile management
-- Employer/company management
-- Remote IT job posting
-- Job search and filtering
-- Job applications
-- Application status tracking
-- Google-based authentication
-
-This document defines the technical architecture for the initial MVP.
-
----
-
-## 2. Architecture Principles
-
-1. Keep the MVP as a modular monolith.
-2. Prefer simple, explicit architecture over premature scalability.
-3. Keep frontend, business logic, and database access separated.
-4. Keep authentication and authorization separate.
-5. Backend is the source of truth for permissions.
-6. Database schema changes must use Alembic migrations.
-7. Secrets must come from environment variables.
-8. New infrastructure or dependencies require a concrete need.
-9. Avoid microservices, message brokers, vector databases, and search infrastructure in the MVP.
-10. Preserve backward compatibility where practical.
-
----
-
-## 3. High-Level Architecture
+## 1. Tổng quan
 
 ```text
-                        Browser
-                           |
-                           | HTTPS / REST / JSON
-                           v
-                    +--------------+
-                    |    React     |
-                    |   Frontend   |
-                    +------+-------+
-                           |
-                           v
-                    +--------------+
-                    |   FastAPI    |
-                    |   API Layer  |
-                    +------+-------+
-                           |
-                    +------+-------+
-                    |   Services   |
-                    | Business Logic|
-                    +------+-------+
-                           |
-                    +------+-------+
-                    | Repositories |
-                    |  DB Access   |
-                    +------+-------+
-                           |
-                           v
-                    +--------------+
-                    | PostgreSQL   |
-                    +--------------+
-
-Google OAuth / OpenID Connect
-           |
-           v
-      Authentication
-           |
-           v
-        FastAPI
+                         Public Users
+                              |
+                              v
+                    +-------------------+
+                    | React Frontend    |
+                    +---------+---------+
+                              |
+                         HTTPS / JSON
+                              |
+                              v
+                    +-------------------+
+                    | FastAPI Backend   |
+                    +---------+---------+
+                              |
+          +-------------------+-------------------+
+          |                   |                   |
+          v                   v                   v
+ Authentication        Business Logic       PostgreSQL
+ Email / Google        RBAC / Jobs          SQLAlchemy
+ Session               Moderation           Alembic
 ```
 
----
+## 2. Frontend
 
-## 4. Technology Stack
-
-### Frontend
-
+Công nghệ:
 - React
+- TypeScript
 - React Router
-- Axios or an equivalent HTTP client
-- JavaScript or TypeScript, depending on the implementation decision made during project initialization
+- Tailwind CSS nếu phù hợp với Stitch output.
 
-### Backend
+Frontend chịu trách nhiệm:
+- Rendering UI.
+- Client-side routing.
+- Form interaction.
+- Request API.
+- Hiển thị loading/error/success states.
+- Quản lý session state ở client.
 
-- Python
-- FastAPI
-- Pydantic
-- SQLAlchemy 2.x
-- Alembic
-- Pytest
+Frontend không chịu trách nhiệm cuối cùng cho:
+- Authorization.
+- Ownership.
+- Job status transition.
+- HR approval.
+- Security validation.
 
-### Database
+## 3. Backend
 
-- PostgreSQL
+FastAPI là application/API layer.
 
-### Authentication
+Backend chịu trách nhiệm:
+- Authentication.
+- OAuth callback.
+- Session management.
+- Authorization/RBAC.
+- CRUD.
+- Business rules.
+- Validation.
+- Search/filter/pagination.
+- Moderation.
+- View counting.
+- Database transaction.
 
-- Google OAuth 2.0 / OpenID Connect
-- Application-managed user and authorization records
-
-### Infrastructure
-
-- Docker
-- Docker Compose for local development
-- Git / GitHub
-
-No additional infrastructure is required for the initial MVP.
-
----
-
-## 5. Repository Structure
-
-```text
-remote-it-job/
-├── frontend/
-├── backend/
-├── docs/
-├── AI_CONTEXT.md
-├── ARCHITECTURE.md
-├── SECURITY.md
-├── PROJECT_MAP.md
-├── PROJECT_STATE.md
-├── CHANGELOG.md
-├── README.md
-├── .env.example
-├── .gitignore
-└── docker-compose.yml
-```
-
-The exact internal structure may evolve during implementation, but architectural responsibilities must remain separated.
-
----
-
-## 6. Backend Architecture
-
-The backend uses four main layers.
-
-```text
-API / Router
-     |
-     v
-Service
-     |
-     v
-Repository
-     |
-     v
-PostgreSQL
-```
-
-### 6.1 API Layer
-
-Responsibilities:
-
-- HTTP routing
-- Request parsing
-- Response serialization
-- Authentication dependencies
-- Basic request/response validation
-- HTTP status codes
-
-The API layer must not contain substantial business logic or raw database queries.
-
-API routes are versioned:
-
-```text
-/api/v1/
-```
-
-### 6.2 Service Layer
-
-Responsibilities:
-
-- Business rules
-- Permission decisions
-- Workflow handling
-- Coordination between repositories
-- Application-specific logic
-
-Example:
-
-```text
-Create Job
-    |
-    +-- verify authenticated user
-    +-- verify company membership
-    +-- validate job data
-    +-- create job
-```
-
-### 6.3 Repository Layer
-
-Responsibilities:
-
-- Database queries
-- SQLAlchemy operations
-- Persistence-related logic
-
-Repositories should not decide application permissions or HTTP responses.
-
-### 6.4 Models
-
-SQLAlchemy models represent persistent database entities.
-
-### 6.5 Schemas
-
-Pydantic schemas represent API input and output contracts.
-
-Request and response schemas should be separated where their requirements differ.
-
----
-
-## 7. Initial Backend Structure
+Kiến trúc backend khuyến nghị:
 
 ```text
 backend/
@@ -224,390 +73,166 @@ backend/
 │   ├── main.py
 │   ├── core/
 │   ├── db/
-│   ├── api/
-│   │   └── v1/
 │   ├── models/
 │   ├── schemas/
+│   ├── repositories/
 │   ├── services/
-│   └── repositories/
-├── tests/
-├── alembic/
-├── alembic.ini
-├── requirements.txt
-└── Dockerfile
+│   ├── api/
+│   │   └── routes/
+│   └── dependencies/
+└── tests/
 ```
 
-The exact module names may change if implementation requires it, but the separation of responsibilities should remain.
+Không bắt buộc giữ đúng tên thư mục nếu implementation có lý do rõ ràng, nhưng phải giữ separation of concerns.
 
----
+## 4. Database
 
-## 8. Frontend Architecture
+PostgreSQL là database chính.
 
-The frontend is responsible for:
+SQLAlchemy:
+- ORM/model mapping.
+- Query building.
+- Transaction management.
 
-- Rendering pages
-- User interaction
-- Client-side state
-- Calling backend APIs
-- Form handling
-- Displaying validation and server errors
-- Route protection for user experience
+Alembic:
+- Database migrations.
+- Không chỉnh schema bằng tay trong production workflow.
 
-The frontend must not be treated as a security boundary.
-
-A conceptual structure:
+## 5. Authentication architecture
 
 ```text
-frontend/
-└── src/
-    ├── assets/
-    ├── components/
-    ├── pages/
-    ├── services/
-    ├── hooks/
-    ├── context/
-    ├── routes/
-    ├── utils/
-    ├── App.*
-    └── main.*
+                    +------------------+
+                    | React            |
+                    +--------+---------+
+                             |
+                +------------+------------+
+                |                         |
+                v                         v
+        Email/password              Google OAuth
+                |                         |
+                +------------+------------+
+                             v
+                       FastAPI Auth
+                             |
+                             v
+                          users
+                             |
+                             v
+                         sessions
 ```
 
-API communication should be centralized through service/API modules rather than scattered throughout components.
+Session implementation phải dùng server-side session hoặc secure signed/session mechanism đã được chốt trong implementation. Không lưu access credentials nhạy cảm trong localStorage nếu không cần thiết.
 
----
+Cookie-based HTTP-only session là phương án ưu tiên cho web application này.
 
-## 9. Authentication Architecture
+## 6. Authorization
 
-The application uses Google OAuth / OpenID Connect for sign-in.
+Roles:
+- hr
+- admin
 
-Conceptually:
+Status:
+- pending
+- active
+- blocked
+
+Ma trận cơ bản:
+
+| Action | Guest | Pending HR | Active HR | Admin |
+|---|---:|---:|---:|---:|
+| Xem public job | ✓ | ✓ | ✓ | ✓ |
+| Search/filter | ✓ | ✓ | ✓ | ✓ |
+| Login | - | ✓ | ✓ | ✓ |
+| Tạo job | - | ✗ | ✓ | Theo admin policy |
+| Sửa job của mình | - | ✗ | ✓ | ✓ |
+| Gửi duyệt | - | ✗ | ✓ | - |
+| Duyệt HR | - | ✗ | ✗ | ✓ |
+| Block HR | - | ✗ | ✗ | ✓ |
+| Duyệt job | - | ✗ | ✗ | ✓ |
+| Quản lý mọi job | - | ✗ | ✗ | ✓ |
+
+## 7. Public job visibility
+
+Chỉ job có trạng thái:
+- approved
+- chưa hết hạn
+
+mới được hiển thị public.
+
+`closed`, `hidden`, `rejected`, `draft`, `pending` không được public.
+
+Nếu `expires_at` đã qua, backend phải coi job là expired theo business rules; không phụ thuộc frontend.
+
+## 8. Job lifecycle
 
 ```text
-Browser
-   |
-   | Login with Google
-   v
-Google
-   |
-   | Identity / authorization result
-   v
-FastAPI
-   |
-   +-- Find existing OAuth account
-   |
-   +-- Create or load application user
-   |
-   +-- Establish application session
-   v
-Authenticated Application
+DRAFT
+  |
+  | submit
+  v
+PENDING
+  | \
+  |  \ reject
+  |   v
+  | REJECTED
+  |
+  | approve
+  v
+APPROVED
+  | \
+  |  \ admin hide
+  |   v
+  | HIDDEN
+  |
+  +---- HR close ---> CLOSED
+  |
+  +---- expires_at --> EXPIRED
 ```
 
-The application does not store Google passwords.
+Nếu job rejected được HR sửa và gửi lại, transition về pending.
 
-Google identity is linked to an internal `users` record through an OAuth account record.
-
----
-
-## 10. Authorization Architecture
-
-Authentication answers:
-
-> Who is this user?
-
-Authorization answers:
-
-> What is this user allowed to do?
-
-The backend must enforce authorization independently of frontend UI checks.
-
-Initial roles:
+## 9. Contact architecture
 
 ```text
-candidate
-employer
-admin
+users
+  |
+  +---- user_contacts
+             |
+             +-- zalo
+             +-- telegram
+             +-- linkedin
+             +-- phone
+             +-- email
+
+jobs.hr_id ---> users.id
 ```
 
-Examples:
+Job không lưu contact copy.
 
-- Candidate can manage their own candidate profile.
-- Candidate can apply to jobs.
-- Employer can manage companies they belong to.
-- Employer can create and manage authorized company jobs.
-- Employer can review applications submitted to their jobs.
-- Admin capabilities are reserved for moderation/administration and should not be implemented beyond actual MVP requirements.
+## 10. Search
 
----
+MVP search chạy trên PostgreSQL.
 
-## 11. Initial Domain Model
+Các trường chính:
+- title
+- description
+- requirements
+- tags
+- category
+- location
 
-Core entities:
+Filter:
+- category
+- tags
+- job_type
+- salary range
+- location
+- timezone
 
-```text
-User
-CandidateProfile
-Company
-CompanyMember
-Job
-Application
-OAuthAccount
-```
+Pagination phải được thực hiện ở backend, không tải toàn bộ jobs về frontend.
 
-Conceptual relationships:
+## 11. Deployment
 
-```text
-User 1 -------- 1 CandidateProfile
+Domain, hosting và production infrastructure nằm ngoài phạm vi hiện tại.
 
-User N -------- N Company
-       via CompanyMember
-
-Company 1 ----- N Job
-
-Candidate 1 --- N Application
-
-Job 1 --------- N Application
-
-User 1 -------- N OAuthAccount
-```
-
----
-
-## 12. Initial Database Tables
-
-### users
-
-```text
-id
-email
-role
-is_active
-created_at
-updated_at
-```
-
-### oauth_accounts
-
-```text
-id
-user_id
-provider
-provider_user_id
-created_at
-```
-
-### candidate_profiles
-
-```text
-id
-user_id
-full_name
-headline
-bio
-location
-avatar_url
-resume_storage_key
-created_at
-updated_at
-```
-
-### companies
-
-```text
-id
-name
-description
-website
-logo_url
-location
-created_at
-updated_at
-```
-
-### company_members
-
-```text
-id
-company_id
-user_id
-role
-created_at
-```
-
-### jobs
-
-```text
-id
-company_id
-title
-description
-employment_type
-remote_type
-location
-salary_min
-salary_max
-currency
-status
-created_at
-updated_at
-expires_at
-```
-
-### applications
-
-```text
-id
-job_id
-candidate_id
-resume_storage_key
-cover_letter
-status
-created_at
-updated_at
-```
-
-The final schema may add indexes, constraints, timestamps, or supporting fields during implementation.
-
----
-
-## 13. API Design
-
-Initial API namespace:
-
-```text
-/api/v1/
-```
-
-Authentication:
-
-```text
-GET  /auth/me
-GET  /auth/google
-GET  /auth/google/callback
-POST /auth/logout
-```
-
-Jobs:
-
-```text
-GET    /jobs
-GET    /jobs/{job_id}
-POST   /jobs
-PATCH  /jobs/{job_id}
-DELETE /jobs/{job_id}
-```
-
-Applications:
-
-```text
-POST  /jobs/{job_id}/applications
-GET   /applications
-GET   /applications/{application_id}
-PATCH /applications/{application_id}
-```
-
-Profile:
-
-```text
-GET   /profile
-PATCH /profile
-```
-
-Companies:
-
-```text
-POST  /companies
-GET   /companies/{company_id}
-PATCH /companies/{company_id}
-```
-
-The exact endpoint contract should be finalized when each module is implemented.
-
----
-
-## 14. File Storage
-
-User-uploaded files such as resumes should not be stored in the frontend public directory.
-
-The database stores metadata or a storage key.
-
-Conceptually:
-
-```text
-Candidate
-    |
-    v
-FastAPI
-    |
-    +-- validate upload
-    +-- authorize
-    +-- store file
-    |
-    v
-Private File Storage
-
-PostgreSQL
-    |
-    +-- resume_storage_key
-```
-
-The MVP may use a simple local/private storage implementation for development, but the storage interface should avoid coupling the rest of the application to one storage provider.
-
----
-
-## 15. Database Migrations
-
-All schema changes must use Alembic.
-
-Do not make undocumented manual schema changes in the development database and assume they are part of the project.
-
-Expected workflow:
-
-```text
-Change SQLAlchemy model
-        |
-        v
-Create Alembic migration
-        |
-        v
-Review migration
-        |
-        v
-Apply migration
-```
-
----
-
-## 16. Deployment Direction
-
-The MVP should be deployable as a small set of services:
-
-```text
-Frontend
-Backend
-PostgreSQL
-```
-
-Docker Compose is sufficient for local development.
-
-Production deployment details should be decided later based on the selected hosting provider.
-
----
-
-## 17. Explicitly Out of Scope for MVP
-
-The following are intentionally not part of the initial architecture:
-
-- Microservices
-- Kubernetes
-- Kafka
-- Celery
-- Redis
-- Elasticsearch
-- Vector database
-- LLM-based matching
-- AI recommendation system
-- Advanced analytics pipeline
-- Real-time chat
-- Complex notification infrastructure
-
-These may be considered later only when there is a concrete product or technical requirement.
+Application phải portable và không phụ thuộc không cần thiết vào một cloud provider.

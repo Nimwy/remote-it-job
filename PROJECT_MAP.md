@@ -1,308 +1,167 @@
-# PROJECT_MAP.md — Project Structure
+# Project Map
 
-## 1. Purpose
-
-This file is a map of the repository.
-
-It describes where responsibilities belong rather than documenting every implementation detail.
-
-Update this file when the source structure changes significantly.
-
----
-
-## 2. Current Repository
+## 1. Repository structure
 
 ```text
 remote-it-job/
 ├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── layouts/
+│   │   ├── pages/
+│   │   ├── features/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── types/
+│   │   └── router/
+│   └── ...
+│
 ├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── routes/
+│   │   ├── core/
+│   │   ├── db/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── repositories/
+│   │   ├── services/
+│   │   ├── dependencies/
+│   │   └── main.py
+│   └── tests/
+│
+├── migrations/
+│
 ├── docs/
+│
+├── .env.example
+├── .gitignore
 ├── AI_CONTEXT.md
 ├── ARCHITECTURE.md
+├── DATABASE_SCHEMA.md
+├── API_SPEC.md
 ├── SECURITY.md
 ├── PROJECT_MAP.md
 ├── PROJECT_STATE.md
 ├── CHANGELOG.md
-├── README.md
-├── .env.example
-├── .gitignore
-└── docker-compose.yml
+└── README.md
 ```
 
-At the initial documentation stage, `frontend/`, `backend/`, and `docs/` may not contain implementation files yet.
+## 2. Frontend areas
 
----
+### Public
+- Home
+- Job search/results
+- Job detail
+- HR login/register
 
-## 3. Frontend
+### HR
+- Dashboard
+- My jobs
+- Create job
+- Edit job
+- Account/profile
+- Contact management
 
-Expected structure:
+### Admin
+- Dashboard
+- HR management
+- Pending job moderation
+- All jobs
+- Category/tag management nếu được đưa vào MVP
 
-```text
-frontend/
-└── src/
-    ├── assets/
-    ├── components/
-    ├── pages/
-    ├── services/
-    ├── hooks/
-    ├── context/
-    ├── routes/
-    ├── utils/
-    ├── App.*
-    └── main.*
-```
+## 3. Backend modules
 
-### components/
+### Auth
+- Email registration/login.
+- Google OAuth.
+- Session.
+- Logout.
+- Account linking.
 
-Reusable UI components.
+### Users
+- Current user.
+- HR profile.
+- Contact management.
+- Admin HR management.
 
-### pages/
+### Jobs
+- Create.
+- Read.
+- Update.
+- Delete/controlled removal.
+- Submit for review.
+- Close.
+- Search.
+- Filter.
+- Pagination.
+- View counting.
 
-Page-level components corresponding to application routes.
+### Moderation
+- HR approval.
+- Job approval/rejection.
+- Hide/unhide.
+- Block/unblock HR.
 
-Expected pages include:
+### Catalog
+- Categories.
+- Tags.
 
-```text
-Home
-Jobs
-JobDetail
-Login
-Profile
-Applications
-Company
-EmployerDashboard
-```
-
-The exact page structure may evolve.
-
-### services/
-
-Frontend API communication.
-
-Examples:
-
-```text
-api
-auth
-jobs
-applications
-companies
-profile
-```
-
-### context/
-
-Application-wide React state where appropriate.
-
-Authentication state may live here if this remains suitable for the chosen frontend architecture.
-
-### routes/
-
-Frontend route definitions and route protection for user experience.
-
-### utils/
-
-Small reusable frontend utilities.
-
----
-
-## 4. Backend
-
-Expected structure:
-
-```text
-backend/
-├── app/
-│   ├── main.py
-│   ├── core/
-│   ├── db/
-│   ├── api/
-│   │   └── v1/
-│   ├── models/
-│   ├── schemas/
-│   ├── services/
-│   └── repositories/
-├── tests/
-├── alembic/
-├── alembic.ini
-├── requirements.txt
-└── Dockerfile
-```
-
-### app/main.py
-
-FastAPI application entry point.
-
-### app/core/
-
-Cross-cutting configuration and security functionality.
-
-Potential modules:
-
-```text
-config
-security
-dependencies
-```
-
-### app/db/
-
-Database engine, session configuration, and SQLAlchemy base configuration.
-
-### app/api/
-
-HTTP API routers.
-
-### app/api/v1/
-
-Version 1 endpoints.
-
-Expected modules:
-
-```text
-auth
-users
-profile
-companies
-jobs
-applications
-```
-
-### app/models/
-
-SQLAlchemy database models.
-
-Expected domain models:
+## 4. Data ownership
 
 ```text
 User
-OAuthAccount
-CandidateProfile
-Company
-CompanyMember
+ ├── Contacts
+ └── Jobs
+
 Job
-Application
+ ├── Category
+ └── Tags
 ```
 
-### app/schemas/
+Job không sở hữu contact/company data độc lập.
 
-Pydantic request/response schemas.
+## 5. Route convention
 
-### app/services/
-
-Business logic.
-
-Expected services:
-
+Public routes:
 ```text
-auth
-user
-profile
-company
-job
-application
+/
+ /jobs
+ /jobs/:id
+ /login
+ /register
 ```
 
-### app/repositories/
-
-Database access and persistence operations.
-
-Expected repositories:
-
+HR routes:
 ```text
-user
-oauth_account
-profile
-company
-job
-application
+/hr
+/hr/jobs
+/hr/jobs/new
+/hr/jobs/:id/edit
+/hr/account
 ```
 
----
-
-## 5. Tests
-
+Admin routes:
 ```text
-backend/tests/
+/admin
+/admin/hr
+/admin/jobs
+/admin/jobs/pending
+/admin/catalog
 ```
 
-Tests should be organized around application behavior.
+API routes nên có prefix `/api/v1`.
 
-Potential areas:
+## 6. File ownership guideline
 
-```text
-auth
-users
-profiles
-companies
-jobs
-applications
-authorization
-```
+- `models/`: database representation.
+- `schemas/`: API input/output schemas.
+- `repositories/`: database access.
+- `services/`: business logic.
+- `api/routes/`: HTTP layer.
+- `dependencies/`: authentication/authorization dependencies.
+- `components/`: reusable UI.
+- `features/`: domain-specific frontend logic.
+- `services/`: API client functions.
 
-The exact test structure may evolve.
-
----
-
-## 6. Database Migrations
-
-```text
-backend/alembic/
-```
-
-All database schema changes must be represented through Alembic migrations.
-
----
-
-## 7. Documentation
-
-Root-level documentation:
-
-```text
-AI_CONTEXT.md
-ARCHITECTURE.md
-SECURITY.md
-PROJECT_MAP.md
-PROJECT_STATE.md
-CHANGELOG.md
-README.md
-```
-
-### AI_CONTEXT.md
-
-Rules for AI coding agents.
-
-### ARCHITECTURE.md
-
-Technical architecture and design decisions.
-
-### SECURITY.md
-
-Security and privacy requirements.
-
-### PROJECT_MAP.md
-
-Repository structure.
-
-### PROJECT_STATE.md
-
-Current implementation status.
-
-### CHANGELOG.md
-
-Project history.
-
-### README.md
-
-Human-facing project overview and setup instructions.
-
----
-
-## 8. Update Rule
-
-When adding or moving important modules:
-
-1. Update the relevant section of this file.
-2. Keep descriptions short.
-3. Do not duplicate implementation details from source code.
-4. Do not document files that do not exist merely because they may exist in the future.
+Không đặt business logic lớn trực tiếp trong React page hoặc FastAPI route handler.

@@ -1,162 +1,115 @@
-# PROJECT_STATE.md — Current Project State
+# Project State
 
-## Last Updated
+## Current status
 
-2026-08-04
+**Phase: Architecture and documentation**
 
----
+Chưa bắt đầu production implementation.
 
-## Current Phase
+## Completed
 
-Phase 0 — Project Foundation and Architecture
+- [x] Xác định mục tiêu sản phẩm.
+- [x] Xác định 3 loại context: Job seeker, HR, Admin.
+- [x] Quyết định Job seeker không cần login.
+- [x] Quyết định không có CV/application system.
+- [x] Chốt React + TypeScript.
+- [x] Chốt FastAPI + Python.
+- [x] Chốt PostgreSQL.
+- [x] Chốt Email/Password authentication.
+- [x] Chốt Google OAuth.
+- [x] Chốt HR approval.
+- [x] Chốt category/tag controlled by system.
+- [x] Chốt contact thuộc HR.
+- [x] Có thiết kế UI từ Google Stitch.
+- [x] Chốt nguyên tắc không tự ý thêm chi phí.
 
----
+## Documentation status
 
-## Repository Status
+- [x] README
+- [x] AI_CONTEXT
+- [x] ARCHITECTURE
+- [x] DATABASE_SCHEMA
+- [x] SECURITY
+- [x] PROJECT_MAP
+- [x] PROJECT_STATE
+- [x] CHANGELOG
+- [x] API_SPEC
 
-- [x] WSL2 project directory created
-- [x] Git repository initialized
-- [x] GitHub remote configured
-- [x] Initial documentation files created
-- [x] Initial documentation pushed to GitHub
+## Current decisions
 
----
+### Authentication
 
-## Documentation Status
+Methods:
+- Email/password.
+- Google OAuth.
 
-- [x] `AI_CONTEXT.md` — initial version
-- [x] `ARCHITECTURE.md` — initial version
-- [x] `SECURITY.md` — initial version
-- [x] `PROJECT_MAP.md` — initial version
-- [x] `PROJECT_STATE.md` — initial version
-- [x] `CHANGELOG.md` — initial version
-- [x] `README.md` — initial version
+One user account may have both methods linked.
 
----
-
-## Implementation Status
-
-### Frontend
-
-- [ ] React project initialized
-- [ ] Routing
-- [ ] API client
-- [ ] Authentication UI
-- [ ] Candidate pages
-- [ ] Employer pages
-- [ ] Job pages
-- [ ] Application pages
-
-### Backend
-
-- [ ] FastAPI project initialized
-- [ ] Configuration
-- [ ] PostgreSQL connection
-- [ ] SQLAlchemy setup
-- [ ] Alembic setup
-- [ ] API v1 structure
-- [ ] Google OAuth
-- [ ] Authorization
-- [ ] Candidate profile
-- [ ] Company
-- [ ] Job
-- [ ] Application
-
-### Database
-
-- [ ] Initial schema
-- [ ] Initial migration
-- [ ] Indexes and constraints review
-
-### Testing
-
-- [ ] Backend test setup
-- [ ] Authentication tests
-- [ ] Authorization tests
-- [ ] Job tests
-- [ ] Application tests
-- [ ] Frontend test setup
-
-### Infrastructure
-
-- [ ] Docker configuration
-- [ ] Docker Compose development environment
-- [ ] Production deployment configuration
-
----
-
-## Current Architecture
+### User approval
 
 ```text
-React
-  |
-  | REST / JSON
-  v
-FastAPI
-  |
-  v
-Service Layer
-  |
-  v
-Repository Layer
-  |
-  v
-PostgreSQL
+new HR
+  -> pending
+  -> admin approval
+  -> active
 ```
 
-Authentication:
+Blocked HR remains in database.
+
+### Job
 
 ```text
-Google OAuth / OpenID Connect
-        |
-        v
-FastAPI
-        |
-        v
-Internal User
+draft
+ -> pending
+ -> approved
+ -> closed / expired / hidden
 ```
 
----
+Rejected jobs can be edited and resubmitted.
 
-## Current Security Direction
+### Contact
 
-The application will treat candidate profiles, resumes, applications, and contact information as protected data.
+Stored in `user_contacts`.
 
-Backend authorization is mandatory.
+### Search
 
-Resume files must not be publicly accessible by default.
+PostgreSQL-based MVP search with backend pagination.
 
-Secrets must be stored outside source control.
+### Views
 
-See `SECURITY.md` for the current security rules.
+Simple integer counter in `jobs.views`.
 
----
+### UI
 
-## Current Next Steps
+Google Stitch design is the visual reference.
 
-1. Review and approve architecture documentation.
-2. Initialize backend project.
-3. Initialize frontend project.
-4. Configure PostgreSQL.
-5. Configure SQLAlchemy and Alembic.
-6. Implement Google authentication.
-7. Implement authorization foundation.
-8. Implement candidate profile.
-9. Implement company management.
-10. Implement job management.
-11. Implement applications.
-12. Add tests and security review.
+The Stitch prototype is not the source of truth for business logic.
 
----
+### Deployment
 
-## Known Issues
+Domain and hosting are handled separately and are outside the current development scope.
 
-None at the documentation stage.
+## Next phase
 
----
+1. Review Stitch output and map pages/components.
+2. Finalize API specification.
+3. Initialize frontend/backend projects.
+4. Create database models.
+5. Create Alembic migrations.
+6. Implement authentication.
+7. Implement HR approval.
+8. Implement job CRUD and moderation.
+9. Implement public search/filter/pagination.
+10. Connect React to API.
+11. Add tests.
+12. Security review.
 
-## Important Note
+## Known future decisions
 
-This file describes the actual current state.
-
-Do not mark a task as completed until the implementation exists and has been checked.
+These are intentionally not locked yet:
+- Exact frontend state management library.
+- Exact session library/implementation package.
+- Rich text editor vs plain text.
+- Exact search ranking.
+- Production deployment configuration.
+- Email verification/password reset implementation details.

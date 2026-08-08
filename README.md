@@ -1,240 +1,83 @@
-# Remote IT Job Platform
+# Remote IT Job Board
 
-A web platform for remote IT job recruitment.
+Website tuyển dụng việc làm remote, tập trung vào thị trường người dùng Việt Nam.
 
-The project is currently in the architecture and foundation stage.
+## Mục tiêu
 
----
+- Job seeker có thể tìm kiếm và xem việc làm remote mà không cần tạo tài khoản.
+- HR có thể đăng và quản lý tin tuyển dụng.
+- Admin kiểm duyệt HR và tin tuyển dụng trước khi công khai.
+- Job seeker liên hệ trực tiếp với HR qua các kênh được HR cung cấp.
+- Không có chức năng nộp CV/application trong hệ thống ở phiên bản hiện tại.
 
-## Project Goal
+## Công nghệ
 
-The initial goal is to provide a focused recruitment platform for remote IT positions.
+- Frontend: React + TypeScript
+- Backend: FastAPI + Python
+- Database: PostgreSQL
+- ORM: SQLAlchemy
+- Migration: Alembic
+- Authentication:
+  - Email + password
+  - Google OAuth / OpenID Connect
+- UI: triển khai dựa trên thiết kế được tạo bằng Google Stitch.
 
-The MVP will support two main user groups:
+## Phạm vi người dùng
 
-### Candidates
+### Job seeker
 
-- Sign in with Google
-- Create and manage a candidate profile
-- Search remote IT jobs
-- Filter jobs
-- View job details
-- Apply for jobs
-- Track application status
+Không cần đăng nhập.
 
-### Employers
+Có thể:
+- Tìm kiếm job.
+- Lọc theo category, tag, mức lương, loại công việc, location, timezone.
+- Xem danh sách job.
+- Xem chi tiết job.
+- Xem thông tin liên hệ của HR.
+- Tự liên hệ HR.
 
-- Sign in with Google
-- Create/manage a company profile
-- Manage company members
-- Create remote IT job postings
-- Edit and close job postings
-- View applications for their jobs
-- Update application status
+### HR
 
----
+Có thể đăng nhập bằng:
+- Email + password.
+- Google.
 
-## Technology Stack
+Một tài khoản có thể liên kết cả hai phương thức.
 
-### Frontend
+HR mới đăng ký phải được admin duyệt trước khi đăng tin.
 
-- React
+Có thể:
+- Tạo draft job.
+- Gửi job để duyệt.
+- Sửa job thuộc quyền sở hữu.
+- Đóng job.
+- Xóa job theo business rules.
+- Quản lý thông tin công ty.
+- Quản lý các kênh liên hệ.
 
-### Backend
+### Admin
 
-- Python
-- FastAPI
-- Pydantic
-- SQLAlchemy
+Có thể:
+- Duyệt / từ chối HR.
+- Khóa / mở khóa HR.
+- Xem và quản lý toàn bộ job.
+- Duyệt / từ chối job.
+- Ẩn / xóa job vi phạm.
+- Xem thống kê cơ bản.
 
-### Database
+## Nguyên tắc quan trọng
 
-- PostgreSQL
-- Alembic
+1. Không thêm hệ thống application/CV nếu chưa có yêu cầu mới.
+2. Job seeker không cần account.
+3. Contact là dữ liệu của HR, không phải dữ liệu riêng của từng job.
+4. Category và tag do hệ thống quản lý; HR chỉ chọn từ danh sách có sẵn.
+5. Authentication thành công không đồng nghĩa HR đã được admin duyệt.
+6. Không tự ý thêm dịch vụ trả phí.
+7. UI không được tự quyết định business logic.
+8. Không tự ý thay đổi database schema hoặc trạng thái nghiệp vụ mà không cập nhật tài liệu.
 
-### Authentication
+## Deployment
 
-- Google OAuth 2.0 / OpenID Connect
+Domain, hosting và production infrastructure nằm ngoài phạm vi phát triển hiện tại và sẽ được xử lý riêng.
 
-### Infrastructure
-
-- Docker
-- Docker Compose
-
----
-
-## Architecture
-
-```text
-React
-   |
-   | REST / JSON
-   v
-FastAPI
-   |
-   +-- API Layer
-   |
-   +-- Service Layer
-   |
-   +-- Repository Layer
-   |
-   v
-PostgreSQL
-```
-
-See:
-
-- `ARCHITECTURE.md`
-- `SECURITY.md`
-
----
-
-## Repository Documentation
-
-### AI_CONTEXT.md
-
-Instructions and development rules for AI coding agents.
-
-### ARCHITECTURE.md
-
-Technical architecture and design decisions.
-
-### SECURITY.md
-
-Security and privacy requirements.
-
-### PROJECT_MAP.md
-
-Repository structure and responsibilities.
-
-### PROJECT_STATE.md
-
-Current implementation status.
-
-### CHANGELOG.md
-
-Project history.
-
----
-
-## Development
-
-The project is intended to be developed primarily inside WSL2.
-
-Expected development environment:
-
-```text
-Windows
-  |
-  +-- WSL2 / Ubuntu
-        |
-        +-- Git
-        +-- Python
-        +-- Node.js
-        +-- Docker
-        +-- OpenCode
-```
-
-The repository should remain inside the WSL2 Linux filesystem when practical.
-
-Example:
-
-```text
-~/projects/remote-it-job
-```
-
----
-
-## Environment Variables
-
-Copy the example configuration:
-
-```bash
-cp .env.example .env
-```
-
-Never commit `.env`.
-
-Required environment variables will be documented as implementation progresses.
-
----
-
-## Git Workflow
-
-Before committing:
-
-```bash
-git status
-git diff
-```
-
-Then:
-
-```bash
-git add .
-git commit -m "type: description"
-git push
-```
-
-Use focused commits.
-
-Examples:
-
-```text
-feat: add Google OAuth authentication
-feat: add job creation API
-fix: prevent unauthorized job editing
-test: add application authorization tests
-docs: update architecture
-```
-
----
-
-## MVP Scope
-
-The project intentionally starts as a modular monolith.
-
-The following are not part of the initial MVP:
-
-- AI job matching
-- LLM features
-- Recommendation systems
-- Vector databases
-- Elasticsearch
-- Redis
-- Kafka
-- Microservices
-- Kubernetes
-- Real-time chat
-- Advanced analytics
-
-These may be considered later when there is a concrete requirement.
-
----
-
-## Security
-
-The application handles personal and recruitment-related information.
-
-Security requirements are defined from the beginning.
-
-Important rules include:
-
-- Google passwords are never stored.
-- Backend authorization is mandatory.
-- Secrets are never committed to Git.
-- Private resumes must not be publicly accessible.
-- User input must be validated.
-- Sensitive credentials must not be logged.
-
-See `SECURITY.md`.
-
----
-
-## Current Status
-
-The repository currently contains the initial project documentation and architecture.
-
-No application implementation has been completed yet.
-
-See `PROJECT_STATE.md` for the current state.
+Ứng dụng nên giữ portable, không phụ thuộc không cần thiết vào một nhà cung cấp hosting cụ thể.

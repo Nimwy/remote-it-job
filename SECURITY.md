@@ -1,333 +1,167 @@
-# Remote IT Job Platform — Security
+# Security Policy
 
-## 1. Purpose
+## 1. Mục tiêu
 
-This document defines the security rules for the Remote IT Job Platform.
+Bảo vệ:
+- Account HR/Admin.
+- Email và identity data.
+- Password.
+- OAuth credentials.
+- Session.
+- Contact information.
+- Job management actions.
 
-The application handles personal and recruitment-related information. Security is therefore part of the initial architecture, not a later feature.
+Project không lưu CV/application của job seeker ở MVP.
 
----
+## 2. Password
 
-## 2. Security Principles
+- Không bao giờ lưu plaintext password.
+- Dùng password hashing hiện đại, ưu tiên Argon2id.
+- Không log password.
+- Không trả password hash về frontend.
+- Login error không tiết lộ account nào tồn tại nếu không cần.
 
-1. Authentication and authorization are separate concerns.
-2. The backend is the security boundary.
-3. Never trust client-provided roles or permissions.
-4. Collect only information required by the application.
-5. Never store passwords belonging to external OAuth providers.
-6. Secrets must never be committed to Git.
-7. Private files must not be publicly accessible by default.
-8. Validate all untrusted input.
-9. Avoid leaking sensitive information through errors or logs.
-10. Security-sensitive changes require tests.
+## 3. Google OAuth
 
----
+- Dùng OAuth/OpenID Connect flow chuẩn.
+- Validate state để chống CSRF.
+- Validate issuer, audience, signature/claims theo flow sử dụng.
+- Không tin email từ client.
+- Dùng Google `sub` làm identity identifier.
+- Không tự tạo account thứ hai nếu Google email đã liên kết với account hiện có mà việc liên kết có thể được xác thực an toàn.
+- Không lưu Google access token nếu application không cần gọi Google API sau authentication.
 
-## 3. Google Authentication
+## 4. Sessions
 
-The application uses Google OAuth 2.0 / OpenID Connect.
+Ưu tiên cookie-based server-side session:
+- Cookie `HttpOnly`.
+- `Secure` trong production.
+- `SameSite` phù hợp.
+- Session expiration.
+- Session rotation sau authentication.
+- Logout phải invalidate session.
+- Không lưu session secret/token nhạy cảm trong localStorage.
 
-The application must:
-
-- Redirect users through Google's authorization flow.
-- Validate the authentication result according to the chosen OAuth/OIDC library.
-- Associate the external Google identity with an internal application user.
-- Store only the identity information required by the application.
-- Never request or store a Google account password.
-
-Sensitive OAuth configuration must be supplied through environment variables.
-
-Examples:
-
-```text
-GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET
-```
-
-These values must never be committed to Git.
-
----
-
-## 4. Session / Token Security
-
-The implementation must use a well-established authentication mechanism supported by the selected FastAPI authentication libraries.
-
-General requirements:
-
-- Do not put long-lived secrets in frontend source code.
-- Do not expose access tokens through logs.
-- Use secure cookie attributes if cookies are used.
-- Use appropriate expiration for application sessions/tokens.
-- Validate authentication on every protected backend operation.
-
-The exact session strategy should be finalized during authentication implementation.
-
----
+CSRF protection phải được thiết kế phù hợp nếu dùng cookie authentication cho state-changing requests.
 
 ## 5. Authorization
 
-Every protected resource must verify that the authenticated user is allowed to access it.
+Backend phải kiểm tra:
+- identity
+- role
+- status
+- ownership
 
-Examples:
+Ví dụ:
+`PUT /jobs/123` không được chỉ dựa vào frontend gửi `hr_id`.
 
-```text
-Candidate A
-    |
-    +-- can edit Candidate A profile
-    +-- cannot edit Candidate B profile
+Backend phải xác định owner từ authenticated session.
 
-Employer A
-    |
-    +-- can edit jobs belonging to authorized companies
-    +-- cannot edit Employer B's jobs
-```
+## 6. HR approval
 
-Frontend checks such as:
+Google/email authentication chỉ chứng minh identity.
 
-```text
-if user.role === "employer"
-```
-
-are only UI behavior.
-
-They are never a substitute for backend authorization.
-
----
-
-## 6. Personal Data
-
-Potentially sensitive application data includes:
-
-- Email address
-- Candidate profile
-- Resume
-- Application history
-- Cover letters
-- Contact information
-- Company/recruiter information
-
-Access to this information must follow the application's authorization rules.
-
-Do not expose complete user objects through generic API responses if the client does not need all fields.
-
----
-
-## 7. Resume and File Upload Security
-
-Resume files must not be publicly accessible by default.
-
-The upload process should include:
-
-- File size limits
-- File type validation
-- MIME/type verification where practical
-- Safe generated storage names/keys
-- Storage outside the frontend public directory
-- Authorization checks before download
-
-Never use an uploaded filename directly as a trusted storage path.
-
-Do not allow a user-controlled path to determine where a file is written.
-
----
-
-## 8. Input Validation
-
-All client input is untrusted.
-
-Validate:
-
-- Request bodies
-- Query parameters
-- Path parameters
-- Uploaded files
-- Search/filter parameters
-
-Pydantic schemas should define API contracts.
-
-Database constraints should provide an additional layer of integrity.
-
----
-
-## 9. SQL Injection
-
-Database access must use SQLAlchemy parameterized operations.
-
-Do not construct SQL queries by concatenating untrusted user input.
-
-Avoid raw SQL unless there is a concrete requirement and the query is safely parameterized.
-
----
-
-## 10. XSS and Content Handling
-
-User-generated content such as:
-
-- Job descriptions
-- Candidate biographies
-- Cover letters
-- Company descriptions
-
-must be treated as untrusted content.
-
-The frontend must not render arbitrary user content as executable HTML unless there is an explicit, reviewed sanitization strategy.
-
----
-
-## 11. CSRF
-
-The authentication/session design must consider CSRF protection when browser cookies are used.
-
-If authentication uses cookies, appropriate:
-
-- SameSite settings
-- Secure settings
-- CSRF protection where required
-
-must be implemented.
-
-The final strategy must be documented when authentication is implemented.
-
----
-
-## 12. CORS
-
-CORS must not use unrestricted origins in production.
-
-Development may use explicitly configured local origins.
-
-Example concept:
+Không đồng nghĩa account được phép đăng job.
 
 ```text
-Development:
-http://localhost:<frontend-port>
-
-Production:
-https://<production-domain>
+authenticated + pending
+=> login có thể thành công
+=> HR management actions bị từ chối
 ```
 
-Never use a wildcard origin for authenticated production APIs unless the security model explicitly supports it.
+## 7. Admin security
 
----
+- Không có public admin registration.
+- Admin account phải được tạo bằng controlled process.
+- Admin endpoints phải kiểm tra role server-side.
+- Không để frontend tự xác định user là admin.
 
-## 13. Rate Limiting
+## 8. Input validation
 
-The MVP should identify endpoints that may require rate limiting, especially:
+Validate ở backend:
+- Email.
+- URL/contact fields.
+- Salary.
+- Job type.
+- Category/tag IDs.
+- Text length.
+- Expiration.
+- Status transitions.
 
-- Authentication endpoints
-- OAuth initiation/callback endpoints
-- Job application endpoints
-- File upload endpoints
+Không trust:
+- hidden form fields.
+- client-side validation.
+- query parameters.
+- JSON fields từ frontend.
 
-A rate-limiting dependency or infrastructure component should only be introduced when needed.
+## 9. XSS
 
-Do not add Redis solely because rate limiting may be useful in the future.
+Job description và requirements là dữ liệu do HR nhập.
 
----
+Nếu hỗ trợ rich text/HTML:
+- sanitize HTML ở backend.
+- whitelist tags/attributes.
+
+Nếu MVP dùng plain text/Markdown giới hạn:
+- ưu tiên render an toàn.
+- Không dùng `dangerouslySetInnerHTML` nếu không cần.
+
+## 10. SQL Injection
+
+Không xây SQL bằng string concatenation từ input.
+
+Dùng SQLAlchemy parameterized queries.
+
+## 11. Rate limiting
+
+Có thể áp dụng cho:
+- Login.
+- OAuth initiation/callback.
+- Password reset nếu có.
+- Public endpoints dễ bị abuse.
+
+Không cần triển khai hệ thống rate-limit phức tạp trước khi có nhu cầu, nhưng kiến trúc phải cho phép bổ sung.
+
+## 12. Personal data
+
+Dữ liệu nhạy cảm ở phạm vi project:
+- Email.
+- Phone.
+- Zalo.
+- Telegram.
+- LinkedIn.
+- Google identity.
+
+Chỉ hiển thị contact của HR trên public job detail theo đúng business requirement.
+
+Không log contact/password/token vào application logs.
+
+## 13. Dependencies
+
+Mọi dependency mới phải:
+- Có license rõ ràng.
+- Không có điều khoản buộc trả phí cho use case hiện tại.
+- Không gửi dữ liệu người dùng đến third party nếu không cần.
 
 ## 14. Secrets
 
-Secrets must be supplied through environment variables or a production secret-management mechanism.
+Không commit:
+- Google OAuth client secret.
+- Session secret.
+- Database password.
+- API keys.
+- Production credentials.
 
-Examples:
+Dùng environment variables/secrets management.
 
-```text
-DATABASE_URL
-GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET
-JWT_SECRET
-```
+`.env` phải nằm trong `.gitignore`.
 
-The repository may contain:
+## 15. Cost/license
 
-```text
-.env.example
-```
+Không sử dụng font, package, API hoặc SaaS có license thương mại/usage fee nếu chưa được phê duyệt.
 
-but must not contain:
+Font hiện tại của Stitch:
+- Geist
+- Inter
 
-```text
-.env
-```
-
-or real credentials.
-
-Never paste production credentials into source code, documentation, Git commits, or AI prompts.
-
----
-
-## 15. Logging
-
-Logs must not contain:
-
-- Passwords
-- OAuth client secrets
-- Access tokens
-- Refresh tokens
-- Session secrets
-- Full private resume contents
-- Unnecessary personal data
-
-Errors returned to users should not expose stack traces, SQL statements, filesystem paths, or secrets in production.
-
----
-
-## 16. Database Security
-
-The application database user should have only the permissions required by the application.
-
-Production database credentials must not be committed to Git.
-
-Backups should be considered before production launch.
-
----
-
-## 17. Dependency Security
-
-Dependencies should be:
-
-- Explicitly declared
-- Kept reasonably current
-- Reviewed before introducing new packages
-
-Do not install a package simply because an AI coding agent suggests it.
-
-Prefer established libraries for authentication, cryptography, and security-sensitive functionality.
-
-Never implement cryptography manually when a standard library or established package exists.
-
----
-
-## 18. AI Coding Security Rules
-
-AI coding agents must not:
-
-- Read or expose production secrets
-- Commit `.env` files
-- Invent authentication cryptography
-- Disable authentication checks to make tests pass
-- Remove authorization checks to fix UI/API errors
-- Make private files public for convenience
-- Log sensitive credentials
-- Introduce insecure shortcuts without documenting them
-
-Security-sensitive changes must be reviewed before being considered complete.
-
----
-
-## 19. Security Review Checklist
-
-Before an MVP release:
-
-- [ ] Google OAuth flow reviewed
-- [ ] Authorization checks implemented for protected resources
-- [ ] Secrets excluded from Git
-- [ ] CORS configured for production
-- [ ] File uploads restricted
-- [ ] Private resumes protected
-- [ ] Input validation implemented
-- [ ] Error responses reviewed
-- [ ] Sensitive logging reviewed
-- [ ] Authentication tests exist
-- [ ] Authorization tests exist
-- [ ] Dependency vulnerabilities reviewed
+Phải giữ license/copyright notice phù hợp nếu bundle font vào project.
