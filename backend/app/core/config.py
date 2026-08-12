@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
+    frontend_url: str = "http://localhost:5173"
     session_cookie_name: str = "session"
     session_max_age_seconds: int = 60 * 60 * 24 * 7
     page_size_default: int = 20
