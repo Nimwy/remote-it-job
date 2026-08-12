@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Remote IT - Kết quả tìm kiếm "React"</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#00685f",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "on-tertiary-fixed": "#001e2c",
+                        "tertiary-fixed": "#c4e7ff",
+                        "on-surface": "#191c1e",
+                        "secondary-container": "#dae2fd",
+                        "surface-tint": "#006a61",
+                        "on-tertiary-container": "#fcfcff",
+                        "surface-container": "#eceef0",
+                        "secondary-fixed": "#dae2fd",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "tertiary-fixed-dim": "#7bd0ff",
+                        "on-secondary-fixed": "#131b2e",
+                        "primary-fixed-dim": "#6bd8cb",
+                        "secondary": "#565e74",
+                        "outline": "#6d7a77",
+                        "on-primary-fixed": "#00201d",
+                        "primary-container": "#008378",
+                        "inverse-surface": "#2d3133",
+                        "inverse-primary": "#6bd8cb",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface": "#f7f9fb",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "outline-variant": "#bcc9c6",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#005049",
+                        "on-tertiary-fixed-variant": "#004c69",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#f4fffc",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#007da9",
+                        "surface-bright": "#f7f9fb",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#5c647a",
+                        "background": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1e",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary": "#006387",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-container-high": "#e6e8ea",
+                        "on-surface-variant": "#3d4947",
+                        "primary-fixed": "#89f5e7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "xs": "4px",
+                        "container-max": "1280px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "md": "16px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "headline-sm": ["Geist"],
+                        "display": ["Geist"],
+                        "label-md": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar (Rendered via JSON directives) -->
+<header class="bg-surface border-b border-outline-variant full-width top-0 w-full z-50">
+<div class="flex justify-between items-center w-full px-gutter max-w-container-max mx-auto h-[64px]">
+<!-- Brand Logo -->
+<div class="flex items-center gap-md">
+<a class="font-headline-sm text-headline-sm font-bold text-primary" href="#">Remote IT</a>
+</div>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex items-center gap-xl h-full">
+<!-- Find Jobs is active based on intent (Search Results) -->
+<a class="h-full flex items-center px-sm text-primary border-b-2 border-primary pb-1 font-label-md text-label-md hover:text-primary transition-colors scale-95 active:opacity-80 transition-all" href="#">Find Jobs</a>
+<a class="h-full flex items-center px-sm text-secondary hover:text-primary font-label-md text-label-md transition-colors scale-95 active:opacity-80 transition-all" href="#">Companies</a>
+<a class="h-full flex items-center px-sm text-secondary hover:text-primary font-label-md text-label-md transition-colors scale-95 active:opacity-80 transition-all" href="#">Salaries</a>
+</nav>
+<!-- Actions -->
+<div class="flex items-center gap-md">
+<!-- Search Bar (on_left implies before actions) -->
+<div class="hidden lg:flex relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+<input class="h-[44px] pl-10 pr-4 rounded-lg bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all font-body-sm text-body-sm w-64" placeholder="Search jobs..." type="text" value="React"/>
+</div>
+<a class="hidden md:block font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">Login</a>
+<a class="bg-primary text-on-primary font-label-md text-label-md px-md py-sm rounded-lg hover:bg-surface-tint transition-colors" href="#">Post a Job</a>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-secondary p-sm rounded hover:bg-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-gutter py-xl md:py-48px">
+<!-- Header & Search Tools -->
+<div class="mb-xl flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg md:font-display md:text-display text-on-surface mb-sm">Kết quả: 24 việc làm remote cho "react"</h1>
+<p class="font-body-md text-body-md text-secondary">Tìm thấy 24 kết quả phù hợp với tiêu chí của bạn.</p>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Sắp xếp theo</span>
+<div class="relative">
+<select class="appearance-none h-[44px] pl-md pr-xl py-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-sm text-body-sm focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none cursor-pointer">
+<option>Mới nhất</option>
+<option>Lương cao nhất</option>
+<option>Phù hợp nhất</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Layout Grid: Filters (Left) + Results (Right) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Filters Sidebar -->
+<aside class="hidden lg:block lg:col-span-3 space-y-xl">
+<!-- Filter Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-md">
+<h3 class="font-headline-sm text-headline-sm mb-md pb-sm border-b border-outline-variant">Lọc theo</h3>
+<!-- Salary Filter (Custom Toggle) -->
+<div class="mb-lg">
+<h4 class="font-label-md text-label-md mb-sm">Loại hình</h4>
+<label class="flex items-center gap-sm cursor-pointer mb-2">
+<input checked="" class="form-checkbox h-4 w-4 text-primary border-outline-variant rounded focus:ring-primary" type="checkbox"/>
+<span class="font-body-sm text-body-sm">Remote Only</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer">
+<input class="form-checkbox h-4 w-4 text-primary border-outline-variant rounded focus:ring-primary" type="checkbox"/>
+<span class="font-body-sm text-body-sm">Hybrid</span>
+</label>
+</div>
+<!-- Tech Stack -->
+<div>
+<h4 class="font-label-md text-label-md mb-sm">Kỹ năng</h4>
+<div class="flex flex-wrap gap-sm">
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-sm py-1 rounded">React</span>
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-sm py-1 rounded">TypeScript</span>
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-sm py-1 rounded">Node.js</span>
+<span class="bg-surface-container text-outline font-label-sm text-label-sm px-sm py-1 rounded border border-dashed border-outline-variant hover:border-primary hover:text-primary cursor-pointer transition-colors">+ Thêm</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Results List -->
+<div class="lg:col-span-9 space-y-md">
+<!-- Job Item 1 -->
+<article class="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg hover:shadow-lg transition-shadow duration-300 group flex flex-col md:flex-row gap-lg md:items-center relative">
+<!-- Subtle Hover Accent -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<!-- Logo -->
+<div class="shrink-0">
+<div class="w-[48px] h-[48px] rounded-lg bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist abstract logo for a tech company named XYZ, utilizing a corporate modern aesthetic with sharp geometric shapes. The logo is displayed on a light gray background, conveying precision and reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkHZlNcM84MFszm-gxoDVnaD8p_zynAOYjbEGI8pAsdRLxIRkxl37oKPT_R704EgH3If727FFp47f91wc9ayaWO93ihMTZja9YDMDLXKzqb2zb99MNBD1ZZbrJvKSw5TkjHgwTejcos6kYDbnVaoWBBWDg8_4dj3TRwunyWC9tCUcXS29Vc2UQA-7n7AiulBG7XscwocAl9kcFPy9dc5ur81bqqlh-rH6FMx5hP5ZYfAv1Nn_cdakk"/>
+</div>
+</div>
+<!-- Content -->
+<div class="flex-grow">
+<div class="flex flex-wrap items-start justify-between gap-sm mb-xs">
+<h2 class="font-headline-sm text-headline-sm group-hover:text-primary transition-colors">React Developer</h2>
+<!-- Badges -->
+<div class="flex gap-2">
+<span class="bg-[#c4e7ff] text-[#001e2c] px-2 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wide">Remote</span>
+<span class="bg-surface-container text-on-surface px-2 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wide">Toàn thời gian</span>
+</div>
+</div>
+<div class="font-body-md text-body-md text-secondary mb-md">Công ty XYZ</div>
+<div class="flex flex-wrap items-center gap-lg font-body-sm text-body-sm text-secondary mb-md">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                                Singapore
+                            </div>
+<div class="flex items-center gap-1 text-on-surface font-medium">
+<span class="material-symbols-outlined text-sm">payments</span>
+                                1800 - 3000$
+                            </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span>
+                                2 ngày trước
+                            </div>
+</div>
+<!-- Tags -->
+<div class="flex flex-wrap gap-2">
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded font-mono">Node.js</span>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded font-mono">React</span>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded font-mono">TypeScript</span>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded font-mono">Remote-friendly</span>
+</div>
+</div>
+<!-- Action -->
+<div class="shrink-0 mt-md md:mt-0 text-right">
+<button class="w-full md:w-auto px-lg py-sm rounded-lg bg-surface-container-highest text-on-surface hover:bg-surface-variant border border-outline-variant transition-colors font-label-md text-label-md font-medium">Chi tiết</button>
+</div>
+</article>
+<!-- Job Item 2 -->
+<article class="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg hover:shadow-lg transition-shadow duration-300 group flex flex-col md:flex-row gap-lg md:items-center relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<!-- Logo -->
+<div class="shrink-0">
+<div class="w-[48px] h-[48px] rounded-lg bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A modern, sleek logo for a startup named Demo. The design is simple, flat, and uses corporate tones like slate and teal. It feels approachable yet highly professional, suitable for a tech job board." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAosHw6LPU5z8dzJcAEgqDuBqU9q9Kt0Xv3MvJtjisiQ-NfMg5KgpJ-GxmPAtl4Lr4D61Vj8mzE9DUH29HcZt4JevfVDMy5fmrbHFaNqkxDyr_i6yM1ekN5LGV42xerqmIylG2YRWTQWEdIJr7eQ3YoqUELRvZlk8Iuqsn-8j5wAFjRb4Xw68viZPWWAy6CK8Ym-NhLo3EtBmxTtwKAJY2Dx54Arn4GbQkkza7KH_gMF7nm2A3nCyre"/>
+</div>
+</div>
+<!-- Content -->
+<div class="flex-grow">
+<div class="flex flex-wrap items-start justify-between gap-sm mb-xs">
+<h2 class="font-headline-sm text-headline-sm group-hover:text-primary transition-colors">Frontend Developer (React)</h2>
+<!-- Badges -->
+<div class="flex gap-2">
+<span class="bg-surface-container text-on-surface px-2 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wide">Bán thời gian</span>
+</div>
+</div>
+<div class="font-body-md text-body-md text-secondary mb-md">Công ty Demo</div>
+<div class="flex flex-wrap items-center gap-lg font-body-sm text-body-sm text-secondary mb-md">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                                Việt Nam
+                            </div>
+<div class="flex items-center gap-1 text-on-surface font-medium">
+<span class="material-symbols-outlined text-sm">payments</span>
+                                1500 - 2500$
+                            </div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span>
+                                5 giờ trước
+                            </div>
+</div>
+<!-- Tags -->
+<div class="flex flex-wrap gap-2">
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded font-mono">React</span>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded font-mono">Tailwind</span>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded font-mono">REST API</span>
+</div>
+</div>
+<!-- Action -->
+<div class="shrink-0 mt-md md:mt-0 text-right">
+<button class="w-full md:w-auto px-lg py-sm rounded-lg bg-surface-container-highest text-on-surface hover:bg-surface-variant border border-outline-variant transition-colors font-label-md text-label-md font-medium">Chi tiết</button>
+</div>
+</article>
+<!-- Pagination -->
+<div class="mt-xl pt-lg border-t border-outline-variant flex justify-center">
+<nav class="flex items-center gap-sm">
+<button class="w-10 h-10 rounded border border-outline-variant flex items-center justify-center text-secondary hover:bg-surface-variant hover:text-on-surface transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">keyboard_double_arrow_left</span>
+</button>
+<button class="w-10 h-10 rounded bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center shadow-sm">1</button>
+<button class="w-10 h-10 rounded border border-outline-variant flex items-center justify-center text-on-surface font-label-md text-label-md hover:bg-surface-variant transition-colors">2</button>
+<button class="w-10 h-10 rounded border border-outline-variant flex items-center justify-center text-on-surface font-label-md text-label-md hover:bg-surface-variant transition-colors">3</button>
+<button class="w-10 h-10 rounded border border-outline-variant flex items-center justify-center text-on-surface font-label-md text-label-md hover:bg-surface-variant transition-colors">4</button>
+<button class="w-10 h-10 rounded border border-outline-variant flex items-center justify-center text-secondary hover:bg-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-sm">keyboard_double_arrow_right</span>
+</button>
+</nav>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Rendered via JSON directives) -->
+<footer class="bg-surface-container-high border-t border-outline-variant full-width bottom mt-auto">
+<div class="w-full py-xl px-gutter max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="flex flex-col items-center md:items-start gap-sm">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">Remote IT</span>
+<span class="font-body-sm text-body-sm text-secondary">© 2024 Remote IT. Precision for the modern developer.</span>
+</div>
+<nav class="flex flex-wrap justify-center gap-lg">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-opacity opacity-100 hover:opacity-80" href="#">Contact</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-opacity opacity-100 hover:opacity-80" href="#">Terms</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-opacity opacity-100 hover:opacity-80" href="#">Privacy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-opacity opacity-100 hover:opacity-80" href="#">Twitter</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary underline transition-opacity opacity-100 hover:opacity-80" href="#">GitHub</a>
+</nav>
+</div>
+</footer>
+</body></html>

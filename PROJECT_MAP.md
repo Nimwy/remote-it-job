@@ -1,167 +1,147 @@
-# Project Map
+# Project Map — Remote IT Job
 
 ## 1. Repository structure
 
 ```text
 remote-it-job/
+├── stitch_remote_it_job_board/     # Stitch UI reference; not production source
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   ├── layouts/
-│   │   ├── pages/
 │   │   ├── features/
+│   │   ├── pages/
 │   │   ├── hooks/
+│   │   ├── lib/
 │   │   ├── services/
 │   │   ├── types/
-│   │   └── router/
+│   │   └── ...
+│   ├── public/
+│   ├── package.json
 │   └── ...
 │
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   │   └── routes/
 │   │   ├── core/
 │   │   ├── db/
 │   │   ├── models/
-│   │   ├── schemas/
 │   │   ├── repositories/
+│   │   ├── schemas/
 │   │   ├── services/
-│   │   ├── dependencies/
 │   │   └── main.py
-│   └── tests/
+│   ├── migrations/
+│   ├── tests/
+│   ├── Dockerfile
+│   └── requirements.txt
 │
-├── migrations/
-│
-├── docs/
-│
-├── .env.example
-├── .gitignore
+├── docker-compose.yml
+├── README.md
 ├── AI_CONTEXT.md
 ├── ARCHITECTURE.md
 ├── DATABASE_SCHEMA.md
 ├── API_SPEC.md
 ├── SECURITY.md
 ├── PROJECT_MAP.md
-├── PROJECT_STATE.md
-├── CHANGELOG.md
-└── README.md
+└── PROJECT_STATE.md
 ```
 
-## 2. Frontend areas
+## 2. Frontend boundaries
 
-### Public
-- Home
-- Job search/results
-- Job detail
-- HR login/register
+### pages/
+View cấp route cao nhất.
 
-### HR
-- Dashboard
-- My jobs
-- Create job
-- Edit job
-- Account/profile
-- Contact management
+Ví dụ:
+- HomePage
+- JobsPage
+- JobDetailPage
+- LoginPage
+- RegisterPage
+- HrDashboardPage
+- AdminDashboardPage
 
-### Admin
-- Dashboard
-- HR management
-- Pending job moderation
-- All jobs
-- Category/tag management nếu được đưa vào MVP
+### features/
+Logic frontend theo domain.
 
-## 3. Backend modules
+Ví dụ:
+- auth
+- jobs
+- hr
+- admin
+- search
 
-### Auth
-- Email registration/login.
-- Google OAuth.
-- Session.
-- Logout.
-- Account linking.
+### components/
+Component UI tái sử dụng, không thuộc riêng một domain.
 
-### Users
-- Current user.
-- HR profile.
-- Contact management.
-- Admin HR management.
+Ví dụ:
+- Button
+- Modal
+- Pagination
+- JobCard
+- FormField
 
-### Jobs
-- Create.
-- Read.
-- Update.
-- Delete/controlled removal.
-- Submit for review.
-- Close.
-- Search.
-- Filter.
-- Pagination.
-- View counting.
+Component có thể chuyển thành domain-specific và chuyển vào feature khi phù hợp.
 
-### Moderation
-- HR approval.
-- Job approval/rejection.
-- Hide/unhide.
-- Block/unblock HR.
+### services/
+Hàm gọi API client.
 
-### Catalog
-- Categories.
-- Tags.
+### hooks/
+React hooks tái sử dụng.
 
-## 4. Data ownership
+### lib/
+Thiết lập infrastructure/helper như query client và hàm tiện ích.
 
-```text
-User
- ├── Contacts
- └── Jobs
+### types/
+TypeScript types dùng chung khi không thuộc riêng một feature.
 
-Job
- ├── Category
- └── Tags
-```
+## 3. Backend boundaries
 
-Job không sở hữu contact/company data độc lập.
+### api/
+HTTP endpoints và dependency wiring.
 
-## 5. Route convention
+### schemas/
+Pydantic request/response schemas.
 
-Public routes:
-```text
-/
- /jobs
- /jobs/:id
- /login
- /register
-```
+### models/
+SQLAlchemy database models.
 
-HR routes:
-```text
-/hr
-/hr/jobs
-/hr/jobs/new
-/hr/jobs/:id/edit
-/hr/account
-```
+### services/
+Business logic và lifecycle rules.
 
-Admin routes:
-```text
-/admin
-/admin/hr
-/admin/jobs
-/admin/jobs/pending
-/admin/catalog
-```
+### repositories/
+Database access abstractions khi cần.
 
-API routes nên có prefix `/api/v1`.
+Không tạo repository wrapper cho mọi query mà không có lý do cụ thể.
 
-## 6. File ownership guideline
+### core/
+Security, configuration, tiện ích toàn ứng dụng.
 
-- `models/`: database representation.
-- `schemas/`: API input/output schemas.
-- `repositories/`: database access.
-- `services/`: business logic.
-- `api/routes/`: HTTP layer.
-- `dependencies/`: authentication/authorization dependencies.
-- `components/`: reusable UI.
-- `features/`: domain-specific frontend logic.
-- `services/`: API client functions.
+### db/
+Database engine/session setup.
 
-Không đặt business logic lớn trực tiếp trong React page hoặc FastAPI route handler.
+### migrations/
+Alembic migrations.
+
+### tests/
+Unit/integration/API tests.
+
+## 4. Naming
+
+Python:
+- modules/files: snake_case
+- functions/variables: snake_case
+- classes: PascalCase
+
+TypeScript:
+- variables/functions: camelCase
+- React components/types: PascalCase
+- hooks: `useXxx`
+
+## 5. Quy tắc sở hữu
+
+Trước khi thêm file, xác định layer nào chịu trách nhiệm.
+
+Tránh:
+- database queries trong React
+- business logic trực tiếp trong UI components
+- authorization logic chỉ ở frontend
+- FastAPI route handler lớn chứa toàn bộ business logic

@@ -1,238 +1,290 @@
-# System Architecture
+# Architecture — Remote IT Job
 
 ## 1. Tổng quan
 
 ```text
-                         Public Users
-                              |
-                              v
-                    +-------------------+
-                    | React Frontend    |
-                    +---------+---------+
-                              |
-                         HTTPS / JSON
-                              |
-                              v
-                    +-------------------+
-                    | FastAPI Backend   |
-                    +---------+---------+
-                              |
-          +-------------------+-------------------+
-          |                   |                   |
-          v                   v                   v
- Authentication        Business Logic       PostgreSQL
- Email / Google        RBAC / Jobs          SQLAlchemy
- Session               Moderation           Alembic
+Browser
+   │
+   ▼
+React + TypeScript + Vite
+   │
+   │ REST / JSON
+   │ HTTP-only session cookie
+   ▼
+FastAPI
+   │
+   ├── Authentication / Authorization
+   ├── API routes
+   ├── Business services
+   └── SQLAlchemy
+   │
+   ▼
+PostgreSQL
 ```
 
-## 2. Frontend
+Backend và PostgreSQL chạy bằng Docker Compose.
+Frontend chạy trực tiếp trong WSL2 bằng Node.js/npm.
 
-Công nghệ:
+## 2. Thành phần
+
+### Frontend
+
 - React
 - TypeScript
+- Vite
 - React Router
-- Tailwind CSS nếu phù hợp với Stitch output.
+- TanStack Query
+- React Hook Form
+- Zod
 
-Frontend chịu trách nhiệm:
-- Rendering UI.
-- Client-side routing.
-- Form interaction.
-- Request API.
-- Hiển thị loading/error/success states.
-- Quản lý session state ở client.
+Trách nhiệm:
+- render UI
+- client-side routing
+- form UX/validation
+- gọi REST API
+- hiển thị loading/error state
 
-Frontend không chịu trách nhiệm cuối cùng cho:
-- Authorization.
-- Ownership.
-- Job status transition.
-- HR approval.
-- Security validation.
+Frontend không chịu trách nhiệm quyết định quyền truy cập cuối cùng.
 
-## 3. Backend
+### Backend
 
-FastAPI là application/API layer.
+FastAPI chịu trách nhiệm:
+- authentication
+- authorization
+- validation
+- job lifecycle
+- moderation
+- search/filter/pagination
+- view counting
+- database access
 
-Backend chịu trách nhiệm:
-- Authentication.
-- OAuth callback.
-- Session management.
-- Authorization/RBAC.
-- CRUD.
-- Business rules.
-- Validation.
-- Search/filter/pagination.
-- Moderation.
-- View counting.
-- Database transaction.
+### Database
 
-Kiến trúc backend khuyến nghị:
+PostgreSQL lưu:
+- users
+- sessions
+- contacts
+- categories
+- tags
+- jobs
+- job_tags
+
+## 3. Backend layers
+
+Khuyến nghị:
 
 ```text
 backend/
 ├── app/
 │   ├── main.py
 │   ├── core/
-│   ├── db/
-│   ├── models/
-│   ├── schemas/
-│   ├── repositories/
-│   ├── services/
 │   ├── api/
-│   │   └── routes/
-│   └── dependencies/
-└── tests/
+│   ├── schemas/
+│   ├── models/
+│   ├── services/
+│   ├── repositories/
+│   └── db/
+├── tests/
+├── migrations/
+├── Dockerfile
+└── requirements.txt
 ```
 
-Không bắt buộc giữ đúng tên thư mục nếu implementation có lý do rõ ràng, nhưng phải giữ separation of concerns.
+Ranh giới:
+- `api/`: HTTP routes/dependencies.
+- `schemas/`: Pydantic request/response models.
+- `models/`: SQLAlchemy models.
+- `services/`: business rules.
+- `repositories/`: database operations khi cần tách riêng.
+- `core/`: config, security, auth utilities.
+- `db/`: engine/session/database setup.
 
-## 4. Database
+Không bắt buộc mọi function phải qua repository nếu abstraction đó không mang lại giá trị.
 
-PostgreSQL là database chính.
+## 4. Authentication
 
-SQLAlchemy:
-- ORM/model mapping.
-- Query building.
-- Transaction management.
-
-Alembic:
-- Database migrations.
-- Không chỉnh schema bằng tay trong production workflow.
-
-## 5. Authentication architecture
+### Email/password
 
 ```text
-                    +------------------+
-                    | React            |
-                    +--------+---------+
-                             |
-                +------------+------------+
-                |                         |
-                v                         v
-        Email/password              Google OAuth
-                |                         |
-                +------------+------------+
-                             v
-                       FastAPI Auth
-                             |
-                             v
-                          users
-                             |
-                             v
-                         sessions
+Register
+  ↓
+validate input
+  ↓
+hash password with Argon2id
+  ↓
+create user(status=pending)
 ```
 
-Session implementation phải dùng server-side session hoặc secure signed/session mechanism đã được chốt trong implementation. Không lưu access credentials nhạy cảm trong localStorage nếu không cần thiết.
+Login chỉ thành công về mặt authentication nhưng HR functionality phải bị giới hạn nếu user chưa active.
 
-Cookie-based HTTP-only session là phương án ưu tiên cho web application này.
+### Google OAuth
+
+```text
+Browser
+  ↓
+Google authorization
+  ↓
+OAuth callback
+  ↓
+validate Google identity
+  ↓
+find/create user
+  ↓
+create server-side session
+```
+
+Account Google mới vẫn có `pending` status và phải được Admin duyệt.
+
+Google OAuth không tự động biến user thành active HR.
+
+## 5. Session
+
+Server-side session.
+
+Browser nhận session cookie.
+Session record nằm trong PostgreSQL.
+
+Cookie production:
+- HttpOnly
+- Secure
+- SameSite được cấu hình phù hợp
+
+Không dùng JWT làm authentication chính của MVP.
+
+Session tối thiểu cần:
+- session id/token identifier
+- user id
+- created_at
+- expires_at
+
+Không bắt buộc `updated_at` khi session không dùng sliding expiration.
 
 ## 6. Authorization
 
-Roles:
-- hr
-- admin
+Role:
+- `hr`
+- `admin`
 
 Status:
-- pending
-- active
-- blocked
+- `pending`
+- `active`
+- `blocked`
 
-Ma trận cơ bản:
+Backend phải kiểm tra cả role và account status.
 
-| Action | Guest | Pending HR | Active HR | Admin |
-|---|---:|---:|---:|---:|
-| Xem public job | ✓ | ✓ | ✓ | ✓ |
-| Search/filter | ✓ | ✓ | ✓ | ✓ |
-| Login | - | ✓ | ✓ | ✓ |
-| Tạo job | - | ✗ | ✓ | Theo admin policy |
-| Sửa job của mình | - | ✗ | ✓ | ✓ |
-| Gửi duyệt | - | ✗ | ✓ | - |
-| Duyệt HR | - | ✗ | ✗ | ✓ |
-| Block HR | - | ✗ | ✗ | ✓ |
-| Duyệt job | - | ✗ | ✗ | ✓ |
-| Quản lý mọi job | - | ✗ | ✗ | ✓ |
+Ví dụ:
+- pending HR không được đăng/submit job.
+- blocked HR không được thao tác HR.
+- HR chỉ sửa/xóa/đóng job của chính mình.
+- Admin có quyền moderation.
 
-## 7. Public job visibility
+## 7. Public job flow
 
-Chỉ job có trạng thái:
-- approved
-- chưa hết hạn
-
-mới được hiển thị public.
-
-`closed`, `hidden`, `rejected`, `draft`, `pending` không được public.
-
-Nếu `expires_at` đã qua, backend phải coi job là expired theo business rules; không phụ thuộc frontend.
-
-## 8. Job lifecycle
+Public chỉ lấy job đáp ứng:
 
 ```text
-DRAFT
-  |
-  | submit
-  v
-PENDING
-  | \
-  |  \ reject
-  |   v
-  | REJECTED
-  |
-  | approve
-  v
-APPROVED
-  | \
-  |  \ admin hide
-  |   v
-  | HIDDEN
-  |
-  +---- HR close ---> CLOSED
-  |
-  +---- expires_at --> EXPIRED
+status = approved
+AND
+(expires_at IS NULL OR expires_at > current_time)
+AND
+owner account is not blocked
 ```
 
-Nếu job rejected được HR sửa và gửi lại, transition về pending.
+`expires_at` được kiểm tra ngay tại query.
 
-## 9. Contact architecture
+Một background/periodic task có thể cập nhật `approved → expired` để đồng bộ database, nhưng public visibility không phụ thuộc hoàn toàn vào task đó.
 
-```text
-users
-  |
-  +---- user_contacts
-             |
-             +-- zalo
-             +-- telegram
-             +-- linkedin
-             +-- phone
-             +-- email
+## 8. Search
 
-jobs.hr_id ---> users.id
-```
+MVP dùng PostgreSQL.
 
-Job không lưu contact copy.
-
-## 10. Search
-
-MVP search chạy trên PostgreSQL.
-
-Các trường chính:
-- title
-- description
-- requirements
-- tags
-- category
-- location
-
-Filter:
+Search/filter gồm:
+- keyword
 - category
 - tags
-- job_type
-- salary range
+- job type
+- salary
 - location
 - timezone
 
-Pagination phải được thực hiện ở backend, không tải toàn bộ jobs về frontend.
+Pagination:
+- offset pagination
+- mặc định 20 jobs/page
 
-## 11. Deployment
+Không dùng Elasticsearch/OpenSearch trong MVP.
 
-Domain, hosting và production infrastructure nằm ngoài phạm vi hiện tại.
+## 9. View counting
 
-Application phải portable và không phụ thuộc không cần thiết vào một cloud provider.
+Mỗi session chỉ tăng view của một job tối đa một lần trong 24 giờ.
+
+Backend xác định session từ server-side session cookie.
+
+Không tin `user_id` hoặc counter do frontend gửi.
+
+Có thể dùng bảng tracking riêng nếu cần chính xác/audit; implementation phải bảo đảm concurrent requests không làm tăng counter nhiều lần ngoài rule 24h.
+
+## 10. Job moderation
+
+Job mới:
+
+```text
+draft → pending → approved
+```
+
+Từ chối:
+
+```text
+pending → rejected
+```
+
+`rejection_reason` phải được lưu.
+
+Job approved khi sửa substantive content:
+
+```text
+approved → pending
+```
+
+HR vẫn có thể đóng job của mình:
+
+```text
+approved → closed
+```
+
+Admin có thể:
+
+```text
+approved → hidden
+```
+
+## 11. HR blocking
+
+Không hard-delete HR khi Admin khóa.
+
+```text
+users.status = blocked
+```
+
+Các job của HR bị blocked không được public.
+
+Dữ liệu cũ được giữ để phục vụ moderation/audit cơ bản.
+
+## 12. Docker
+
+Docker Compose cung cấp:
+- FastAPI backend
+- PostgreSQL
+
+Frontend không chạy trong Docker ở MVP.
+
+## 13. Không dùng microservices
+
+Toàn bộ backend là một FastAPI application.
+
+Không tách:
+- auth service
+- job service
+- admin service
+- search service
+
+thành các microservice riêng.

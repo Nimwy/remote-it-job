@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Portal - Pending Jobs &amp; HR</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#00685f",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "on-tertiary-fixed": "#001e2c",
+                        "tertiary-fixed": "#c4e7ff",
+                        "on-surface": "#191c1e",
+                        "secondary-container": "#dae2fd",
+                        "surface-tint": "#006a61",
+                        "on-tertiary-container": "#fcfcff",
+                        "surface-container": "#eceef0",
+                        "secondary-fixed": "#dae2fd",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "tertiary-fixed-dim": "#7bd0ff",
+                        "on-secondary-fixed": "#131b2e",
+                        "primary-fixed-dim": "#6bd8cb",
+                        "secondary": "#565e74",
+                        "outline": "#6d7a77",
+                        "on-primary-fixed": "#00201d",
+                        "primary-container": "#008378",
+                        "inverse-surface": "#2d3133",
+                        "inverse-primary": "#6bd8cb",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface": "#f7f9fb",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "outline-variant": "#bcc9c6",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#005049",
+                        "on-tertiary-fixed-variant": "#004c69",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#f4fffc",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#007da9",
+                        "surface-bright": "#f7f9fb",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#5c647a",
+                        "background": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1e",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary": "#006387",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-container-high": "#e6e8ea",
+                        "on-surface-variant": "#3d4947",
+                        "primary-fixed": "#89f5e7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "xs": "4px",
+                        "container-max": "1280px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "md": "16px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter", "sans-serif"],
+                        "label-sm": ["Geist", "sans-serif"],
+                        "headline-lg": ["Geist", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-md": ["Geist", "sans-serif"],
+                        "headline-sm": ["Geist", "sans-serif"],
+                        "display": ["Geist", "sans-serif"],
+                        "label-md": ["Geist", "sans-serif"],
+                        "headline-lg-mobile": ["Geist", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background flex h-screen overflow-hidden antialiased">
+<!-- SideNavBar (Shared Component) -->
+<nav class="bg-surface-container shadow-sm flex flex-col h-screen fixed left-0 top-0 p-md z-40 docked left-0 h-full w-64 border-r border-outline-variant">
+<!-- Header -->
+<div class="flex items-center gap-md mb-xl px-sm">
+<img class="w-10 h-10 rounded-full object-cover shadow-sm" data-alt="A minimalist, professional corporate avatar graphic for an admin user in a high-tech interface. Clean light-mode aesthetic, utilizing deep slate and teal accents. Solid background, high resolution, precise framing." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVvQvIDMbWStPfGwHxCSuZaeYF0MvMweYcBCfVTGUf4m6c6QGktGVtIYjBNrr5lv8VjciBYskmpWPP-O2vNyxcyyP2XiO41AxWkCdeYgi22n5yhLLpucm2AOUOTygH5qT9cfRW1sgY0uTg8hT6Uh5T2vCxp4riHSfneFG1V2JeGjlbJ-0iNRsAPmO227x8iVwlr5Aq8yab_-dh6_Oe4KtCdlGA-000AL3X6ygA8CGY9nK5FYJucxN3"/>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary">Admin Portal</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage Listings</p>
+</div>
+</div>
+<!-- Main Navigation -->
+<div class="flex flex-col gap-sm flex-1">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all cursor-pointer active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- Active Navigation Item: Pending Jobs -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-primary-container text-on-primary-container font-bold cursor-pointer active:scale-98 transition-all" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="pending_actions">pending_actions</span>
+<span class="font-label-md text-label-md">Pending Jobs</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all cursor-pointer active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="work_history">work_history</span>
+<span class="font-label-md text-label-md">Manage Jobs</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all cursor-pointer active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-label-md text-label-md">Manage HR</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all cursor-pointer active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+<!-- CTA -->
+<div class="mt-auto mb-lg">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm px-md rounded-lg hover:bg-surface-tint transition-colors active:scale-95 shadow-sm">
+                Post New Job
+            </button>
+</div>
+<!-- Footer Navigation -->
+<div class="flex flex-col gap-sm border-t border-outline-variant pt-md">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all cursor-pointer active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all cursor-pointer active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label-md text-label-md">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 h-full overflow-y-auto bg-surface relative">
+<div class="max-w-container-max mx-auto p-lg md:p-xl space-y-xl pb-32">
+<!-- Header -->
+<header class="flex justify-between items-end border-b border-outline-variant pb-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Tổng quan Hệ thống</h1>
+<p class="font-body-md text-body-md text-secondary mt-sm">Quản lý phê duyệt công việc và tài khoản nhân sự.</p>
+</div>
+</header>
+<!-- Section 1: Job Approval List (Bento Grid Style) -->
+<section>
+<div class="flex justify-between items-center mb-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">Danh sách chờ duyệt</h2>
+<span class="bg-surface-variant text-on-surface-variant font-label-sm text-label-sm px-sm py-xs rounded-full">2 Yêu cầu</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col gap-md transition-shadow hover:shadow-[0_4px_12px_rgba(15,23,42,0.05)]">
+<div class="flex justify-between items-start">
+<div class="flex gap-md">
+<img class="w-12 h-12 rounded-lg object-cover border border-surface-variant" data-alt="A highly stylized, minimalist logo for a tech company named XYZ. Designed with geometric precision, utilizing a palette of deep teal and crisp white, set against a light background. Corporate modern aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC82ws0S2nP13j09y-pk9tnO7S75qZDep5bNBAlgWF9ScDr_kE-t4fOQPpwLfTXIU-n_NnXRWe9pi1zUrPz98N7dIy7CoVW3wKaCX-VH5jOXkeRE8dLEdjJb7Wvpq8qSCEi44sCLWUcN9xK5GwT-YvEYA0bS0zueMnjkhpMG_SHDdfoHLjblnbqo-6IhfOfPL6VjqJt30UjR2UgcybGgN-QRtlayfeWUYuE6m1lb10Br6nivkw_UDIb"/>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">React Developer</h3>
+<p class="font-body-sm text-body-sm text-secondary">Công ty XYZ</p>
+</div>
+</div>
+<span class="bg-[#FFF8E1] text-[#F57F17] font-label-sm text-label-sm uppercase px-2 py-1 rounded-full border border-[#FFE082]">Đang chờ</span>
+</div>
+<div class="flex gap-md font-body-sm text-body-sm text-secondary border-y border-surface-variant py-sm my-sm">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">location_on</span> HCM / Remote</div>
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">payments</span> $1500 - $2500</div>
+</div>
+<div class="flex gap-sm mt-auto pt-sm">
+<button class="flex-1 bg-surface-container text-on-surface font-label-md text-label-md py-sm rounded-lg hover:bg-surface-variant transition-colors border border-outline-variant">Xem chi tiết</button>
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md py-sm rounded-lg hover:bg-primary-container transition-colors">Phê duyệt</button>
+<button class="flex-none bg-error-container text-on-error-container px-md py-sm rounded-lg hover:bg-[#ffb4ab] transition-colors"><span class="material-symbols-outlined">close</span></button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col gap-md transition-shadow hover:shadow-[0_4px_12px_rgba(15,23,42,0.05)]">
+<div class="flex justify-between items-start">
+<div class="flex gap-md">
+<img class="w-12 h-12 rounded-lg object-cover border border-surface-variant" data-alt="A clean, minimalist logo for a tech startup named ABC. Features a modern sans-serif typographic mark in dark slate and vibrant cyan accents, rendered in a crisp, light-mode environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR8vwVnw_suYRXg64DR20CWjQ3obMLO5Lz_EaDZnpJxXuBMSIGUMFNACSBnKEnZSU0Zk8ykTZ-YYp5oiJDQLc1Dlmcndz7EILIcZTgXuusIMQcupvAzv1fA18uZrIYMtfZsmExLeE5hpiMSaXqIhYxyGG5ydpj9l0ZH9dgDH9p2ZRJtHJsiKYEen9Bv8PlNo9p-p00KuJaFDQgIzuWpWegZN1Ohe8Ze49ROkFfs9hFnZOT4BFiwLof"/>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Node.js Backend Dev</h3>
+<p class="font-body-sm text-body-sm text-secondary">Công ty ABC</p>
+</div>
+</div>
+<span class="bg-[#FFF8E1] text-[#F57F17] font-label-sm text-label-sm uppercase px-2 py-1 rounded-full border border-[#FFE082]">Đang chờ</span>
+</div>
+<div class="flex gap-md font-body-sm text-body-sm text-secondary border-y border-surface-variant py-sm my-sm">
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">location_on</span> Hà Nội</div>
+<div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">payments</span> Thỏa thuận</div>
+</div>
+<div class="flex gap-sm mt-auto pt-sm">
+<button class="flex-1 bg-surface-container text-on-surface font-label-md text-label-md py-sm rounded-lg hover:bg-surface-variant transition-colors border border-outline-variant">Xem chi tiết</button>
+<button class="flex-1 bg-primary text-on-primary font-label-md text-label-md py-sm rounded-lg hover:bg-primary-container transition-colors">Phê duyệt</button>
+<button class="flex-none bg-error-container text-on-error-container px-md py-sm rounded-lg hover:bg-[#ffb4ab] transition-colors"><span class="material-symbols-outlined">close</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: HR Management Table -->
+<section class="mt-xl">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md">Quản lý Nhân sự</h2>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="font-label-md text-label-md text-secondary py-sm px-md font-medium">Tên</th>
+<th class="font-label-md text-label-md text-secondary py-sm px-md font-medium">Công ty</th>
+<th class="font-label-md text-label-md text-secondary py-sm px-md font-medium">Trạng thái</th>
+<th class="font-label-md text-label-md text-secondary py-sm px-md font-medium">Số tin</th>
+<th class="font-label-md text-label-md text-secondary py-sm px-md font-medium text-right">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-variant font-body-sm text-body-sm text-on-surface">
+<tr class="hover:bg-surface transition-colors">
+<td class="py-sm px-md font-medium text-on-surface">Nguyễn Văn A</td>
+<td class="py-sm px-md text-secondary">Công ty XYZ</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-xs text-primary bg-primary-fixed px-2 py-1 rounded-full text-xs font-semibold">
+<span class="w-2 h-2 rounded-full bg-primary"></span> Active
+                                    </span>
+</td>
+<td class="py-sm px-md text-secondary">12</td>
+<td class="py-sm px-md text-right">
+<button class="text-secondary hover:text-on-surface transition-colors p-xs rounded hover:bg-surface-variant"><span class="material-symbols-outlined text-[20px]">lock_open</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="py-sm px-md font-medium text-on-surface">Trần Thị B</td>
+<td class="py-sm px-md text-secondary">Công ty ABC</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-xs text-on-surface-variant bg-surface-variant px-2 py-1 rounded-full text-xs font-semibold">
+<span class="w-2 h-2 rounded-full bg-outline"></span> Locked
+                                    </span>
+</td>
+<td class="py-sm px-md text-secondary">5</td>
+<td class="py-sm px-md text-right">
+<button class="text-secondary hover:text-on-surface transition-colors p-xs rounded hover:bg-surface-variant"><span class="material-symbols-outlined text-[20px]">lock</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="py-sm px-md font-medium text-on-surface">Lê Hoàng C</td>
+<td class="py-sm px-md text-secondary">Tech Solutions</td>
+<td class="py-sm px-md">
+<span class="inline-flex items-center gap-xs text-primary bg-primary-fixed px-2 py-1 rounded-full text-xs font-semibold">
+<span class="w-2 h-2 rounded-full bg-primary"></span> Active
+                                    </span>
+</td>
+<td class="py-sm px-md text-secondary">28</td>
+<td class="py-sm px-md text-right">
+<button class="text-secondary hover:text-on-surface transition-colors p-xs rounded hover:bg-surface-variant"><span class="material-symbols-outlined text-[20px]">lock_open</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</main>
+<!-- Overlay Popup: Job Details (Level 3 Elevation) -->
+<!-- Note: Wrapping in a standard UI pattern state; assuming it's triggered to be open for demonstration -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-on-background/20 backdrop-blur-sm" id="job-detail-modal">
+<div class="bg-surface-container-lowest w-full max-w-2xl rounded-2xl shadow-[0_12px_24px_rgba(15,23,42,0.1)] border border-outline-variant overflow-hidden flex flex-col max-h-[921px]">
+<!-- Modal Header -->
+<div class="flex justify-between items-center p-lg border-b border-outline-variant bg-surface-bright">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Chi tiết tin tuyển dụng</h2>
+<button class="text-secondary hover:text-on-surface transition-colors rounded-full p-xs hover:bg-surface-variant">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Content (Scrollable) -->
+<div class="p-lg overflow-y-auto flex-1 font-body-sm text-body-sm text-on-surface space-y-lg">
+<div class="flex gap-lg items-start">
+<img class="w-16 h-16 rounded-xl object-cover border border-surface-variant shadow-sm" data-alt="A detailed, sharp corporate logo for XYZ company. Features abstract geometry in a modern tech aesthetic, deep teal and silver colors, presented on a pristine white background with high resolution clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtga_G-nuvkW3Tp3ZJtaRCJZJtOktxnz7hkf58UPsmF1Tl_c3_WquHs5INzoAdIeoOdB4zh2R7A7s_4CB95mJXhOZoFEL-kDD4HcN4DkmbVtxaO6XIWIUIxTXD7_sguKyqzWjr6QM6Yw6X46-oNr0Bx9B5TPairIcDWkrWiSVt4ZZurz_5ni9MaqGfc8V0b2AMZ2nu4oGuPPHEVWix0oL_ShOAjlLGpT1NFkD4u14LXeIF0gK_mB4g"/>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-xs">React Developer (Senior)</h3>
+<p class="font-label-md text-label-md text-primary">Công ty XYZ</p>
+<div class="flex gap-md mt-sm text-secondary flex-wrap">
+<span class="flex items-center gap-xs bg-surface-container px-2 py-1 rounded-md text-xs"><span class="material-symbols-outlined text-[14px]">location_on</span> HCM / Remote</span>
+<span class="flex items-center gap-xs bg-surface-container px-2 py-1 rounded-md text-xs"><span class="material-symbols-outlined text-[14px]">schedule</span> Full-time</span>
+<span class="flex items-center gap-xs bg-surface-container px-2 py-1 rounded-md text-xs"><span class="material-symbols-outlined text-[14px]">payments</span> $1500 - $2500</span>
+</div>
+</div>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface mb-sm">Mô tả công việc (Description)</h4>
+<div class="bg-surface rounded-lg p-md text-secondary border border-surface-variant space-y-sm">
+<p>- Phát triển và bảo trì các ứng dụng web phức tạp sử dụng React.js và hệ sinh thái liên quan.</p>
+<p>- Tối ưu hóa hiệu suất ứng dụng, đảm bảo trải nghiệm người dùng mượt mà trên nhiều thiết bị.</p>
+<p>- Phối hợp chặt chẽ với đội ngũ UX/UI designer và Backend engineer để triển khai tính năng mới.</p>
+<p>- Viết code sạch, dễ bảo trì và tuân thủ các tiêu chuẩn kỹ thuật (Clean Code, SOLID).</p>
+</div>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface mb-sm">Thông tin liên hệ (Contact Info)</h4>
+<div class="flex flex-col gap-sm text-secondary bg-surface rounded-lg p-md border border-surface-variant">
+<p class="flex items-center gap-sm"><span class="material-symbols-outlined text-[18px]">person</span> Nguyễn Văn A (HR Manager)</p>
+<p class="flex items-center gap-sm"><span class="material-symbols-outlined text-[18px]">mail</span> hr@xyzcompany.com</p>
+<p class="flex items-center gap-sm"><span class="material-symbols-outlined text-[18px]">phone</span> +84 123 456 789</p>
+</div>
+</div>
+</div>
+<!-- Modal Footer (Actions) -->
+<div class="p-lg border-t border-outline-variant bg-surface-bright flex justify-end gap-md">
+<button class="px-lg py-sm rounded-lg font-label-md text-label-md bg-surface-container text-on-surface border border-outline-variant hover:bg-surface-variant transition-colors">Đóng</button>
+<button class="px-lg py-sm rounded-lg font-label-md text-label-md bg-[#ffebee] text-[#c62828] border border-[#ffcdd2] hover:bg-[#ffcdd2] transition-colors">Từ chối (Reject)</button>
+<button class="px-lg py-sm rounded-lg font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-container transition-colors shadow-sm">Phê duyệt (Approve)</button>
+</div>
+</div>
+</div>
+</body></html>

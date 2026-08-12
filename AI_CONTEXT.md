@@ -1,164 +1,202 @@
-# AI Context
+# AI Context — Remote IT Job
 
-Tài liệu này là hợp đồng làm việc dành cho AI coding agent.
+## 1. Vai trò của tài liệu
 
-## 1. Mục tiêu project
+File này là nguồn quy tắc dành cho AI coding agent (OpenCode/DeepSeek hoặc agent tương đương).
 
-Xây dựng website đăng tin tuyển dụng việc làm remote, tập trung vào người dùng Việt Nam.
+AI phải đọc tài liệu này trước khi sửa code.
 
-Stack:
-- React + TypeScript
-- FastAPI + Python
-- PostgreSQL
-- SQLAlchemy
-- Alembic
+Khi có xung đột giữa code hiện tại và tài liệu:
+1. Không tự ý thay đổi requirement.
+2. Xác định phần xung đột.
+3. Ưu tiên quyết định kiến trúc đã được chốt trong tài liệu.
+4. Nếu thay đổi ảnh hưởng schema, API, authentication hoặc security, phải cập nhật tài liệu liên quan.
 
-## 2. Business rules bắt buộc
+## 2. Mục tiêu hệ thống
 
-### Job seeker
-- Không cần đăng nhập.
-- Không cần tạo account.
-- Không có chức năng nộp CV/application.
-- Chỉ tìm kiếm, xem job và lấy contact HR.
+Xây dựng website đăng tin tuyển dụng IT remote, hướng tới người dùng Việt Nam.
+
+Job seeker:
+- Không cần tài khoản.
+- Tìm kiếm, lọc, xem chi tiết job.
+- Xem kênh liên hệ HR.
 - Tự liên hệ HR bên ngoài hệ thống.
+- Không upload/nộp CV qua website.
 
-### HR
-- Có thể đăng nhập bằng email/password hoặc Google OAuth.
-- Một account có thể sử dụng cả email/password và Google.
-- Email là định danh account chính.
-- Google identity được liên kết bằng Google subject (`sub`), không tạo account trùng khi email đã tồn tại.
-- HR mới có `status = pending`.
-- Pending HR không được đăng tin cho đến khi admin duyệt.
-- Active HR mới có quyền quản lý job.
-- Blocked HR không được sử dụng các chức năng HR cần quyền active.
-- HR chỉ được sửa/xóa/đóng job thuộc mình.
+HR:
+- Đăng ký bằng email/password hoặc đăng nhập bằng Google.
+- Tài khoản mới phải chờ Admin duyệt.
+- Tạo, sửa, đóng và quản lý job của mình.
+- Job phải được Admin duyệt trước khi public.
 
-### Admin
-- Role riêng trong bảng users.
-- Admin có thể duyệt/từ chối HR.
-- Admin có thể block/unblock HR.
-- Admin có thể duyệt/từ chối/ẩn/xóa job theo quyền.
-- Không tạo bảng admin riêng trong MVP.
+Admin:
+- Đăng nhập bằng tài khoản quản trị.
+- Duyệt/từ chối job.
+- Duyệt, khóa/mở khóa HR.
+- Ẩn/xóa job vi phạm.
+- Quản lý category/tag.
+- Xem thống kê cơ bản.
 
-### Contacts
-- Contact thuộc về HR.
-- Các channel hiện tại:
-  - zalo
-  - telegram
-  - linkedin
-  - phone
-  - email
-- Mỗi HR có tối đa một contact cho mỗi channel trong MVP.
-- Job detail lấy contact từ HR sở hữu job.
+## 3. Tech Stack đã chốt
 
-### Categories và tags
-- Được quản lý bởi hệ thống/admin.
-- HR không tự tạo tag/category.
-- Job có đúng một category.
-- Job có thể có nhiều tags.
-- Tags là công nghệ/kỹ năng.
+Frontend:
+- React
+- TypeScript
+- Vite
+- React Router
+- TanStack Query
+- React Hook Form
+- Zod
+- Node.js/npm chạy trực tiếp, không Docker hóa frontend trong MVP.
 
-### Views
-- `jobs.views` là tổng số lượt mở trang chi tiết job.
-- Không tuyên bố đây là unique visitors.
-- Không cần bảng event view riêng trong MVP.
+Backend:
+- Python
+- FastAPI
+- Pydantic
+- SQLAlchemy 2.x
+- Alembic
+- pytest + httpx
+- Ruff
+- Docker.
 
-## 3. Authentication
+Database:
+- PostgreSQL
+- Docker Compose.
 
-Hai phương thức:
-1. Email + password.
-2. Google OAuth / OpenID Connect.
+Authentication:
+- Email/password
+- Google OAuth
+- Server-side session lưu PostgreSQL
+- HTTP-only cookie
+- Argon2id cho password.
 
-Password phải được lưu dưới dạng hash bằng thuật toán password hashing an toàn; không bao giờ lưu plaintext.
+API:
+- REST
+- JSON
+- OpenAPI do FastAPI sinh.
 
-Google identity dùng `google_subject`.
+## 4. Nguyên tắc kiến trúc
 
-Nếu user đăng ký email trước rồi login Google bằng cùng email:
-- Không tạo user thứ hai.
-- Liên kết Google identity vào account hiện tại theo quy tắc bảo mật đã định.
+- Backend là nguồn xác thực cuối cùng.
+- Frontend route guard không phải cơ chế bảo mật.
+- Không tin dữ liệu do frontend gửi.
+- Mọi authorization phải được kiểm tra ở backend.
+- HR chỉ được thao tác với tài nguyên thuộc về mình.
+- Admin có quyền moderation theo role.
+- Không hard-delete HR khi khóa tài khoản.
+- Job của HR bị khóa phải được ẩn khỏi public.
+- Job đã approved nếu sửa các trường nội dung quan trọng phải quay lại pending.
+- Job bị từ chối phải có rejection reason.
+- `expires_at` phải được kiểm tra khi truy vấn public; không phụ thuộc hoàn toàn vào cron/background task.
 
-Authentication và HR approval là hai khái niệm riêng.
+## 5. User lifecycle
 
-## 4. Authorization
+```text
+HR register / Google first login
+        ↓
+pending
+        ↓ Admin approve
+active
+        ↓ Admin block
+blocked
+```
 
-Mọi endpoint protected phải kiểm tra:
-1. Authentication.
-2. User role.
-3. User status.
-4. Ownership nếu endpoint thao tác trên tài nguyên của HR.
+Google không tự động cấp quyền HR.
 
-Không tin tưởng role/status do frontend gửi lên.
+Admin account được tạo bằng seed/CLI, không dùng Google OAuth trong MVP.
 
-## 5. Job lifecycle
+## 6. Job lifecycle
 
-Các trạng thái:
-- draft
-- pending
-- approved
-- rejected
-- closed
-- hidden
-- expired
+```text
+draft
+  ↓ submit
+pending
+  ├── approve → approved
+  └── reject  → rejected
+                    ↓ edit + resubmit
+                  pending
 
-`approved` nghĩa là đã được admin duyệt và được phép hiển thị công khai.
+approved
+  ├── HR close → closed
+  ├── expires_at reached → expired
+  └── Admin hide → hidden
+```
 
-Không tự ý cho phép mọi transition. Transition phải được kiểm soát theo role và business rules.
+Nếu job approved được sửa các trường substantive như title, description, requirements, salary, location, job_type, category hoặc tags thì phải re-approval.
 
-## 6. Cost policy
+## 7. Coding rules
 
-Project cá nhân và không được tự ý tạo chi phí.
+### Python
+- snake_case cho variables/functions/modules.
+- PascalCase cho classes.
+- Type hints cho public functions.
+- Không nhồi toàn bộ business logic vào route handler.
+- Pydantic schema, service/business logic và database access phải có ranh giới rõ.
+- Không dùng `print()` cho application logging; sử dụng Python standard library `logging`. Không thêm logging framework bên ngoài nếu chưa có nhu cầu thực tế.
+- Không commit secrets.
 
-Ưu tiên:
-- Open-source.
-- Self-hosted.
-- Local development.
-- Free libraries.
-- Free/open font licenses.
+### TypeScript
+- camelCase cho variables/functions.
+- PascalCase cho React components/types.
+- Ưu tiên type rõ ràng, tránh `any`.
+- Server state dùng TanStack Query.
+- Form dùng React Hook Form + Zod khi phù hợp.
 
-Không tự ý thêm:
-- Paid SaaS.
-- Paid APIs.
-- Paid authentication providers.
-- Paid search services.
-- Paid email services.
-- Paid map APIs.
-- Managed cloud database.
-- AI API có tính phí.
+### General
+- Ưu tiên code đơn giản, dễ đọc.
+- Không thêm dependency nếu chưa cần.
+- Không tạo abstraction chỉ để "phòng tương lai".
+- Không refactor diện rộng nếu task không yêu cầu.
 
-Nếu dependency có license hoặc pricing đáng chú ý, phải ghi rõ trong tài liệu trước khi thêm.
+## 8. MVP không được tự ý thêm
 
-Không tự ý đổi font sang font có license thương mại. Font Stitch hiện tại cần được giữ license/copyright notice phù hợp khi phân phối.
+- Redis
+- Elasticsearch/OpenSearch
+- Kafka
+- Celery
+- Kubernetes
+- Microservices
+- GraphQL
+- Firebase/Supabase thay thế backend/database
+- Paid email service
+- Paid analytics
+- AI API
+- Cloud storage
+- Docker hóa frontend
 
-## 7. UI
+Các công nghệ trên chỉ được thêm khi có quyết định mới.
 
-Google Stitch là nguồn tham chiếu visual design.
+## 9. Testing
 
-Không được suy luận business logic chỉ từ UI mockup.
+Ưu tiên test các logic quan trọng:
+- authentication
+- authorization
+- HR approval
+- job lifecycle
+- job moderation
+- search/filter
+- pagination
+- view counting
+- blocked HR behavior
 
-Ví dụ một nút "Apply" trong prototype không có nghĩa backend được phép tạo application system.
+## 10. Documentation rule
 
-UI prototype có thể chứa mock data; production frontend phải lấy dữ liệu qua API.
+Nếu code làm thay đổi:
+- database schema → cập nhật `DATABASE_SCHEMA.md`
+- API contract → cập nhật `API_SPEC.md`
+- security behavior → cập nhật `SECURITY.md`
+- architecture → cập nhật `ARCHITECTURE.md`
+- project state → cập nhật `PROJECT_STATE.md`
 
-## 8. Coding rules
+Không tạo thêm file documentation chỉ để mô tả lại thông tin đã có nếu không thực sự cần.
 
-- Đọc toàn bộ documentation trước khi sửa code.
-- Không thay đổi architecture chỉ để giải quyết một lỗi nhỏ.
-- Không thêm dependency nếu standard library hoặc dependency hiện có đủ dùng.
-- Không tạo duplicate business logic giữa frontend và backend.
-- Backend là nguồn xác thực cuối cùng cho authorization và validation.
-- Mọi thay đổi schema phải đi qua migration.
-- Không sửa database production bằng thao tác thủ công trong code application.
-- Cập nhật PROJECT_STATE.md và CHANGELOG.md sau các thay đổi có ý nghĩa.
+## 11. Tham chiếu UI từ Stitch
 
-## 9. Không được tự ý làm
+Dự án chứa thư mục `stitch_remote_it_job_board/` với UI output được tạo từ Google Stitch.
 
-- Không thêm job application/CV system.
-- Không thêm account cho job seeker.
-- Không thêm company marketplace.
-- Không thêm salary database riêng.
-- Không thêm chat giữa HR và job seeker.
-- Không thêm payment/subscription.
-- Không thêm AI matching/recommendation.
-- Không thêm external SaaS chỉ vì thuận tiện.
+Sử dụng Stitch output làm nguồn tham chiếu visual cho React frontend:
+- giữ nguyên các requirement và kiến trúc đã được phê duyệt trong tài liệu này;
+- chuyển đổi Stitch UI thành cấu trúc React/TypeScript component của dự án;
+- không coi markup hoặc cấu trúc dự án từ Stitch là nguồn xác thực cho backend, API, authentication, database, hoặc kiến trúc frontend;
+- không tạo ra một kiến trúc frontend riêng chỉ vì nó xuất hiện trong Stitch output.
 
-Các tính năng trên chỉ được thêm khi requirement được cập nhật.

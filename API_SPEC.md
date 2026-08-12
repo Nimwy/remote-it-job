@@ -1,22 +1,29 @@
-# API Specification
+# API Specification — Remote IT Job
 
-## 1. General
+## 1. Quy ước
 
-Base prefix:
+Base path:
 
 ```text
-/api/v1
+/api
 ```
 
-JSON API unless endpoint explicitly uses OAuth redirect.
+Định dạng:
+- REST
+- JSON
+- UTF-8
 
-Authentication should normally use secure session cookies.
+Xác thực:
+- session phía server
+- cookie HTTP-only
+
+Tất cả endpoint được bảo vệ yêu cầu backend authorization.
 
 ## 2. Public jobs
 
-### GET /jobs
+### GET /api/jobs
 
-Search and filter public jobs.
+Tìm kiếm/lọc public jobs.
 
 Query parameters:
 
@@ -25,289 +32,290 @@ q
 category
 tags
 job_type
-location
-timezone
 salary_min
 salary_max
 currency
+location
+timezone
 page
 page_size
 sort
 ```
 
-Only public jobs are returned.
+Mặc định:
+- `page=1`
+- `page_size=20`
+- `sort=latest`
 
-Recommended sort:
-- newest
-- relevant when search query exists
+Chỉ trả về job public/đủ điều kiện.
 
-Response should contain:
-- items
-- pagination metadata
-- total or equivalent metadata if implemented
+Conceptual response:
 
-### GET /jobs/{job_id}
+```json
+{
+  "items": [
+    {
+      "id": 123,
+      "title": "React Developer",
+      "company_name": "ABC",
+      "category": {
+        "id": 1,
+        "name": "Frontend",
+        "slug": "frontend"
+      },
+      "job_type": "fulltime",
+      "location": "Vietnam",
+      "timezone": "UTC+7",
+      "salary_min": 1800,
+      "salary_max": 3000,
+      "currency": "USD",
+      "tags": ["react", "typescript"],
+      "created_at": "2026-08-05T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "page_size": 20,
+    "total": 24,
+    "total_pages": 2
+  }
+}
+```
 
-Return public job detail.
+### GET /api/jobs/{job_id}
 
-Must:
-- Verify job is publicly visible.
-- Increment view counter according to view policy.
-- Return HR/company contact data required by the public page.
+Trả về chi tiết job public và các kênh liên hệ HR.
 
-Do not expose private account fields.
+Không tiết lộ dữ liệu riêng tư của HR ngoài thông tin profile/contact được công khai.
+
+Request chi tiết job public hợp lệ được tính là một lượt xem.
 
 ## 3. Authentication
 
-### POST /auth/register
+### POST /api/auth/register
 
-Create HR account with email/password.
+Tạo tài khoản HR bằng email/password.
 
-Input:
-- name
-- email
-- password
-- company_name
+Trạng thái tài khoản ban đầu:
 
-Result:
-- account created with `pending` status.
+```text
+pending
+```
 
-### POST /auth/login
+Đăng ký chỉ yêu cầu thông tin tối thiểu cần thiết.
 
-Email/password login.
+### POST /api/auth/login
 
-Checks:
-- account exists.
-- password valid.
-- account status allowed.
+Xác thực email/password.
 
-Creates authenticated session.
+Khi thành công:
+- tạo session phía server
+- đặt cookie HTTP-only
 
-### GET /auth/google/start
+HR đang pending có thể xác thực nhưng không thể thực hiện thao tác HR đã được duyệt cho đến khi Admin duyệt.
 
-Start Google OAuth flow.
+### GET /api/auth/google/login
 
-### GET /auth/google/callback
+Bắt đầu Google OAuth flow.
 
-Handle Google OAuth callback.
+### GET /api/auth/google/callback
 
-Must:
-- Validate OAuth response.
-- Identify Google subject.
-- Resolve/link account safely.
-- Create session.
+OAuth callback.
 
-### POST /auth/logout
+HR mới qua Google:
+- tạo tài khoản nếu cần
+- status = pending
+- tạo session sau khi xác thực thành công
 
-Invalidate current session.
+Google không bypass HR approval.
 
-### GET /auth/me
+### POST /api/auth/logout
 
-Return current authenticated user summary.
+Hủy session hiện tại và xóa cookie.
 
-Never return password hash or session token.
+### GET /api/auth/me
+
+Trả về thông tin user đang xác thực.
+
+### POST /api/auth/change-password
+
+Đổi password cho tài khoản có password credential.
+
+Yêu cầu password hiện tại và password mới.
+
+Không cần dịch vụ email reset password trong MVP.
 
 ## 4. HR profile
 
-### GET /hr/profile
+### GET /api/hr/profile
 
-Return current HR profile.
+Trả về profile HR hiện tại.
 
-### PATCH /hr/profile
+### PATCH /api/hr/profile
 
-Update allowed HR profile fields.
+Cập nhật các trường profile như:
+- name
+- company_name
+- avatar
+- contacts
 
-### GET /hr/contacts
-
-Return current HR contacts.
-
-### PUT /hr/contacts/{channel}
-
-Create/update one contact channel.
-
-Allowed channels:
-- zalo
-- telegram
-- linkedin
-- phone
-- email
-
-### DELETE /hr/contacts/{channel}
-
-Remove contact.
+Implementation phải xác thực quyền sở hữu qua session hiện tại.
 
 ## 5. HR jobs
 
-### GET /hr/jobs
+### GET /api/hr/jobs
 
-Return current HR's jobs.
+Danh sách job của HR hiện tại với pagination và filter status tùy chọn.
 
-Filters:
-- status
-- search
-- pagination
+### POST /api/hr/jobs
 
-### POST /hr/jobs
+Tạo draft job.
 
-Create draft job.
+### GET /api/hr/jobs/{job_id}
 
-Requires:
-- authenticated
-- role = hr
-- status = active
+Lấy job thuộc sở hữu của HR hiện tại.
 
-### GET /hr/jobs/{job_id}
+### PATCH /api/hr/jobs/{job_id}
 
-Return own job.
+Cập nhật job thuộc sở hữu.
 
-### PATCH /hr/jobs/{job_id}
+Nếu job đã approved nhận thay đổi substantive, backend đặt status về `pending`.
 
-Update own job if allowed by lifecycle.
+### POST /api/hr/jobs/{job_id}/submit
 
-### DELETE /hr/jobs/{job_id}
+Gửi job draft/rejected để kiểm duyệt.
 
-Controlled removal of own job.
+### POST /api/hr/jobs/{job_id}/close
 
-### POST /hr/jobs/{job_id}/submit
+Đóng job đã approved.
 
-Move draft/rejected job to pending review.
+### DELETE /api/hr/jobs/{job_id}
 
-### POST /hr/jobs/{job_id}/close
+Xóa job khi được phép bởi lifecycle policy. Ưu tiên giữ lại bản ghi phục vụ kiểm duyệt thay vì xóa hủy diệt.
 
-Close own approved job.
+## 6. Admin
 
-## 6. Admin HR
+Tất cả endpoint `/api/admin/*` yêu cầu:
+- session đã xác thực
+- role = admin
+- tài khoản active
 
-### GET /admin/hr
+### GET /api/admin/jobs
 
-List HR accounts.
+Danh sách tất cả job với filter.
 
-Filters:
-- search
-- status
-- pagination
+### GET /api/admin/jobs/pending
 
-### POST /admin/hr/{user_id}/approve
+Danh sách job đang pending.
 
-Set pending HR to active.
+### POST /api/admin/jobs/{job_id}/approve
 
-### POST /admin/hr/{user_id}/block
+Duyệt job đang pending.
 
-Block HR.
+### POST /api/admin/jobs/{job_id}/reject
 
-### POST /admin/hr/{user_id}/unblock
+Từ chối job đang pending.
 
-Unblock HR.
-
-### DELETE /admin/hr/{user_id}
-
-Controlled deletion/deactivation according to data-retention policy.
-
-## 7. Admin jobs
-
-### GET /admin/jobs
-
-List all jobs.
-
-Filters:
-- status
-- search
-- HR
-- category
-- pagination
-
-### POST /admin/jobs/{job_id}/approve
-
-Move pending job to approved.
-
-### POST /admin/jobs/{job_id}/reject
-
-Move pending job to rejected.
-
-### POST /admin/jobs/{job_id}/hide
-
-Hide job.
-
-### POST /admin/jobs/{job_id}/unhide
-
-Unhide according to valid lifecycle rules.
-
-### DELETE /admin/jobs/{job_id}
-
-Remove job according to deletion policy.
-
-## 8. Categories/tags
-
-### GET /categories
-
-Public list of categories.
-
-### GET /tags
-
-Public list of tags.
-
-Admin management endpoints can be added when catalog management is implemented.
-
-## 9. Pagination
-
-Backend owns pagination.
-
-Preferred query:
-
-```text
-?page=1&page_size=20
-```
-
-Constraints:
-- enforce maximum page size.
-- reject or normalize invalid values.
-- do not fetch unlimited rows.
-
-Example response:
+Request:
 
 ```json
 {
-  "items": [],
-  "page": 1,
-  "page_size": 20,
-  "total": 0,
-  "total_pages": 0
+  "reason": "Tin tuyển dụng thiếu thông tin về yêu cầu công việc."
 }
 ```
 
-Exact response shape can be refined during implementation but must remain consistent across endpoints.
+### POST /api/admin/jobs/{job_id}/hide
 
-## 10. Error format
+Ẩn job công khai.
 
-Use consistent JSON error responses.
+### POST /api/admin/jobs/{job_id}/unhide
 
-Example:
+Khôi phục job bị ẩn chỉ khi lifecycle rules cho phép.
+
+### GET /api/admin/users
+
+Danh sách tài khoản HR với pagination/filter.
+
+### POST /api/admin/users/{user_id}/approve
+
+Duyệt HR đang pending.
+
+### POST /api/admin/users/{user_id}/block
+
+Khóa HR.
+
+### POST /api/admin/users/{user_id}/unblock
+
+Mở khóa HR.
+
+### GET /api/admin/categories
+
+Danh sách category.
+
+### POST /api/admin/categories
+
+Tạo category.
+
+### PATCH /api/admin/categories/{id}
+
+Cập nhật category.
+
+### POST /api/admin/categories/{id}/deactivate
+
+Vô hiệu hóa category.
+
+### GET /api/admin/tags
+
+Danh sách tag.
+
+### POST /api/admin/tags
+
+Tạo tag.
+
+### PATCH /api/admin/tags/{id}
+
+Cập nhật tag.
+
+### POST /api/admin/tags/{id}/deactivate
+
+Vô hiệu hóa tag.
+
+## 7. Quy tắc authorization
+
+Backend phải thực thi:
+
+| Hành động | Job seeker | HR | Admin |
+|---|---|---|---|
+| Xem public jobs | Có | Có | Có |
+| Tạo job | Không | Active HR | Có |
+| Sửa job của mình | Không | Có | Có |
+| Sửa job của HR khác | Không | Không | Có |
+| Gửi duyệt job | Không | Active HR | Có |
+| Duyệt job | Không | Không | Có |
+| Từ chối job | Không | Không | Có |
+| Khóa HR | Không | Không | Có |
+| Quản lý catalog | Không | Không | Có |
+
+## 8. Định dạng lỗi
+
+Sử dụng cấu trúc JSON nhất quán, ví dụ:
 
 ```json
 {
-  "detail": "Human-readable message"
+  "error": {
+    "code": "JOB_NOT_FOUND",
+    "message": "Không tìm thấy tin tuyển dụng."
+  }
 }
 ```
 
-Validation errors should follow FastAPI's established validation format unless a project-wide error envelope is deliberately adopted.
+Validation errors sử dụng quy ước FastAPI/Pydantic nhất quán.
 
-## 11. Authorization
+## 9. Quy tắc API
 
-Protected endpoints must derive identity from the authenticated session.
-
-Never accept:
-- `user_id`
-- `hr_id`
-- `role`
-- `is_admin`
-
-from the client as authority.
-
-## 12. API design rules
-
-- Keep routes thin.
-- Put business rules in services.
-- Use schemas for validation and serialization.
-- Use transactions for multi-step mutations.
-- Avoid returning database models directly when it leaks fields.
-- Do not expose internal exception details in production.
+- Không tin `user_id` do client gửi để xác định quyền sở hữu.
+- Lấy thông tin user hiện tại từ session phía server.
+- Validate tất cả input ở backend.
+- Không tiết lộ password hash, session token hoặc dữ liệu bảo mật nội bộ.
+- Giữ API naming nhất quán.
+- Mọi thay đổi API breaking yêu cầu cập nhật file này.

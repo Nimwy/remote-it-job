@@ -1,167 +1,224 @@
-# Security Policy
+# Security — Remote IT Job
 
-## 1. Mục tiêu
+## 1. Nguyên tắc bảo mật
 
-Bảo vệ:
-- Account HR/Admin.
-- Email và identity data.
-- Password.
-- OAuth credentials.
-- Session.
-- Contact information.
-- Job management actions.
-
-Project không lưu CV/application của job seeker ở MVP.
+- Backend là nguồn xác thực cuối cùng cho authentication và authorization.
+- Không tin frontend checks.
+- Không lưu plaintext password.
+- Không tiết lộ session secrets.
+- Giảm thiểu dữ liệu cá nhân được lưu trữ.
+- Không log password, OAuth token hoặc session token.
 
 ## 2. Password
 
-- Không bao giờ lưu plaintext password.
-- Dùng password hashing hiện đại, ưu tiên Argon2id.
-- Không log password.
-- Không trả password hash về frontend.
-- Login error không tiết lộ account nào tồn tại nếu không cần.
+Sử dụng Argon2id để hash password.
 
-## 3. Google OAuth
+Không:
+- lưu plaintext password
+- log password
+- trả password hash qua API
+- so sánh password thủ công bằng custom hashing không an toàn
 
-- Dùng OAuth/OpenID Connect flow chuẩn.
-- Validate state để chống CSRF.
-- Validate issuer, audience, signature/claims theo flow sử dụng.
-- Không tin email từ client.
-- Dùng Google `sub` làm identity identifier.
-- Không tự tạo account thứ hai nếu Google email đã liên kết với account hiện có mà việc liên kết có thể được xác thực an toàn.
-- Không lưu Google access token nếu application không cần gọi Google API sau authentication.
+Yêu cầu password phải hợp lý và được ghi nhận trong validation schemas.
 
-## 4. Sessions
+## 3. Session
 
-Ưu tiên cookie-based server-side session:
-- Cookie `HttpOnly`.
-- `Secure` trong production.
-- `SameSite` phù hợp.
-- Session expiration.
-- Session rotation sau authentication.
-- Logout phải invalidate session.
-- Không lưu session secret/token nhạy cảm trong localStorage.
+Sử dụng server-side session lưu trong PostgreSQL.
 
-CSRF protection phải được thiết kế phù hợp nếu dùng cookie authentication cho state-changing requests.
+Cookie phải:
+- HttpOnly
+- Secure trong production
+- SameSite được cấu hình phù hợp
+- giới hạn trong domain/path ứng dụng
 
-## 5. Authorization
+Khi logout:
+- hủy session phía server
+- xóa cookie trình duyệt
 
-Backend phải kiểm tra:
-- identity
-- role
-- status
-- ownership
+Session phải có thời hạn.
+
+## 4. Authorization
+
+Backend kiểm tra:
+1. authentication
+2. trạng thái tài khoản
+3. role
+4. quyền sở hữu tài nguyên
 
 Ví dụ:
-`PUT /jobs/123` không được chỉ dựa vào frontend gửi `hr_id`.
+- pending HR không được đăng/submit job.
+- blocked HR không được sử dụng chức năng HR.
+- HR không được sửa job của HR khác.
+- chỉ Admin được duyệt/từ chối job.
+- chỉ Admin được khóa/mở khóa HR.
 
-Backend phải xác định owner từ authenticated session.
+## 5. Google OAuth
 
-## 6. HR approval
+Sử dụng OAuth authorization code flow qua backend implementation tin cậy.
 
-Google/email authentication chỉ chứng minh identity.
+Validate:
+- OAuth state
+- callback
+- dữ liệu issuer/provider
+- intended client/application
+- thông tin Google identity
 
-Không đồng nghĩa account được phép đăng job.
+Không chấp nhận Google email do browser gửi trực tiếp làm bằng chứng danh tính.
 
-```text
-authenticated + pending
-=> login có thể thành công
-=> HR management actions bị từ chối
-```
+Google authentication không bypass HR approval.
 
-## 7. Admin security
+## 6. CSRF
 
-- Không có public admin registration.
-- Admin account phải được tạo bằng controlled process.
-- Admin endpoints phải kiểm tra role server-side.
-- Không để frontend tự xác định user là admin.
+Vì authentication sử dụng cookie, các request thay đổi trạng thái cần CSRF protection phù hợp với kiến trúc đã chọn.
+
+Tối thiểu:
+- sử dụng SameSite policy phù hợp
+- triển khai CSRF token protection cho unsafe cross-site requests khi cần
+- xác minh Origin/Referer khi thích hợp trong production
+
+Không coi CORS là CSRF protection.
+
+## 7. CORS
+
+Development có thể cho phép origin local frontend đã cấu hình.
+
+Production phải dùng allowlist tường minh các origin frontend đáng tin cậy.
+
+Không dùng wildcard origin cùng với credentialed cookies.
 
 ## 8. Input validation
 
-Validate ở backend:
-- Email.
-- URL/contact fields.
-- Salary.
-- Job type.
-- Category/tag IDs.
-- Text length.
-- Expiration.
-- Status transitions.
+Validate tất cả input với Pydantic/backend rules.
 
-Không trust:
-- hidden form fields.
-- client-side validation.
-- query parameters.
-- JSON fields từ frontend.
+Validate:
+- độ dài
+- enum values
+- phạm vi số
+- quan hệ salary
+- định dạng URL/contact khi áp dụng
+- IDs và quyền sở hữu
+
+Không xây SQL query bằng string concatenation.
+
+Phải dùng SQLAlchemy parameterization.
 
 ## 9. XSS
 
-Job description và requirements là dữ liệu do HR nhập.
+Job description và requirements là nội dung do người dùng tạo.
 
-Nếu hỗ trợ rich text/HTML:
-- sanitize HTML ở backend.
-- whitelist tags/attributes.
+Nếu sau này hỗ trợ rich HTML, phải sanitize bằng sanitizer đã được đánh giá.
 
-Nếu MVP dùng plain text/Markdown giới hạn:
-- ưu tiên render an toàn.
-- Không dùng `dangerouslySetInnerHTML` nếu không cần.
+Trong MVP, ưu tiên plain text hoặc markdown giới hạn có chủ đích.
 
-## 10. SQL Injection
+Không render trực tiếp HTML tùy ý của người dùng.
 
-Không xây SQL bằng string concatenation từ input.
+## 10. Security headers
 
-Dùng SQLAlchemy parameterized queries.
+Production nên cấu hình các header phù hợp, bao gồm:
+- Strict-Transport-Security (HSTS)
+- Content-Security-Policy
+- X-Content-Type-Options
+- Referrer-Policy
+- frame protection qua CSP `frame-ancestors` và/hoặc cơ chế tương đương
+
+Không sao chép mù quáng CSP mà không kiểm tra frontend assets thực tế.
 
 ## 11. Rate limiting
 
-Có thể áp dụng cho:
-- Login.
-- OAuth initiation/callback.
-- Password reset nếu có.
-- Public endpoints dễ bị abuse.
+MVP nên bảo vệ các endpoint nhạy cảm khỏi abuse, đặc biệt:
+- login
+- registration
+- Google OAuth initiation/callback
+- password changes
+- admin authentication
+- public job detail/view counting
 
-Không cần triển khai hệ thống rate-limit phức tạp trước khi có nhu cầu, nhưng kiến trúc phải cho phép bổ sung.
+Một chiến lược đơn giản ở application/proxy level là đủ ban đầu.
 
-## 12. Personal data
+Không thêm Redis chỉ để rate limiting trừ khi quy mô yêu cầu.
 
-Dữ liệu nhạy cảm ở phạm vi project:
-- Email.
-- Phone.
-- Zalo.
-- Telegram.
-- LinkedIn.
-- Google identity.
+## 12. Dữ liệu cá nhân
 
-Chỉ hiển thị contact của HR trên public job detail theo đúng business requirement.
+Thông tin có thể là dữ liệu cá nhân:
+- tên HR
+- email
+- phone
+- Zalo
+- Telegram
+- LinkedIn
+- avatar
 
-Không log contact/password/token vào application logs.
+Chỉ tiết lộ thông tin liên hệ được HR cố ý công khai.
 
-## 13. Dependencies
+Không tiết lộ các trường nội bộ như:
+- password_hash
+- google_id khi không cần thiết
+- session data
+- admin/security metadata
 
-Mọi dependency mới phải:
-- Có license rõ ràng.
-- Không có điều khoản buộc trả phí cho use case hiện tại.
-- Không gửi dữ liệu người dùng đến third party nếu không cần.
+## 13. Khóa HR
+
+Khóa HR không phải là hard delete.
+
+Khi HR bị khóa:
+- từ chối thao tác HR
+- ngăn job của họ xuất hiện công khai
+- giữ lại bản ghi cần thiết phục vụ kiểm duyệt
 
 ## 14. Secrets
 
 Không commit:
-- Google OAuth client secret.
-- Session secret.
-- Database password.
-- API keys.
-- Production credentials.
+- Google OAuth client secret
+- database password
+- application secret key
+- session secrets
+- production credentials
 
-Dùng environment variables/secrets management.
+Sử dụng environment variables/secrets management.
 
-`.env` phải nằm trong `.gitignore`.
+Cung cấp `.env.example` không có credentials thật.
 
-## 15. Cost/license
+## 15. Logging
 
-Không sử dụng font, package, API hoặc SaaS có license thương mại/usage fee nếu chưa được phê duyệt.
+Log các sự kiện vận hành hữu ích nhưng không chứa secrets.
 
-Font hiện tại của Stitch:
-- Geist
-- Inter
+Không log:
+- password
+- raw session token
+- OAuth authorization code
+- dữ liệu cá nhân nhạy cảm không cần thiết
 
-Phải giữ license/copyright notice phù hợp nếu bundle font vào project.
+Sử dụng Python standard library `logging` cho application logging. Có thể dùng structured log formatting khi hữu ích, nhưng không thêm external logging framework chỉ vì phức tạp hóa.
+
+## 16. Database
+
+Sử dụng database credentials với quyền tối thiểu khi khả thi.
+
+Sử dụng migrations cho thay đổi schema.
+
+Sử dụng transactions cho các thao tác thay đổi trạng thái cần tính nguyên tử.
+
+## 17. Dependency security
+
+Giữ dependencies được cập nhật hợp lý.
+
+Không thêm package không có lý do.
+
+Trước khi thêm package, kiểm tra:
+- license compatibility
+- trạng thái bảo trì
+- liệu standard library/dependency hiện có đã giải quyết được vấn đề chưa
+
+## 18. Ràng buộc free/open-source
+
+MVP nên tránh third-party services có phí.
+
+Điều này không có nghĩa sao chép font/assets tùy tiện.
+
+Sử dụng:
+- system fonts
+- font/assets có license tương thích rõ ràng
+- assets thuộc sở hữu dự án
+- open-source dependencies có license tương thích
+
+Không tải asset chỉ vì nó có sẵn miễn phí trực tuyến; xác minh license khi phân phối lại là vấn đề quan trọng.

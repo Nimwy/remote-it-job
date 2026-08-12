@@ -1,83 +1,59 @@
-# Remote IT Job Board
+# Remote IT Job
 
-Website tuyển dụng việc làm remote, tập trung vào thị trường người dùng Việt Nam.
+Website tuyển dụng việc làm remote dành cho thị trường Việt Nam.
 
 ## Mục tiêu
 
-- Job seeker có thể tìm kiếm và xem việc làm remote mà không cần tạo tài khoản.
-- HR có thể đăng và quản lý tin tuyển dụng.
-- Admin kiểm duyệt HR và tin tuyển dụng trước khi công khai.
-- Job seeker liên hệ trực tiếp với HR qua các kênh được HR cung cấp.
-- Không có chức năng nộp CV/application trong hệ thống ở phiên bản hiện tại.
+- Job seeker không cần đăng nhập để tìm kiếm và xem việc làm.
+- HR có thể đăng ký/đăng nhập bằng email + password hoặc Google OAuth.
+- Tài khoản HR mới phải được Admin duyệt trước khi sử dụng chức năng đăng tin.
+- Job phải được Admin duyệt trước khi hiển thị công khai.
+- Job seeker tự liên hệ HR qua các kênh được HR công khai; hệ thống không nhận CV.
 
-## Công nghệ
+## Tech Stack
 
-- Frontend: React + TypeScript
-- Backend: FastAPI + Python
-- Database: PostgreSQL
-- ORM: SQLAlchemy
-- Migration: Alembic
-- Authentication:
-  - Email + password
-  - Google OAuth / OpenID Connect
-- UI: triển khai dựa trên thiết kế được tạo bằng Google Stitch.
+### Frontend
+- React
+- TypeScript
+- Vite
+- React Router
+- TanStack Query
+- React Hook Form
+- Zod
+- Chạy trực tiếp bằng Node.js/npm, không Docker hóa trong MVP.
 
-## Phạm vi người dùng
+### Backend
+- Python
+- FastAPI
+- Pydantic
+- SQLAlchemy 2.x
+- Alembic
+- pytest + httpx
+- Ruff
+- Chạy bằng Docker.
 
-### Job seeker
+### Database
+- PostgreSQL
+- Chạy bằng Docker Compose.
 
-Không cần đăng nhập.
+### Authentication
+- Email/password
+- Google OAuth
+- Server-side session
+- HTTP-only cookie
+- Session lưu trong PostgreSQL
+- Password hash bằng Argon2id
 
-Có thể:
-- Tìm kiếm job.
-- Lọc theo category, tag, mức lương, loại công việc, location, timezone.
-- Xem danh sách job.
-- Xem chi tiết job.
-- Xem thông tin liên hệ của HR.
-- Tự liên hệ HR.
+## Documentation
 
-### HR
+- `AI_CONTEXT.md` — quy tắc và context cho AI coding agent.
+- `ARCHITECTURE.md` — kiến trúc hệ thống.
+- `DATABASE_SCHEMA.md` — database schema và constraints.
+- `API_SPEC.md` — REST API contract.
+- `SECURITY.md` — yêu cầu bảo mật.
+- `PROJECT_MAP.md` — cấu trúc source code.
+- `PROJECT_STATE.md` — trạng thái triển khai hiện tại.
 
-Có thể đăng nhập bằng:
-- Email + password.
-- Google.
+## MVP Non-goals
 
-Một tài khoản có thể liên kết cả hai phương thức.
-
-HR mới đăng ký phải được admin duyệt trước khi đăng tin.
-
-Có thể:
-- Tạo draft job.
-- Gửi job để duyệt.
-- Sửa job thuộc quyền sở hữu.
-- Đóng job.
-- Xóa job theo business rules.
-- Quản lý thông tin công ty.
-- Quản lý các kênh liên hệ.
-
-### Admin
-
-Có thể:
-- Duyệt / từ chối HR.
-- Khóa / mở khóa HR.
-- Xem và quản lý toàn bộ job.
-- Duyệt / từ chối job.
-- Ẩn / xóa job vi phạm.
-- Xem thống kê cơ bản.
-
-## Nguyên tắc quan trọng
-
-1. Không thêm hệ thống application/CV nếu chưa có yêu cầu mới.
-2. Job seeker không cần account.
-3. Contact là dữ liệu của HR, không phải dữ liệu riêng của từng job.
-4. Category và tag do hệ thống quản lý; HR chỉ chọn từ danh sách có sẵn.
-5. Authentication thành công không đồng nghĩa HR đã được admin duyệt.
-6. Không tự ý thêm dịch vụ trả phí.
-7. UI không được tự quyết định business logic.
-8. Không tự ý thay đổi database schema hoặc trạng thái nghiệp vụ mà không cập nhật tài liệu.
-
-## Deployment
-
-Domain, hosting và production infrastructure nằm ngoài phạm vi phát triển hiện tại và sẽ được xử lý riêng.
-
-Ứng dụng nên giữ portable, không phụ thuộc không cần thiết vào một nhà cung cấp hosting cụ thể.
+Không tự ý thêm Redis, Elasticsearch, Kafka, Celery, microservices, Kubernetes, paid API/service, cloud storage hoặc AI API nếu chưa có quyết định mới.

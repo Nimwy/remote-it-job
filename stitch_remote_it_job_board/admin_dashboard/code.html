@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Remote IT - Admin Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary": "#00685f",
+                      "on-secondary-fixed-variant": "#3f465c",
+                      "on-tertiary-fixed": "#001e2c",
+                      "tertiary-fixed": "#c4e7ff",
+                      "on-surface": "#191c1e",
+                      "secondary-container": "#dae2fd",
+                      "surface-tint": "#006a61",
+                      "on-tertiary-container": "#fcfcff",
+                      "surface-container": "#eceef0",
+                      "secondary-fixed": "#dae2fd",
+                      "on-primary": "#ffffff",
+                      "surface-dim": "#d8dadc",
+                      "tertiary-fixed-dim": "#7bd0ff",
+                      "on-secondary-fixed": "#131b2e",
+                      "primary-fixed-dim": "#6bd8cb",
+                      "secondary": "#565e74",
+                      "outline": "#6d7a77",
+                      "on-primary-fixed": "#00201d",
+                      "primary-container": "#008378",
+                      "inverse-surface": "#2d3133",
+                      "inverse-primary": "#6bd8cb",
+                      "inverse-on-surface": "#eff1f3",
+                      "surface": "#f7f9fb",
+                      "secondary-fixed-dim": "#bec6e0",
+                      "outline-variant": "#bcc9c6",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#005049",
+                      "on-tertiary-fixed-variant": "#004c69",
+                      "error": "#ba1a1a",
+                      "on-primary-container": "#f4fffc",
+                      "error-container": "#ffdad6",
+                      "tertiary-container": "#007da9",
+                      "surface-bright": "#f7f9fb",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#5c647a",
+                      "background": "#f7f9fb",
+                      "surface-variant": "#e0e3e5",
+                      "surface-container-lowest": "#ffffff",
+                      "on-background": "#191c1e",
+                      "surface-container-highest": "#e0e3e5",
+                      "tertiary": "#006387",
+                      "on-error": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f2f4f6",
+                      "surface-container-high": "#e6e8ea",
+                      "on-surface-variant": "#3d4947",
+                      "primary-fixed": "#89f5e7"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "base": "4px",
+                      "xs": "4px",
+                      "container-max": "1280px",
+                      "lg": "24px",
+                      "xl": "32px",
+                      "gutter": "24px",
+                      "md": "16px",
+                      "sm": "8px"
+              },
+              "fontFamily": {
+                      "body-sm": ["Inter"],
+                      "label-sm": ["Geist"],
+                      "headline-lg": ["Geist"],
+                      "body-md": ["Inter"],
+                      "headline-md": ["Geist"],
+                      "headline-sm": ["Geist"],
+                      "display": ["Geist"],
+                      "label-md": ["Geist"],
+                      "headline-lg-mobile": ["Geist"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background flex min-h-screen font-body-md text-body-md overflow-x-hidden">
+<!-- SideNavBar (Generated from JSON) -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 p-md z-40 bg-surface-container shadow-sm w-64 border-r border-outline-variant">
+<!-- Header -->
+<div class="flex items-center gap-md mb-xl px-sm">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-variant flex-shrink-0">
+<img alt="Admin Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of an IT manager in a modern office setting. The lighting is bright and even, highlighting a confident expression. Corporate modern aesthetic, high quality, sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzruY3oRPb4s0rS20KM1sEQ0HuFIQ1801zxJ-UYnfcI8rK8jsNrku5T1U2LDAiiXaIzq5c_FiiBuQlYt69dMlqQ4km7dsShp4XbF1BXfKhK5sNPIfM3MFi0bMydyC2fauqNOUZXzTdfvMwc94mbHSjYRrCwR_WOmTJnDPzZDKZELxdS8qrb7YQKaPOrYAtCObgldFtj0XrTMPeReAEHo7erzNwG6IfWFIF4jcWFY42hOIAWw8OZXR5"/>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary m-0 p-0 leading-tight">Admin Portal</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant m-0 p-0">Manage Listings</p>
+</div>
+</div>
+<!-- Main Navigation -->
+<nav class="flex-1 flex flex-col gap-sm">
+<!-- Active Tab: Dashboard -->
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md font-bold cursor-pointer active:scale-98 transition-all" href="#">
+<span class="material-symbols-outlined fill">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant font-label-md text-label-md cursor-pointer active:scale-98 transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">pending_actions</span>
+<span class="flex-1">Pending Jobs</span>
+<span class="bg-error text-on-error font-label-sm text-label-sm rounded-full px-2 py-0.5">5</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant font-label-md text-label-md cursor-pointer active:scale-98 transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">work_history</span>
+<span>Manage Jobs</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant font-label-md text-label-md cursor-pointer active:scale-98 transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">group</span>
+<span>Manage HR</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-variant font-label-md text-label-md cursor-pointer active:scale-98 transition-all group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<!-- CTA & Footer Nav -->
+<div class="mt-auto flex flex-col gap-md">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm">
+                Post New Job
+            </button>
+<div class="h-px bg-outline-variant w-full my-sm"></div>
+<a class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant font-label-md text-label-md cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined text-sm">help</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant font-label-md text-label-md cursor-pointer transition-all" href="#">
+<span class="material-symbols-outlined text-sm">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 p-xl max-w-container-max mx-auto w-full">
+<header class="mb-xl flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Tổng Quan Quản Trị</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Theo dõi hiệu suất và quản lý nền tảng Remote IT.</p>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+                Hôm nay, 24 Thg 10
+            </div>
+</header>
+<!-- Stats Grid (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-md mb-xl">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 right-0 p-md opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-display">group</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-sm">Tổng HR</h3>
+<div class="flex items-end gap-sm">
+<span class="font-display text-display text-primary leading-none">20</span>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-2 py-1 rounded">+2 tháng này</span>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 right-0 p-md opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-display">work</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-sm">Tổng tin tuyển dụng</h3>
+<div class="flex items-end gap-sm">
+<span class="font-display text-display text-primary leading-none">50</span>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-2 py-1 rounded">+12 tuần này</span>
+</div>
+</div>
+<!-- Stat Card 3 (Highlight) -->
+<div class="bg-tertiary-container border border-tertiary rounded-xl p-md shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-md opacity-20">
+<span class="material-symbols-outlined text-display text-on-tertiary-container">pending_actions</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-tertiary-container mb-sm">Tin chờ duyệt</h3>
+<div class="flex items-end gap-sm">
+<span class="font-display text-display text-on-tertiary-container leading-none">5</span>
+<span class="font-label-sm text-label-sm text-on-tertiary-container bg-tertiary px-2 py-1 rounded bg-opacity-30">Cần xử lý</span>
+</div>
+</div>
+</section>
+<!-- Quick Management Actions -->
+<section class="mb-xl">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-md">Thao Tác Nhanh</h2>
+<div class="flex flex-wrap gap-md">
+<button class="flex items-center gap-sm bg-primary text-on-primary font-label-md text-label-md px-lg py-sm rounded-lg hover:bg-primary-container hover:text-on-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm">fact_check</span>
+                    Duyệt Tin Mới
+                </button>
+<button class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-on-surface font-label-md text-label-md px-lg py-sm rounded-lg hover:bg-surface-variant transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm">manage_accounts</span>
+                    Quản Lý HR
+                </button>
+<button class="flex items-center gap-sm bg-surface-container-lowest border border-outline-variant text-on-surface font-label-md text-label-md px-lg py-sm rounded-lg hover:bg-surface-variant transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm">edit_document</span>
+                    Quản Lý Tin
+                </button>
+</div>
+</section>
+<!-- Recent Activity Log (Bento Grid layout for content) -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Main Activity Table -->
+<div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-md border-b border-outline-variant bg-surface flex justify-between items-center">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Hoạt Động Gần Đây</h2>
+<button class="font-label-sm text-label-sm text-primary hover:underline">Xem tất cả</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant text-on-surface-variant font-label-sm text-label-sm bg-surface-container-low">
+<th class="p-md font-medium">Hành động</th>
+<th class="p-md font-medium">Người thực hiện</th>
+<th class="p-md font-medium">Thời gian</th>
+<th class="p-md font-medium">Trạng thái</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface">
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-tertiary">add_circle</span>
+                                    Tạo tin tuyển dụng mới "Senior React Dev"
+                                </td>
+<td class="p-md">TechCorp HR</td>
+<td class="p-md text-on-surface-variant">10 phút trước</td>
+<td class="p-md"><span class="bg-surface-container text-on-surface-variant px-2 py-1 rounded-full font-label-sm text-label-sm border border-outline-variant">Chờ duyệt</span></td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">check_circle</span>
+                                    Duyệt tài khoản HR
+                                </td>
+<td class="p-md">Admin (Bạn)</td>
+<td class="p-md text-on-surface-variant">1 giờ trước</td>
+<td class="p-md"><span class="bg-primary-container text-on-primary-container px-2 py-1 rounded-full font-label-sm text-label-sm">Thành công</span></td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+<td class="p-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-error">cancel</span>
+                                    Từ chối tin "Data Entry"
+                                </td>
+<td class="p-md">Admin (Bạn)</td>
+<td class="p-md text-on-surface-variant">3 giờ trước</td>
+<td class="p-md"><span class="bg-error-container text-on-error-container px-2 py-1 rounded-full font-label-sm text-label-sm">Đã hủy</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">edit</span>
+                                    Cập nhật thông tin công ty
+                                </td>
+<td class="p-md">VNG Corp HR</td>
+<td class="p-md text-on-surface-variant">Hôm qua</td>
+<td class="p-md"><span class="bg-primary-container text-on-primary-container px-2 py-1 rounded-full font-label-sm text-label-sm">Thành công</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- System Status Chart Widget -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-md flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-md">Phân Bổ Kỹ Năng</h2>
+<div class="flex-1 flex flex-col justify-center gap-md">
+<!-- Faux Bar Chart -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-xs">
+<span>Frontend (React/Vue)</span>
+<span>45%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-xs">
+<span>Backend (Node/Java)</span>
+<span>30%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-tertiary h-2 rounded-full" style="width: 30%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-xs">
+<span>DevOps &amp; Cloud</span>
+<span>15%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-secondary h-2 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-xs">
+<span>Khác</span>
+<span>10%</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2">
+<div class="bg-outline-variant h-2 rounded-full" style="width: 10%"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

@@ -1,115 +1,129 @@
-# Project State
+# Project State — Remote IT Job
 
-## Current status
+## Giai đoạn hiện tại
 
-**Phase: Architecture and documentation**
+**Tài liệu / tiền triển khai**
 
-Chưa bắt đầu production implementation.
+Yêu cầu dự án và kiến trúc cốt lõi đã được quyết định. Chưa bắt đầu triển khai code.
 
-## Completed
+## Quyết định đã chốt
 
-- [x] Xác định mục tiêu sản phẩm.
-- [x] Xác định 3 loại context: Job seeker, HR, Admin.
-- [x] Quyết định Job seeker không cần login.
-- [x] Quyết định không có CV/application system.
-- [x] Chốt React + TypeScript.
-- [x] Chốt FastAPI + Python.
-- [x] Chốt PostgreSQL.
-- [x] Chốt Email/Password authentication.
-- [x] Chốt Google OAuth.
-- [x] Chốt HR approval.
-- [x] Chốt category/tag controlled by system.
-- [x] Chốt contact thuộc HR.
-- [x] Có thiết kế UI từ Google Stitch.
-- [x] Chốt nguyên tắc không tự ý thêm chi phí.
+### Sản phẩm
+- Website đăng tin tuyển dụng IT remote.
+- Đối tượng chính: người dùng Việt Nam.
+- Ngôn ngữ UI: tiếng Việt.
+- Nội dung job có thể là tiếng Việt hoặc tiếng Anh.
+- Job seeker không cần tài khoản.
+- Không nộp/upload CV qua nền tảng.
 
-## Documentation status
+### Vai trò
+- Job seeker: truy cập công khai.
+- HR: quản lý job của mình.
+- Admin: kiểm duyệt và quản lý catalog.
 
-- [x] README
-- [x] AI_CONTEXT
-- [x] ARCHITECTURE
-- [x] DATABASE_SCHEMA
-- [x] SECURITY
-- [x] PROJECT_MAP
-- [x] PROJECT_STATE
-- [x] CHANGELOG
-- [x] API_SPEC
+### Xác thực
+- Đăng ký/đăng nhập bằng email/password.
+- Đăng nhập Google OAuth.
+- Tài khoản HR mới cần Admin duyệt.
+- Session phía server.
+- Session lưu trong PostgreSQL.
+- Cookie HTTP-only.
+- Hash password bằng Argon2id.
+- Tài khoản Admin được tạo bằng seed/CLI.
+- Google OAuth không dùng cho Admin trong MVP.
 
-## Current decisions
+### Database
+- PostgreSQL.
+- SQLAlchemy 2.x.
+- Alembic.
 
-### Authentication
+### Triển khai / runtime
+- Backend chạy trong Docker.
+- PostgreSQL chạy qua Docker Compose.
+- Frontend chạy trực tiếp bằng Node.js/npm trong WSL2.
+- Domain/hosting được xử lý riêng và nằm ngoài phạm vi triển khai hiện tại.
 
-Methods:
-- Email/password.
-- Google OAuth.
-
-One user account may have both methods linked.
-
-### User approval
-
-```text
-new HR
-  -> pending
-  -> admin approval
-  -> active
-```
-
-Blocked HR remains in database.
-
-### Job
-
+### Vòng đời job
 ```text
 draft
- -> pending
- -> approved
- -> closed / expired / hidden
+  ↓
+pending
+  ├── approved
+  └── rejected
+         ↓
+       pending
+
+approved
+  ├── closed
+  ├── hidden
+  └── expired
 ```
 
-Rejected jobs can be edited and resubmitted.
+Sửa substantive content trên job đã approved yêu cầu re-approval.
 
-### Contact
+### Vòng đời HR
+```text
+pending → active → blocked
+```
 
-Stored in `user_contacts`.
+HR bị blocked không bị hard-delete và job của họ không hiển thị công khai.
 
-### Search
+### Tìm kiếm
+- Search/filter dựa trên PostgreSQL.
+- Từ khóa.
+- Category.
+- Tags.
+- Loại job.
+- Lương.
+- Currency.
+- Địa điểm.
+- Múi giờ.
+- Offset pagination.
+- Mặc định 20 items/page.
 
-PostgreSQL-based MVP search with backend pagination.
+### Category và tag
+- Được quản lý bởi hệ thống/Admin.
+- HR chọn từ category/tag có sẵn.
+- Không cho phép HR tự do tạo tag trong MVP.
 
-### Views
+### Lượt xem
+- Một server-side session chỉ được tính view cho cùng một job tối đa một lần trong 24 giờ.
+- Backend kiểm soát việc đếm, không phải frontend.
 
-Simple integer counter in `jobs.views`.
+## Chưa triển khai
 
-### UI
+- Frontend source code.
+- Backend source code.
+- Database migrations.
+- Authentication implementation.
+- Google OAuth configuration.
+- API implementation.
+- Admin UI.
+- HR UI.
+- Public job UI.
+- Automated tests.
 
-Google Stitch design is the visual reference.
+## Bước tiếp theo
 
-The Stitch prototype is not the source of truth for business logic.
+1. Kiểm tra tính nhất quán của bộ tài liệu.
+2. Tạo cấu trúc source code.
+3. Thiết lập môi trường backend Docker.
+4. Thiết lập PostgreSQL.
+5. Thiết lập React/Vite frontend.
+6. Triển khai database models và Alembic migrations.
+7. Triển khai authentication/session.
+8. Triển khai public jobs.
+9. Triển khai tính năng HR.
+10. Triển khai Admin moderation.
+11. Thêm tests.
+12. Tích hợp UI từ Stitch.
 
-### Deployment
+## Ràng buộc quan trọng
 
-Domain and hosting are handled separately and are outside the current development scope.
+Không coi file này là changelog.
 
-## Next phase
+Chỉ cập nhật khi trạng thái triển khai hiện tại hoặc quyết định kiến trúc đã chốt thay đổi đáng kể.
 
-1. Review Stitch output and map pages/components.
-2. Finalize API specification.
-3. Initialize frontend/backend projects.
-4. Create database models.
-5. Create Alembic migrations.
-6. Implement authentication.
-7. Implement HR approval.
-8. Implement job CRUD and moderation.
-9. Implement public search/filter/pagination.
-10. Connect React to API.
-11. Add tests.
-12. Security review.
+## Thời điểm triển khai Stitch UI
 
-## Known future decisions
-
-These are intentionally not locked yet:
-- Exact frontend state management library.
-- Exact session library/implementation package.
-- Rich text editor vs plain text.
-- Exact search ranking.
-- Production deployment configuration.
-- Email verification/password reset implementation details.
+Output `stitch_remote_it_job_board/` là tham chiếu UI dùng trong quá trình triển khai frontend. Đây không phải là giai đoạn cuối riêng biệt phải chờ đến cuối cùng; các React page/component nên chuyển đổi thiết kế Stitch ngay khi triển khai các tính năng frontend tương ứng.

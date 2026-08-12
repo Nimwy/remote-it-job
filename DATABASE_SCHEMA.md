@@ -1,135 +1,157 @@
-# Database Schema
+# Database Schema — Remote IT Job
 
-## 1. ER Diagram
+## 1. Database
+
+Database chính thức: PostgreSQL.
+
+ORM: SQLAlchemy 2.x.
+Migration: Alembic.
+
+## 2. ER Diagram
 
 ```mermaid
 erDiagram
+    USERS ||--o{ SESSIONS : has
     USERS ||--o{ JOBS : posts
     USERS ||--o{ USER_CONTACTS : owns
-    CATEGORIES ||--o{ JOBS : categorizes
+    CATEGORIES ||--o{ JOBS : classifies
     JOBS ||--o{ JOB_TAGS : has
-    TAGS ||--o{ JOB_TAGS : assigned
+    TAGS ||--o{ JOB_TAGS : used_by
 
     USERS {
         bigint id PK
-        enum role
-        varchar name
-        varchar email UK
-        varchar password_hash
-        varchar google_subject UK
-        varchar company_name
-        varchar avatar
-        enum status
-        timestamp created_at
-        timestamp updated_at
+        string role
+        string name
+        string email UK
+        string password_hash
+        string google_id UK
+        string company_name
+        string avatar
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    SESSIONS {
+        bigint id PK
+        bigint user_id FK
+        string token_hash UK
+        datetime created_at
+        datetime expires_at
     }
 
     USER_CONTACTS {
         bigint id PK
         bigint user_id FK
-        enum channel
-        varchar value
-        timestamp created_at
+        string channel
+        string value
+        datetime created_at
+        datetime updated_at
     }
 
     CATEGORIES {
         bigint id PK
-        varchar name
-        varchar slug UK
+        string name
+        string slug UK
         int sort_order
+        boolean is_active
     }
 
     TAGS {
         bigint id PK
-        varchar name
-        varchar slug UK
+        string name
+        string slug UK
+        boolean is_active
     }
 
     JOBS {
         bigint id PK
         bigint hr_id FK
         bigint category_id FK
-        varchar title
-        enum job_type
-        varchar location
-        varchar timezone
+        string title
+        string job_type
+        string location
+        string timezone
         decimal salary_min
         decimal salary_max
-        varchar currency
+        string currency
         text description
         text requirements
-        enum status
+        string status
+        text rejection_reason
         int views
-        timestamp expires_at
-        timestamp created_at
-        timestamp updated_at
+        datetime expires_at
+        datetime created_at
+        datetime updated_at
     }
 
     JOB_TAGS {
         bigint job_id FK
         bigint tag_id FK
     }
-
-    SESSIONS {
-        bigint id PK
-        bigint user_id FK
-        varchar token_hash UK
-        timestamp expires_at
-        timestamp created_at
-    }
 ```
 
-## 2. users
+## 3. users
 
-| Column | Type | Constraints |
+| Column | Type | Constraint |
 |---|---|---|
 | id | BIGINT | PK |
-| role | ENUM | `hr`, `admin` |
+| role | VARCHAR/enum | NOT NULL, `hr/admin` |
 | name | VARCHAR(100) | NOT NULL |
 | email | VARCHAR(255) | UNIQUE, NOT NULL |
 | password_hash | VARCHAR(255) | NULL |
-| google_subject | VARCHAR(255) | UNIQUE, NULL |
+| google_id | VARCHAR(255) | UNIQUE, NULL |
 | company_name | VARCHAR(150) | NULL |
 | avatar | VARCHAR(500) | NULL |
-| status | ENUM | `pending`, `active`, `blocked` |
+| status | VARCHAR/enum | NOT NULL, `pending/active/blocked` |
 | created_at | TIMESTAMP | NOT NULL |
 | updated_at | TIMESTAMP | NOT NULL |
 
-Rules:
-- `password_hash` NULL nếu account chưa liên kết password.
-- `google_subject` NULL nếu account chưa liên kết Google.
-- Account có thể có cả hai.
-- Email unique.
-- Admin được seed/create bằng controlled process, không tự đăng ký public.
-- `pending` là trạng thái HR chưa được admin duyệt.
-- `blocked` không được sử dụng các quyền HR.
+Quy tắc:
+- HR có thể xác thực qua password, Google, hoặc cả hai nếu sau này thêm account-linking.
+- `password_hash` NULL khi chưa có password.
+- `google_id` NULL khi chưa liên kết Google.
+- Tài khoản HR mới bắt đầu với trạng thái `pending`.
+- Tài khoản Admin được seed và bắt đầu với trạng thái `active`.
+- HR bị blocked không được sử dụng chức năng HR.
 
-## 3. user_contacts
+## 4. sessions
 
-| Column | Type | Constraints |
+| Column | Type | Constraint |
 |---|---|---|
 | id | BIGINT | PK |
-| user_id | BIGINT | FK users.id |
-| channel | ENUM | zalo/telegram/linkedin/phone/email |
-| value | VARCHAR(255) | NOT NULL |
+| user_id | BIGINT | FK → users.id |
+| token_hash | VARCHAR(255) | UNIQUE, NOT NULL |
 | created_at | TIMESTAMP | NOT NULL |
+| expires_at | TIMESTAMP | NOT NULL |
 
-Constraint:
-- `UNIQUE(user_id, channel)` trong MVP.
-- FK xóa theo policy đã định; không cascade xóa user nếu business policy yêu cầu giữ audit data.
+Session là server-side.
 
-## 4. categories
+Lưu hash/opaque identifier thay vì raw session secret trong database.
 
-| Column | Type | Constraints |
-|---|---|---|
-| id | BIGINT | PK |
-| name | VARCHAR(100) | NOT NULL |
-| slug | VARCHAR(120) | UNIQUE, NOT NULL |
-| sort_order | INT | DEFAULT 0 |
+Session hết hạn có thể được dọn dẹp định kỳ.
 
-Category do admin/system quản lý.
+## 5. user_contacts
 
-Ví dụ:
+Các kênh được hỗ trợ:
+- zalo
+- telegram
+- linkedin
+- phone
+- email
+
+Một HR có thể có nhiều kênh liên hệ.
+
+Ràng buộc database:
+- `UNIQUE(user_id, channel)` — mỗi HR có tối đa một giá trị liên hệ cho mỗi kênh.
+
+Contact thuộc về HR profile, không bị trùng lặp trên mỗi job.
+
+## 6. categories
+
+Category được quản lý bởi hệ thống/Admin.
+
+Ví dụ khởi tạo:
 - Backend
 - Frontend
 - Fullstack
@@ -139,99 +161,163 @@ Ví dụ:
 - QA / Test
 - UI/UX Designer
 
-## 5. tags
+Trường:
+- id
+- name
+- slug
+- sort_order
+- is_active
 
-| Column | Type | Constraints |
+Không hard-delete category đã được job tham chiếu; thay vào đó deactivate.
+
+## 7. tags
+
+Tag được quản lý bởi hệ thống/Admin.
+
+Ví dụ:
+- React
+- TypeScript
+- Python
+- FastAPI
+- Node.js
+- PostgreSQL
+- Docker
+
+Trường:
+- id
+- name
+- slug
+- is_active
+
+Không hard-delete tag đã được tham chiếu; thay vào đó deactivate.
+
+## 8. jobs
+
+| Column | Type | Constraint |
 |---|---|---|
 | id | BIGINT | PK |
-| name | VARCHAR(50) | NOT NULL |
-| slug | VARCHAR(60) | UNIQUE, NOT NULL |
-
-Tag do admin/system quản lý.
-
-HR chỉ chọn tag có sẵn.
-
-## 6. jobs
-
-| Column | Type | Constraints |
-|---|---|---|
-| id | BIGINT | PK |
-| hr_id | BIGINT | FK users.id, NOT NULL |
-| category_id | BIGINT | FK categories.id, NOT NULL |
+| hr_id | BIGINT | FK → users.id, NOT NULL |
+| category_id | BIGINT | FK → categories.id, NOT NULL |
 | title | VARCHAR(200) | NOT NULL |
-| job_type | ENUM | fulltime/parttime/freelance/contract |
+| job_type | VARCHAR/enum | NOT NULL |
 | location | VARCHAR(150) | NULL |
 | timezone | VARCHAR(50) | NULL |
 | salary_min | DECIMAL(12,2) | NULL |
 | salary_max | DECIMAL(12,2) | NULL |
 | currency | VARCHAR(10) | NULL |
 | description | TEXT | NOT NULL |
-| requirements | TEXT | NULL |
-| status | ENUM | draft/pending/approved/rejected/closed/hidden/expired |
-| views | INT | DEFAULT 0 |
+| requirements | TEXT | NOT NULL |
+| status | VARCHAR/enum | NOT NULL |
+| rejection_reason | TEXT | NULL |
+| views | INTEGER | NOT NULL, default 0 |
 | expires_at | TIMESTAMP | NULL |
 | created_at | TIMESTAMP | NOT NULL |
 | updated_at | TIMESTAMP | NOT NULL |
 
-Rules:
-- `hr_id` là owner.
-- `company_name` không copy vào jobs; lấy từ HR.
-- Contact không copy vào jobs; lấy từ HR.
-- `views` là total detail-page views.
-- Salary có thể NULL để biểu diễn "thỏa thuận".
-- `salary_min <= salary_max` nếu cả hai tồn tại.
-- Job public phải là approved và chưa hết hạn.
+Loại job:
+- fulltime
+- parttime
+- freelance
+- contract
 
-## 7. job_tags
+Currency được hỗ trợ ban đầu:
+- VND
+- USD
+- EUR
+- SGD
+- JPY
+- GBP
+
+Không gán salary về 0 khi không công khai lương. Dùng NULL.
+
+## 9. job status
+
+```text
+draft
+pending
+approved
+rejected
+closed
+hidden
+expired
+```
+
+Transitions:
+
+```text
+draft → pending
+pending → approved
+pending → rejected
+rejected → pending
+approved → closed
+approved → hidden
+approved → expired
+```
+
+Sau khi sửa substantive content trên job đã approved:
+
+```text
+approved → pending
+```
+
+Các trường substantive bao gồm title, description, requirements, salary, location, job type, category và tags.
+
+## 10. job_tags
 
 Composite primary key:
-- `(job_id, tag_id)`
 
-Không cho duplicate pair.
+```text
+(job_id, tag_id)
+```
 
-## 8. sessions
+Ngăn chặn gán trùng tag.
 
-Session server-side.
+## 11. Foreign key behavior
 
-| Column | Type | Constraints |
-|---|---|---|
-| id | BIGINT | PK |
-| user_id | BIGINT | FK users.id |
-| token_hash | VARCHAR(255) | UNIQUE, NOT NULL |
-| expires_at | TIMESTAMP | NOT NULL |
-| created_at | TIMESTAMP | NOT NULL |
+Khuyến nghị:
+- users → jobs: giữ lại job khi HR bị block; visibility được kiểm soát bởi trạng thái HR.
+- users → sessions: cascade delete session hết hạn hoặc session của user chỉ khi policy xóa tài khoản cho phép.
+- users → contacts: contact có thể bị xóa khi tài khoản HR bị xóa vĩnh viễn.
+- categories/tags → jobs: ưu tiên RESTRICT/soft deactivation thay vì hard delete.
+- jobs → job_tags: CASCADE khi xóa job.
 
-Không lưu raw session token trong database nếu implementation sử dụng hash.
+"Xóa" HR trong admin UI thường có nghĩa là deactivation/soft delete thay vì hard delete hủy diệt.
 
-## 9. Delete policy
+## 12. Indexes
 
-MVP ưu tiên soft/controlled deletion cho dữ liệu quan trọng.
+Tối thiểu cần có:
+- users(email)
+- users(google_id)
+- users(status, role)
+- sessions(token_hash)
+- sessions(user_id)
+- sessions(expires_at)
+- jobs(status, created_at)
+- jobs(category_id, status)
+- jobs(hr_id, status)
+- jobs(expires_at, status)
+- job_tags(tag_id, job_id)
 
-Không hard-delete HR nếu việc đó làm mất ownership/history của job mà admin cần quản lý.
+Search indexes có thể được thêm sau khi đo lường hành vi query thực tế.
 
-Khi HR bị block:
-- Account vẫn tồn tại.
-- Jobs không tự động bị xóa.
-- Public visibility của jobs của blocked HR phải tuân theo moderation policy.
-- Policy cụ thể phải được triển khai nhất quán ở backend.
+## 13. Expiration
 
-Khi xóa job:
-- Job không còn public.
-- Quan hệ job_tags phải được dọn dẹp.
-- Không để orphan records.
+Public query phải kiểm tra:
 
-## 10. Indexes
+```text
+status = approved
+AND
+(expires_at IS NULL OR expires_at > NOW())
+```
 
-Tối thiểu:
-- users.email
-- users.google_subject
-- jobs.hr_id
-- jobs.category_id
-- jobs.status
-- jobs.created_at
-- jobs.expires_at
-- job_tags.tag_id
-- job_tags.job_id
-- user_contacts(user_id, channel)
+Một periodic task có thể cập nhật job hết hạn sang `expired`.
 
-Có thể bổ sung PostgreSQL full-text/trigram indexes sau khi benchmark search thực tế.
+Periodic task dùng để đồng bộ trạng thái database, không phải cơ chế duy nhất ngăn job hết hạn hiển thị.
+
+## 14. View tracking
+
+Cột `jobs.views` lưu tổng số lượt xem.
+
+Implementation phải ngăn cùng một server-side session tăng view của cùng một job quá một lần trong 24 giờ.
+
+Nếu dùng bảng view-tracking riêng, cần có uniqueness/indexing phù hợp cho `(job_id, session_id, time window)` và xử lý concurrent request an toàn.
