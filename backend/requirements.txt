@@ -1,0 +1,13 @@
+fastapi[standard]
+uvicorn[standard]
+sqlalchemy>=2.0
+alembic
+psycopg2-binary
+python-dotenv
+argon2-cffi
+itsdangerous
+pydantic[email]
+authlib
+pytest
+httpx
+ruff
