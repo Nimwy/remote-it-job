@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
     session_cookie_name: str = "session"
     session_max_age_seconds: int = 60 * 60 * 24 * 7
+    visitor_cookie_name: str = "visitor_id"
     page_size_default: int = 20
     page_size_max: int = 100
 
