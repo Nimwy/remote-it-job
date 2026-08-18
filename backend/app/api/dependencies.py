@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db.session import SessionLocal
-from app.models.user import User
+from app.models.user import User, UserRole, UserStatus
 
 settings = get_settings()
 
@@ -41,3 +41,23 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Người dùng không tồn tại")
 
     return user
+
+
+def require_active_hr(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != UserRole.hr:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền HR")
+
+    if current_user.status != UserStatus.active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản HR chưa được duyệt hoặc đã bị khóa",
+        )
+
+    return current_user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Không có quyền Admin")
+
+    return current_user
