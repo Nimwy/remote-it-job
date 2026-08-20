@@ -12,6 +12,7 @@ import { EditJobPage } from './pages/EditJobPage'
 import { HrProfilePage } from './pages/HrProfilePage'
 import { AdminDashboardPage } from './pages/AdminDashboardPage'
 import { AdminJobsPage } from './pages/AdminJobsPage'
+import { AdminManageJobsPage } from './pages/AdminManageJobsPage'
 import { AdminUsersPage } from './pages/AdminUsersPage'
 import { AdminCatalogPage } from './pages/AdminCatalogPage'
 
@@ -70,7 +71,8 @@ export default function App() {
           }
         >
           <Route index element={<AdminDashboardPage />} />
-          <Route path="jobs" element={<AdminJobsPage />} />
+          <Route path="pending" element={<AdminJobsPage />} />
+          <Route path="jobs" element={<AdminManageJobsPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="catalog" element={<AdminCatalogPage />} />
         </Route>

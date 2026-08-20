@@ -77,7 +77,7 @@ export function AdminDashboardPage() {
         <h2 className="mb-4 font-display text-headline-sm text-on-surface">Thao Tác Nhanh</h2>
         <div className="flex flex-wrap gap-4">
           <Link
-            to="/admin/jobs"
+            to="/admin/pending"
             className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container hover:text-on-primary-container"
           >
             <Icon name="fact_check" className="text-sm" />
@@ -89,6 +89,13 @@ export function AdminDashboardPage() {
           >
             <Icon name="manage_accounts" className="text-sm" />
             Quản Lý HR
+          </Link>
+          <Link
+            to="/admin/jobs"
+            className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-6 py-2 text-label-md text-on-surface shadow-sm transition-colors hover:bg-surface-variant"
+          >
+            <Icon name="work_history" className="text-sm" />
+            Quản Lý Tin
           </Link>
           <Link
             to="/admin/catalog"

@@ -66,6 +66,17 @@ export function useAdminJobAction() {
   })
 }
 
+export function useAdminDeleteJob() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: adminService.deleteJob,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-jobs'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-jobs-pending'] })
+    },
+  })
+}
+
 export function useAdminHrAction() {
   const queryClient = useQueryClient()
   return useMutation({

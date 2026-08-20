@@ -92,6 +92,11 @@ def unhide_job(job_id: int, db: Session = Depends(get_db), _: User = Depends(req
     return admin_service.serialize_admin_job(job)
 
 
+@router.delete("/jobs/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_job(job_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    admin_service.delete_job(db, job_id)
+
+
 @router.get("/users", response_model=PaginatedResponse[AdminUserResponse])
 def list_users(
     search: str | None = None,

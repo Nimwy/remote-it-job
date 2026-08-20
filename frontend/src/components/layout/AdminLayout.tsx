@@ -38,7 +38,7 @@ export function AdminLayout() {
             <Icon name="dashboard" fill />
             <span>Dashboard</span>
           </NavLink>
-          <NavLink to="/admin/jobs" className={navItemClass}>
+          <NavLink to="/admin/pending" className={navItemClass}>
             <Icon name="pending_actions" />
             <span className="flex-1">Duyệt tin</span>
             {pending && pending.total > 0 && (
@@ -46,6 +46,10 @@ export function AdminLayout() {
                 {pending.total}
               </span>
             )}
+          </NavLink>
+          <NavLink to="/admin/jobs" className={navItemClass}>
+            <Icon name="work_history" />
+            <span>Quản lý tin</span>
           </NavLink>
           <NavLink to="/admin/users" className={navItemClass}>
             <Icon name="group" />

@@ -232,6 +232,10 @@ Request:
 
 Khôi phục job bị ẩn chỉ khi lifecycle rules cho phép.
 
+### DELETE /api/admin/jobs/{job_id}
+
+Xóa job theo deletion policy (dọn cả job_tags và job_views).
+
 ### GET /api/admin/users
 
 Danh sách tài khoản HR với pagination/filter.

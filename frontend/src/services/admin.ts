@@ -38,6 +38,10 @@ export async function unhideJob(id: number): Promise<AdminJob> {
   return res.data
 }
 
+export async function deleteJob(id: number): Promise<void> {
+  await api.delete(`/admin/jobs/${id}`)
+}
+
 export async function listHrs(params: {
   search?: string
   status?: string

@@ -109,6 +109,21 @@ def test_hide_and_unhide_job(client, db):
     assert unhide.json()["status"] == "approved"
 
 
+def test_admin_delete_job(client, db):
+    create_admin(db)
+    hr = create_user(db, "hr@example.com")
+    category = create_category(db)
+    job = create_job(db, hr, category, status=JobStatus.closed)
+    db.commit()
+    login_admin(client)
+
+    res = client.delete(f"/api/admin/jobs/{job.id}")
+    assert res.status_code == 204
+
+    res_get = client.get("/api/admin/jobs")
+    assert all(j["id"] != job.id for j in res_get.json()["items"])
+
+
 def test_approve_job_wrong_status(client, db):
     create_admin(db)
     hr = create_user(db, "hr@example.com")

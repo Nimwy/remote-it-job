@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.category import Category
 from app.models.job import Job, JobStatus
+from app.models.job_view import JobView
 from app.models.tag import Tag
 from app.models.user import User, UserRole, UserStatus
 from app.schemas.admin import CategoryCreate, CategoryUpdate, TagCreate, TagUpdate
@@ -123,6 +124,13 @@ def unhide_job(db: Session, job_id: int) -> Job:
     db.commit()
     db.refresh(job)
     return job
+
+
+def delete_job(db: Session, job_id: int) -> None:
+    job = get_job(db, job_id)
+    db.query(JobView).filter(JobView.job_id == job_id).delete()
+    db.delete(job)
+    db.commit()
 
 
 def serialize_admin_user(user: User, job_count: int) -> dict:
