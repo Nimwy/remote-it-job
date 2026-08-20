@@ -1,11 +1,11 @@
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from './components/layout/Layout'
+import { AdminLayout } from './components/layout/AdminLayout'
 import { RequireRole } from './components/guards'
 import { HomePage } from './pages/HomePage'
 import { JobsPage } from './pages/JobsPage'
 import { JobDetailPage } from './pages/JobDetailPage'
-import { LoginPage } from './pages/LoginPage'
-import { RegisterPage } from './pages/RegisterPage'
+import { AuthPage } from './pages/AuthPage'
 import { HrDashboardPage } from './pages/HrDashboardPage'
 import { PostJobPage } from './pages/PostJobPage'
 import { EditJobPage } from './pages/EditJobPage'
@@ -17,13 +17,16 @@ import { AdminCatalogPage } from './pages/AdminCatalogPage'
 
 export default function App() {
   return (
-    <Layout>
-      <Routes>
+    <Routes>
+      <Route path="/login" element={<AuthPage initialTab="login" />} />
+      <Route path="/register" element={<AuthPage initialTab="register" />} />
+
+      <Route
+        element={<Layout />}
+      >
         <Route path="/" element={<HomePage />} />
         <Route path="/jobs" element={<JobsPage />} />
         <Route path="/jobs/:id" element={<JobDetailPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
 
         <Route
           path="/hr"
@@ -62,35 +65,16 @@ export default function App() {
           path="/admin"
           element={
             <RequireRole role="admin">
-              <AdminDashboardPage />
+              <AdminLayout />
             </RequireRole>
           }
-        />
-        <Route
-          path="/admin/jobs"
-          element={
-            <RequireRole role="admin">
-              <AdminJobsPage />
-            </RequireRole>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <RequireRole role="admin">
-              <AdminUsersPage />
-            </RequireRole>
-          }
-        />
-        <Route
-          path="/admin/catalog"
-          element={
-            <RequireRole role="admin">
-              <AdminCatalogPage />
-            </RequireRole>
-          }
-        />
-      </Routes>
-    </Layout>
+        >
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="jobs" element={<AdminJobsPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="catalog" element={<AdminCatalogPage />} />
+        </Route>
+      </Route>
+    </Routes>
   )
 }

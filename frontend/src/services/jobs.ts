@@ -12,6 +12,7 @@ export interface JobFilters {
   timezone?: string
   page?: number
   page_size?: number
+  sort?: string
 }
 
 export async function listJobs(filters: JobFilters = {}): Promise<PaginatedResponse<JobListItem>> {

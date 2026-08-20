@@ -1,13 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
 import { useJob } from '../hooks/useJobs'
 import { CONTACT_LABELS, JOB_TYPE_LABELS } from '../types'
+import { Icon } from '../components/ui/Icon'
 
 const contactIcons: Record<string, string> = {
-  zalo: '💬',
-  telegram: '✈️',
-  linkedin: '💼',
-  phone: '📞',
-  email: '✉️',
+  zalo: 'chat',
+  telegram: 'send',
+  linkedin: 'work',
+  phone: 'call',
+  email: 'mail',
 }
 
 export function JobDetailPage() {
@@ -52,11 +53,13 @@ export function JobDetailPage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {job.location && (
-                <span className="rounded-full bg-surface-container px-3 py-1 text-label-sm text-secondary">
-                  📍 {job.location}
+                <span className="flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-label-sm text-secondary">
+                  <Icon name="location_on" className="text-[16px]" />
+                  {job.location}
                 </span>
               )}
-              <span className="rounded-full bg-surface-container px-3 py-1 text-label-sm text-secondary">
+              <span className="flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-label-sm text-secondary">
+                <Icon name="schedule" className="text-[16px]" />
                 {JOB_TYPE_LABELS[job.job_type] ?? job.job_type}
               </span>
               <span className="rounded-full bg-tertiary-fixed px-3 py-1 text-label-sm uppercase text-on-surface">
@@ -111,7 +114,7 @@ export function JobDetailPage() {
                     }
                     className="flex items-center gap-3 text-body-md text-secondary hover:text-primary"
                   >
-                    <span>{contactIcons[contact.channel] ?? '🔗'}</span>
+                    <Icon name={contactIcons[contact.channel] ?? 'link'} className="text-[20px]" />
                     <span>{CONTACT_LABELS[contact.channel] ?? contact.channel}</span>
                     <span className="ml-auto truncate text-body-sm">{contact.value}</span>
                   </a>
