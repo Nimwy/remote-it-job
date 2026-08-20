@@ -22,7 +22,7 @@ export function AdminLayout() {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-outline-variant bg-surface-container p-4 shadow-sm">
+      <aside className="fixed left-0 top-16 z-30 flex h-[calc(100vh-4rem)] w-64 flex-col border-r border-outline-variant bg-surface-container p-4 shadow-sm">
         <div className="mb-8 flex items-center gap-4 px-2">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-variant">
             <Icon name="admin_panel_settings" className="text-[24px] text-on-surface-variant" />
