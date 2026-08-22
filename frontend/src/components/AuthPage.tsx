@@ -152,6 +152,7 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
                 <h2 className="mb-2 font-display text-headline-md text-on-surface">{t("loginTitle")}</h2>
                 <p className="mb-6 text-body-sm text-on-surface-variant">{t("loginSubtitle")}</p>
 
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <a
                   href="/api/auth/google/login"
                   className="mb-6 flex h-[44px] w-full items-center justify-center gap-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-label-md text-on-surface transition-colors hover:bg-surface-container"
