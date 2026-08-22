@@ -2,12 +2,11 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.slug import slugify, unique_slug
-from app.models.category import Category
 from app.models.contact import ContactChannel, UserContact
 from app.models.job import Job, JobStatus, JobType
 from app.models.job_tag import JobTag
-from app.models.tag import Tag
 from app.models.user import User
+from app.repositories import category_repository, contact_repository, job_repository, tag_repository
 from app.schemas.hr import HrProfileUpdate
 from app.schemas.job import JobCreate, JobUpdate
 
@@ -45,9 +44,12 @@ def update_profile(db: Session, user: User, data: HrProfileUpdate) -> User:
         user.avatar = data.avatar
 
     if data.contacts is not None:
-        db.query(UserContact).filter(UserContact.user_id == user.id).delete()
+        contact_repository.delete_for_user(db, user.id)
         for c in data.contacts:
-            db.add(UserContact(user_id=user.id, channel=ContactChannel(c.channel), value=c.value))
+            contact_repository.create(
+                db,
+                UserContact(user_id=user.id, channel=ContactChannel(c.channel), value=c.value),
+            )
 
     db.commit()
     db.refresh(user)
@@ -79,32 +81,20 @@ def serialize_hr_job(job: Job) -> dict:
 
 
 def list_hr_jobs(db: Session, user: User, status_filter: str | None, page: int, page_size: int):
-    query = db.query(Job).filter(Job.hr_id == user.id)
-    if status_filter:
-        query = query.filter(Job.status == status_filter)
-
-    query = query.order_by(Job.created_at.desc())
-
-    total = query.count()
-    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
-    jobs = query.offset((page - 1) * page_size).limit(page_size).all()
-
-    return jobs, total, total_pages
+    return job_repository.list_by_hr(db, user.id, status_filter, page, page_size)
 
 
 def _validate_category(db: Session, category_id: int) -> None:
-    category = db.query(Category).filter(Category.id == category_id, Category.is_active.is_(True)).first()
-    if not category:
+    if not category_repository.get_active_by_id(db, category_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category không hợp lệ")
 
 
-def _validate_tags(db: Session, tag_ids: list[int]) -> list[Tag]:
+def _validate_tags(db: Session, tag_ids: list[int]) -> None:
     if not tag_ids:
-        return []
-    tags = db.query(Tag).filter(Tag.id.in_(tag_ids), Tag.is_active.is_(True)).all()
+        return
+    tags = tag_repository.get_active_by_ids(db, tag_ids)
     if len(tags) != len(set(tag_ids)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tag không hợp lệ")
-    return tags
 
 
 def _validate_salary(salary_min: float | None, salary_max: float | None) -> None:
@@ -117,11 +107,7 @@ def _validate_salary(salary_min: float | None, salary_max: float | None) -> None
 
 def _generate_slug(db: Session, title: str, exclude_id: int | None = None) -> str:
     base = slugify(title) or "job"
-    query = db.query(Job.slug).filter(Job.slug.like(f"{base}%"))
-    if exclude_id is not None:
-        query = query.filter(Job.id != exclude_id)
-    existing = {slug for (slug,) in query.all()}
-    return unique_slug(base, existing)
+    return unique_slug(base, job_repository.existing_slugs(db, exclude_id))
 
 
 def create_job(db: Session, user: User, data: JobCreate) -> Job:
@@ -145,8 +131,7 @@ def create_job(db: Session, user: User, data: JobCreate) -> Job:
         expires_at=data.expires_at,
         status=JobStatus.draft,
     )
-    db.add(job)
-    db.flush()
+    job_repository.create(db, job)
 
     for tag_id in data.tag_ids:
         db.add(JobTag(job_id=job.id, tag_id=tag_id))
@@ -157,7 +142,7 @@ def create_job(db: Session, user: User, data: JobCreate) -> Job:
 
 
 def get_owned_job(db: Session, user: User, job_id: int) -> Job:
-    job = db.query(Job).filter(Job.id == job_id, Job.hr_id == user.id).first()
+    job = job_repository.get_owned(db, user.id, job_id)
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tin tuyển dụng")
     return job
@@ -167,10 +152,7 @@ def update_job(db: Session, user: User, job_id: int, data: JobUpdate) -> Job:
     job = get_owned_job(db, user, job_id)
 
     data_dict = data.model_dump(exclude_unset=True)
-    changed_substantive = False
-
-    for field in SUBSTANTIVE_FIELDS & set(data_dict.keys()):
-        changed_substantive = True
+    changed_substantive = bool(SUBSTANTIVE_FIELDS & set(data_dict.keys()))
 
     if "category_id" in data_dict:
         _validate_category(db, data_dict["category_id"])
@@ -237,5 +219,5 @@ def delete_job(db: Session, user: User, job_id: int) -> None:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Không thể xóa job ở trạng thái hiện tại",
         )
-    db.delete(job)
+    job_repository.delete(db, job)
     db.commit()
