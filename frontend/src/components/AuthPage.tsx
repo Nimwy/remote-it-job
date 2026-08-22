@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLogin, useRegister } from "../hooks/useAuth";
 import { Icon } from "./ui/Icon";
@@ -66,10 +67,10 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-surface-tint lg:flex">
         <div className="absolute inset-0 bg-gradient-to-t from-surface-tint via-surface-tint/80 to-transparent" />
         <div className="relative z-10 mx-auto flex h-full w-full max-w-xl flex-col justify-between p-8 pt-16">
-          <div className="inline-flex items-center gap-2 text-on-primary">
+          <Link href="/" className="inline-flex items-center gap-2 text-on-primary">
             <Icon name="public" className="text-[32px]" />
             <span className="font-display text-headline-md font-bold tracking-tight">Remote IT</span>
-          </div>
+          </Link>
           <div className="mb-24">
             <h1 className="mb-6 font-display text-display leading-tight text-on-primary">
               Kết nối tài năng công nghệ toàn cầu.
@@ -94,6 +95,13 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
 
       <div className="flex w-full items-center justify-center bg-surface p-6 lg:w-1/2">
         <div className="w-full max-w-[480px]">
+          <Link
+            href="/"
+            className="mb-6 inline-flex items-center gap-2 text-primary lg:hidden"
+          >
+            <Icon name="public" className="text-[28px]" />
+            <span className="font-display text-headline-sm font-bold tracking-tight">Remote IT</span>
+          </Link>
           <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-8 shadow-sm">
             <div className="relative mb-8 flex rounded-lg bg-surface-container p-1">
               <div
