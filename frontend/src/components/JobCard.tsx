@@ -1,15 +1,19 @@
-import Link from "next/link";
+import { getTranslations, getLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { JobListItem } from "../types";
-import { JOB_TYPE_LABELS } from "../types";
 import { jobUrl } from "../lib/url";
 import { timeAgo } from "../lib/date";
 import { Icon } from "./ui/Icon";
 
-export function JobCard({ job }: { job: JobListItem }) {
+export async function JobCard({ job }: { job: JobListItem }) {
+  const t = await getTranslations("jobDetail");
+  const jt = await getTranslations("jobType");
+  const locale = await getLocale();
+
   const salaryText =
     job.salary_min || job.salary_max
       ? `${job.salary_min ?? "?"}${job.currency === "USD" ? "$" : ""} - ${job.salary_max ?? "?"}${job.currency === "USD" ? "$" : ""}`
-      : "Thỏa thuận";
+      : t("negotiable");
 
   return (
     <Link
@@ -39,7 +43,7 @@ export function JobCard({ job }: { job: JobListItem }) {
           Remote
         </span>
         <span className="rounded bg-[#e1f5fe] px-2 py-1 text-label-sm uppercase tracking-wider text-[#0277bd]">
-          {JOB_TYPE_LABELS[job.job_type] ?? job.job_type}
+          {jt(job.job_type)}
         </span>
       </div>
 
@@ -56,7 +60,7 @@ export function JobCard({ job }: { job: JobListItem }) {
         )}
         <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
           <Icon name="schedule" className="text-[16px]" />
-          <span>{timeAgo(job.created_at)}</span>
+          <span>{timeAgo(job.created_at, locale as "vi" | "en")}</span>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useAdminPendingJobs } from "@/hooks/useAdmin";
 import { useLogout } from "@/hooks/useAuth";
 import { Icon } from "@/components/ui/Icon";
@@ -38,6 +38,7 @@ function SideLink({
 }
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("admin");
   const { data: pending } = useAdminPendingJobs();
   const logout = useLogout();
   const router = useRouter();
@@ -56,34 +57,34 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <Icon name="admin_panel_settings" className="text-[24px] text-on-surface-variant" />
           </div>
           <div>
-            <h2 className="font-display text-headline-sm leading-tight text-primary">Admin Portal</h2>
-            <p className="text-label-sm text-on-surface-variant">Manage Listings</p>
+            <h2 className="font-display text-headline-sm leading-tight text-primary">{t("portal")}</h2>
+            <p className="text-label-sm text-on-surface-variant">{t("manageListings")}</p>
           </div>
         </div>
 
         <nav className="flex flex-1 flex-col gap-2">
-          <SideLink href="/admin" label="Dashboard" icon="dashboard" active={pathname === "/admin"} />
+          <SideLink href="/admin" label={t("dashboard")} icon="dashboard" active={pathname === "/admin"} />
           <SideLink
             href="/admin/pending"
-            label="Duyệt tin"
+            label={t("pending")}
             icon="pending_actions"
             active={pathname === "/admin/pending"}
             badge={pending?.total}
           />
-          <SideLink href="/admin/jobs" label="Quản lý tin" icon="work_history" active={pathname === "/admin/jobs"} />
-          <SideLink href="/admin/users" label="Quản lý HR" icon="group" active={pathname === "/admin/users"} />
-          <SideLink href="/admin/catalog" label="Catalog" icon="category" active={pathname === "/admin/catalog"} />
+          <SideLink href="/admin/jobs" label={t("manageJobsNav")} icon="work_history" active={pathname === "/admin/jobs"} />
+          <SideLink href="/admin/users" label={t("manageHrNav")} icon="group" active={pathname === "/admin/users"} />
+          <SideLink href="/admin/catalog" label={t("catalog")} icon="category" active={pathname === "/admin/catalog"} />
         </nav>
 
         <div className="mt-auto flex flex-col gap-4">
           <div className="h-px w-full bg-outline-variant" />
           <Link href="/" className="flex items-center gap-4 rounded-lg px-4 py-1 text-label-md text-on-surface-variant hover:bg-surface-variant">
             <Icon name="home" className="text-sm" />
-            <span>Trang chủ</span>
+            <span>{t("home")}</span>
           </Link>
           <button onClick={handleLogout} className="flex items-center gap-4 rounded-lg px-4 py-1 text-label-md text-on-surface-variant hover:bg-surface-variant">
             <Icon name="logout" className="text-sm" />
-            <span>Đăng xuất</span>
+            <span>{t("logout")}</span>
           </button>
         </div>
       </aside>

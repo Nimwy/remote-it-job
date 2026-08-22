@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { JobCard } from "@/components/JobCard";
 import { serverListCategories, serverListJobs } from "@/services/jobs";
 
@@ -22,6 +23,7 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const t = await getTranslations("nav");
   const [jobsData, categories] = await Promise.all([
     serverListJobs({ category: slug, page_size: 50 }),
     serverListCategories(),
@@ -33,17 +35,17 @@ export default async function CategoryPage({
     <div className="mx-auto max-w-[1280px] px-6 py-8">
       <nav className="mb-4 text-body-sm text-secondary">
         <Link href="/" className="hover:text-primary">
-          Trang chủ
+          Home
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-on-surface">Việc làm {category?.name ?? slug}</span>
+        <span className="text-on-surface">{category?.name ?? slug}</span>
       </nav>
 
       <h1 className="mb-2 font-display text-headline-lg">
-        Việc làm {category?.name ?? slug} Remote
+        {category?.name ?? slug} · {t("findJobs")}
       </h1>
       <p className="mb-6 text-body-md text-secondary">
-        {jobsData?.total ?? 0} việc làm {category?.name ?? ""} đang tuyển
+        {jobsData?.total ?? 0} {category?.name ?? ""}
       </p>
 
       {jobsData && jobsData.items.length > 0 ? (
@@ -53,7 +55,7 @@ export default async function CategoryPage({
           ))}
         </div>
       ) : (
-        <p className="text-body-md text-secondary">Chưa có tin tuyển dụng trong danh mục này.</p>
+        <p className="text-body-md text-secondary">No jobs in this category.</p>
       )}
     </div>
   );

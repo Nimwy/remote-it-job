@@ -1,11 +1,15 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
+import { useParams } from "next/navigation";
 import { JobForm, type JobFormData } from "@/components/JobForm";
 import { useHrJob, useUpdateJob, useSubmitJob } from "@/hooks/useHr";
 import { Button } from "@/components/ui/Button";
 
 export function EditJob() {
+  const t = useTranslations("jobForm");
+  const hr = useTranslations("hr");
   const params = useParams<{ id: string }>();
   const jobId = Number(params.id);
   const { data: job, isLoading } = useHrJob(jobId);
@@ -14,11 +18,11 @@ export function EditJob() {
   const router = useRouter();
 
   if (isLoading) {
-    return <div className="mx-auto max-w-3xl px-6 py-8 text-body-md text-secondary">Đang tải...</div>;
+    return <div className="mx-auto max-w-3xl px-6 py-8 text-body-md text-secondary">{hr("loading")}</div>;
   }
 
   if (!job) {
-    return <div className="mx-auto max-w-3xl px-6 py-8 text-body-md text-secondary">Không tìm thấy tin.</div>;
+    return <div className="mx-auto max-w-3xl px-6 py-8 text-body-md text-secondary">{t("notFound")}</div>;
   }
 
   const onSubmit = async (data: JobFormData) => {
@@ -45,16 +49,18 @@ export function EditJob() {
     <div className="mx-auto max-w-3xl px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="font-display text-headline-lg">Sửa tin tuyển dụng</h1>
-          <p className="text-body-md text-secondary">Trạng thái: {job.status}</p>
+          <h1 className="font-display text-headline-lg">{t("editTitle")}</h1>
+          <p className="text-body-md text-secondary">
+            {t("status")}: {job.status}
+          </p>
         </div>
         {(job.status === "draft" || job.status === "rejected") && (
           <Button variant="outline" onClick={() => submitJob.mutateAsync(jobId).then(() => router.push("/hr"))}>
-            Gửi duyệt
+            {hr("submit")}
           </Button>
         )}
       </div>
-      <JobForm initialValues={job} onSubmit={onSubmit} submitLabel="Cập nhật" />
+      <JobForm initialValues={job} onSubmit={onSubmit} submitLabel={t("update")} />
     </div>
   );
 }

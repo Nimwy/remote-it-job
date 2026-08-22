@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useHrJobs, useSubmitJob, useCloseJob, useDeleteJob } from "@/hooks/useHr";
-import { JOB_STATUS_LABELS } from "@/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -36,13 +36,15 @@ function StatCard({
 }
 
 export function HrDashboard() {
+  const t = useTranslations("hr");
+  const st = useTranslations("status");
   const { data, isLoading } = useHrJobs();
   const submitJob = useSubmitJob();
   const closeJob = useCloseJob();
   const deleteJob = useDeleteJob();
 
   if (isLoading) {
-    return <div className="mx-auto max-w-[1280px] px-6 py-8 text-body-md text-secondary">Đang tải...</div>;
+    return <div className="mx-auto max-w-[1280px] px-6 py-8 text-body-md text-secondary">{t("loading")}</div>;
   }
 
   const jobs = data?.items ?? [];
@@ -55,34 +57,34 @@ export function HrDashboard() {
     <div className="mx-auto max-w-[1280px] px-6 py-8">
       <header className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="font-display text-headline-lg">Xin chào</h1>
-          <p className="text-body-md text-secondary">Đây là tổng quan về các tin tuyển dụng của bạn.</p>
+          <h1 className="font-display text-headline-lg">{t("hello")}</h1>
+          <p className="text-body-md text-secondary">{t("subtitle")}</p>
         </div>
         <Link href="/hr/jobs/new">
           <Button>
             <Icon name="add" className="text-[18px]" />
-            Đăng tin mới
+            {t("postNew")}
           </Button>
         </Link>
       </header>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Tổng tin" value={total} icon="list_alt" color="bg-primary" total={total || 1} />
-        <StatCard label="Đang mở" value={openCount} icon="check_circle" color="bg-primary" total={total || 1} />
-        <StatCard label="Chờ duyệt" value={pendingCount} icon="hourglass_empty" color="bg-tertiary-container" total={total || 1} />
-        <StatCard label="Đã đóng" value={closedCount} icon="block" color="bg-secondary" total={total || 1} />
+        <StatCard label={t("totalJobs")} value={total} icon="list_alt" color="bg-primary" total={total || 1} />
+        <StatCard label={t("open")} value={openCount} icon="check_circle" color="bg-primary" total={total || 1} />
+        <StatCard label={t("pending")} value={pendingCount} icon="hourglass_empty" color="bg-tertiary-container" total={total || 1} />
+        <StatCard label={t("closed")} value={closedCount} icon="block" color="bg-secondary" total={total || 1} />
       </section>
 
       <section className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
         <div className="flex items-center justify-between border-b border-outline-variant bg-surface p-4">
-          <h2 className="font-display text-headline-sm text-on-surface">Danh sách tin tuyển dụng</h2>
+          <h2 className="font-display text-headline-sm text-on-surface">{t("jobList")}</h2>
         </div>
 
         {jobs.length === 0 ? (
           <p className="p-6 text-body-md text-secondary">
-            Bạn chưa có tin tuyển dụng nào.{" "}
+            {t("noJobs")}{" "}
             <Link href="/hr/jobs/new" className="text-primary hover:underline">
-              Đăng tin đầu tiên
+              {t("postFirst")}
             </Link>
           </p>
         ) : (
@@ -90,10 +92,10 @@ export function HrDashboard() {
             <table className="w-full text-left">
               <thead className="border-b border-outline-variant bg-surface text-label-sm text-secondary">
                 <tr>
-                  <th className="p-4 font-semibold">Tiêu đề tin</th>
-                  <th className="p-4 font-semibold">Trạng thái</th>
-                  <th className="p-4 text-right font-semibold">Lượt xem</th>
-                  <th className="p-4 text-right font-semibold">Thao tác</th>
+                  <th className="p-4 font-semibold">{t("jobList")}</th>
+                  <th className="p-4 font-semibold">{t("pending")}</th>
+                  <th className="p-4 text-right font-semibold">Views</th>
+                  <th className="p-4 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant text-body-sm">
@@ -114,7 +116,7 @@ export function HrDashboard() {
                       )}
                     </td>
                     <td className="p-4">
-                      <Badge status={job.status}>{JOB_STATUS_LABELS[job.status]}</Badge>
+                      <Badge status={job.status}>{st(job.status)}</Badge>
                       {job.rejection_reason && (
                         <p className="mt-1 max-w-[240px] text-[12px] text-error">{job.rejection_reason}</p>
                       )}
@@ -124,22 +126,22 @@ export function HrDashboard() {
                       <div className="flex justify-end gap-2">
                         {job.status === "draft" && (
                           <Button variant="outline" onClick={() => submitJob.mutate(job.id)}>
-                            Gửi duyệt
+                            {t("submit")}
                           </Button>
                         )}
                         {job.status === "rejected" && (
                           <Button variant="outline" onClick={() => submitJob.mutate(job.id)}>
-                            Gửi lại
+                            {t("resubmit")}
                           </Button>
                         )}
                         {job.status === "approved" && (
                           <Button variant="outline" onClick={() => closeJob.mutate(job.id)}>
-                            Đóng tin
+                            {t("closeJob")}
                           </Button>
                         )}
                         {(job.status === "draft" || job.status === "rejected" || job.status === "closed") && (
                           <Button variant="danger" onClick={() => deleteJob.mutate(job.id)}>
-                            Xóa
+                            {t("delete")}
                           </Button>
                         )}
                       </div>

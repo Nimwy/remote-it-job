@@ -1,10 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { JobForm, type JobFormData } from "@/components/JobForm";
 import { useCreateJob } from "@/hooks/useHr";
 
 export function PostJob() {
+  const t = useTranslations("jobForm");
   const createJob = useCreateJob();
   const router = useRouter();
 
@@ -27,11 +29,9 @@ export function PostJob() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-8">
-      <h1 className="mb-2 font-display text-headline-lg">Đăng tin tuyển dụng mới</h1>
-      <p className="mb-6 text-body-md text-secondary">
-        Tin đăng sẽ được gửi Admin duyệt trước khi công khai.
-      </p>
-      <JobForm onSubmit={onSubmit} submitLabel="Lưu nháp" />
+      <h1 className="mb-2 font-display text-headline-lg">{t("postTitle")}</h1>
+      <p className="mb-6 text-body-md text-secondary">{t("postSubtitle")}</p>
+      <JobForm onSubmit={onSubmit} submitLabel={t("saveDraft")} />
     </div>
   );
 }

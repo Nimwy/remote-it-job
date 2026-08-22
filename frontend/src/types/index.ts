@@ -107,28 +107,3 @@ export interface PaginatedResponse<T> {
   total: number;
   total_pages: number;
 }
-
-export const JOB_TYPE_LABELS: Record<string, string> = {
-  fulltime: "Toàn thời gian",
-  parttime: "Bán thời gian",
-  freelance: "Freelance",
-  contract: "Hợp đồng",
-};
-
-export const JOB_STATUS_LABELS: Record<string, string> = {
-  draft: "Nháp",
-  pending: "Chờ duyệt",
-  approved: "Đã duyệt",
-  rejected: "Từ chối",
-  closed: "Đã đóng",
-  hidden: "Đã ẩn",
-  expired: "Hết hạn",
-};
-
-export const CONTACT_LABELS: Record<string, string> = {
-  zalo: "Zalo",
-  telegram: "Telegram",
-  linkedin: "LinkedIn",
-  phone: "Điện thoại",
-  email: "Email",
-};

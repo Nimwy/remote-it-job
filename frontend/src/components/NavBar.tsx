@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useLogout, useMe } from "../hooks/useAuth";
 import { Icon } from "./ui/Icon";
 import { Button } from "./ui/Button";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 function NavLink({
   href,
@@ -31,6 +32,7 @@ function NavLink({
 }
 
 export function NavBar() {
+  const t = useTranslations("nav");
   const { data: user, isLoading } = useMe();
   const logout = useLogout();
   const router = useRouter();
@@ -59,12 +61,12 @@ export function NavBar() {
           </Link>
 
           <nav className="hidden items-center gap-4 md:flex">
-            <NavLink href="/jobs" label="Tìm việc" active={pathname.startsWith("/jobs")} />
+            <NavLink href="/jobs" label={t("findJobs")} active={pathname.startsWith("/jobs")} />
             {user?.role === "hr" && (
-              <NavLink href="/hr" label="Dashboard" active={pathname.startsWith("/hr")} />
+              <NavLink href="/hr" label={t("dashboard")} active={pathname.startsWith("/hr")} />
             )}
             {user?.role === "admin" && (
-              <NavLink href="/admin" label="Quản trị" active={pathname.startsWith("/admin")} />
+              <NavLink href="/admin" label={t("admin")} active={pathname.startsWith("/admin")} />
             )}
           </nav>
         </div>
@@ -75,7 +77,7 @@ export function NavBar() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tìm kiếm từ khóa..."
+              placeholder={t("searchPlaceholder")}
               className="h-10 w-full rounded-lg border border-outline-variant bg-surface-container pl-10 pr-4 text-body-sm placeholder:text-outline-variant focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </form>
@@ -83,12 +85,12 @@ export function NavBar() {
           {!isLoading && !user && (
             <>
               <Link href="/login" className="hidden sm:block">
-                <Button variant="outline">Đăng nhập</Button>
+                <Button variant="outline">{t("login")}</Button>
               </Link>
               <Link href="/register">
                 <Button>
                   <Icon name="add" className="text-[18px]" />
-                  <span className="hidden sm:inline">Đăng tin</span>
+                  <span className="hidden sm:inline">{t("postJob")}</span>
                 </Button>
               </Link>
             </>
@@ -98,14 +100,14 @@ export function NavBar() {
               <Link href="/hr/jobs/new" className="hidden md:block">
                 <Button>
                   <Icon name="add" className="text-[18px]" />
-                  Đăng tin
+                  {t("postJob")}
                 </Button>
               </Link>
               <button
                 onClick={handleLogout}
                 className="hidden text-label-md text-secondary hover:text-primary md:block"
               >
-                Đăng xuất
+                {t("logout")}
               </button>
             </>
           )}
@@ -114,9 +116,10 @@ export function NavBar() {
               onClick={handleLogout}
               className="hidden text-label-md text-secondary hover:text-primary md:block"
             >
-              Đăng xuất
+              {t("logout")}
             </button>
           )}
+          <LanguageSwitcher />
         </div>
       </div>
     </header>

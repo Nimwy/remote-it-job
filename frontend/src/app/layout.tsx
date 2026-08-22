@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -18,13 +20,16 @@ export const metadata: Metadata = {
   description: "Website tuyển dụng việc làm IT remote dành cho thị trường Việt Nam.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="vi" className={`${geist.variable} ${inter.variable}`}>
+    <html lang={locale} className={`${geist.variable} ${inter.variable}`}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -32,7 +37,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased">
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

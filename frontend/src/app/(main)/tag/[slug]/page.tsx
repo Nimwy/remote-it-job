@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { JobCard } from "@/components/JobCard";
 import { serverListJobs, serverListTags } from "@/services/jobs";
 
@@ -12,7 +12,7 @@ export async function generateMetadata({
   const tags = await serverListTags();
   const tag = tags?.find((t) => t.slug === slug);
   return {
-    title: `Việc làm ${tag?.name ?? slug} Remote | Remote IT`,
+    title: `${tag?.name ?? slug} Remote | Remote IT`,
   };
 }
 
@@ -33,15 +33,15 @@ export default async function TagPage({
     <div className="mx-auto max-w-[1280px] px-6 py-8">
       <nav className="mb-4 text-body-sm text-secondary">
         <Link href="/" className="hover:text-primary">
-          Trang chủ
+          Home
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-on-surface">Tag {tag?.name ?? slug}</span>
+        <span className="text-on-surface">#{tag?.name ?? slug}</span>
       </nav>
 
-      <h1 className="mb-2 font-display text-headline-lg">Việc làm {tag?.name ?? slug}</h1>
+      <h1 className="mb-2 font-display text-headline-lg">#{tag?.name ?? slug}</h1>
       <p className="mb-6 text-body-md text-secondary">
-        {jobsData?.total ?? 0} việc làm liên quan đến {tag?.name ?? slug}
+        {jobsData?.total ?? 0} jobs
       </p>
 
       {jobsData && jobsData.items.length > 0 ? (
@@ -51,7 +51,7 @@ export default async function TagPage({
           ))}
         </div>
       ) : (
-        <p className="text-body-md text-secondary">Chưa có tin tuyển dụng cho tag này.</p>
+        <p className="text-body-md text-secondary">No jobs for this tag.</p>
       )}
     </div>
   );

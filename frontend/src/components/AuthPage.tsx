@@ -1,43 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useLogin, useRegister } from "../hooks/useAuth";
 import { Icon } from "./ui/Icon";
 
-const loginSchema = z.object({
-  email: z.string().email("Email không hợp lệ"),
-  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
-});
+type LoginFormData = {
+  email: string;
+  password: string;
+};
 
-const registerSchema = z
-  .object({
-    name: z.string().min(1, "Vui lòng nhập tên"),
-    company_name: z.string().min(1, "Vui lòng nhập tên công ty"),
-    email: z.string().email("Email không hợp lệ"),
-    password: z.string().min(8, "Mật khẩu tối thiểu 8 ký tự"),
-    confirm_password: z.string(),
-  })
-  .refine((d) => d.password === d.confirm_password, {
-    message: "Mật khẩu xác nhận không khớp",
-    path: ["confirm_password"],
-  });
-
-type LoginFormData = z.infer<typeof loginSchema>;
-type RegisterFormData = z.infer<typeof registerSchema>;
+type RegisterFormData = {
+  name: string;
+  company_name: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+};
 
 const inputClass =
   "form-input block w-full h-[44px] rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-sm placeholder:text-on-surface-variant focus:border-primary focus:outline-none";
 
 export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
+  const t = useTranslations("auth");
   const [tab, setTab] = useState<"login" | "register">(initialTab);
   const login = useLogin();
   const registerUser = useRegister();
   const router = useRouter();
+
+  const loginSchema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t("invalidEmail")),
+        password: z.string().min(1, t("requiredPassword")),
+      }),
+    [t],
+  );
+
+  const registerSchema = useMemo(
+    () =>
+      z
+        .object({
+          name: z.string().min(1, t("requiredName")),
+          company_name: z.string().min(1, t("requiredCompany")),
+          email: z.string().email(t("invalidEmail")),
+          password: z.string().min(8, t("passwordMin")),
+          confirm_password: z.string(),
+        })
+        .refine((d) => d.password === d.confirm_password, {
+          message: t("passwordMismatch"),
+          path: ["confirm_password"],
+        }),
+    [t],
+  );
 
   const loginForm = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
   const registerForm = useForm<RegisterFormData>({ resolver: zodResolver(registerSchema) });
@@ -52,7 +71,12 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
   };
 
   const onRegister = async (data: RegisterFormData) => {
-    const { confirm_password: _c, ...payload } = data;
+    const payload = {
+      name: data.name,
+      company_name: data.company_name,
+      email: data.email,
+      password: data.password,
+    };
     try {
       await registerUser.mutateAsync(payload);
       setTab("login");
@@ -73,20 +97,17 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
           </Link>
           <div className="mb-24">
             <h1 className="mb-6 font-display text-display leading-tight text-on-primary">
-              Kết nối tài năng công nghệ toàn cầu.
+              {t("heroTitle")}
             </h1>
-            <p className="max-w-md text-body-lg text-on-primary/80">
-              Nền tảng tuyển dụng chuyên biệt dành cho các kỹ sư phần mềm, DevOps và chuyên gia IT
-              mong muốn làm việc từ xa.
-            </p>
+            <p className="max-w-md text-body-lg text-on-primary/80">{t("heroSubtitle")}</p>
             <div className="mt-12 flex gap-4">
               <div className="flex items-center gap-2 rounded-full border border-on-primary/20 bg-on-primary/10 px-4 py-2 backdrop-blur-sm">
                 <Icon name="check_circle" className="text-[20px] text-on-primary" />
-                <span className="text-label-md text-on-primary">Đăng tin nhanh chóng</span>
+                <span className="text-label-md text-on-primary">{t("fastPosting")}</span>
               </div>
               <div className="flex items-center gap-2 rounded-full border border-on-primary/20 bg-on-primary/10 px-4 py-2 backdrop-blur-sm">
                 <Icon name="group" className="text-[20px] text-on-primary" />
-                <span className="text-label-md text-on-primary">Tiếp cận 50,000+ ứng viên</span>
+                <span className="text-label-md text-on-primary">{t("reachCandidates")}</span>
               </div>
             </div>
           </div>
@@ -114,7 +135,7 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
                   tab === "login" ? "text-primary" : "text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                Đăng nhập
+                {t("login")}
               </button>
               <button
                 onClick={() => setTab("register")}
@@ -122,16 +143,14 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
                   tab === "register" ? "text-primary" : "text-on-surface-variant hover:text-on-surface"
                 }`}
               >
-                Đăng ký
+                {t("register")}
               </button>
             </div>
 
             {tab === "login" ? (
               <div>
-                <h2 className="mb-2 font-display text-headline-md text-on-surface">Đăng nhập HR</h2>
-                <p className="mb-6 text-body-sm text-on-surface-variant">
-                  Đăng nhập để đăng tin tuyển dụng remote
-                </p>
+                <h2 className="mb-2 font-display text-headline-md text-on-surface">{t("loginTitle")}</h2>
+                <p className="mb-6 text-body-sm text-on-surface-variant">{t("loginSubtitle")}</p>
 
                 <a
                   href="/api/auth/google/login"
@@ -143,117 +162,113 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                   </svg>
-                  Tiếp tục với Google
+                  {t("continueWithGoogle")}
                 </a>
 
                 <div className="relative mb-6 flex items-center py-2">
                   <div className="flex-grow border-t border-outline-variant" />
                   <span className="mx-4 shrink-0 text-label-sm uppercase tracking-wider text-on-surface-variant">
-                    Hoặc bằng Email
+                    {t("orEmail")}
                   </span>
                   <div className="flex-grow border-t border-outline-variant" />
                 </div>
 
                 <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                   <div>
-                    <label className="mb-1 block text-label-sm text-on-surface">Email công việc</label>
-                    <input type="email" {...loginForm.register("email")} className={inputClass} placeholder="name@company.com" />
+                    <label className="mb-1 block text-label-sm text-on-surface">{t("email")}</label>
+                    <input type="email" {...loginForm.register("email")} className={inputClass} placeholder={t("emailPlaceholder")} />
                     {loginForm.formState.errors.email && (
                       <p className="mt-1 text-body-sm text-error">{loginForm.formState.errors.email.message}</p>
                     )}
                   </div>
                   <div>
-                    <label className="mb-1 block text-label-sm text-on-surface">Mật khẩu</label>
+                    <label className="mb-1 block text-label-sm text-on-surface">{t("password")}</label>
                     <input type="password" {...loginForm.register("password")} className={inputClass} placeholder="••••••••" />
                     {loginForm.formState.errors.password && (
                       <p className="mt-1 text-body-sm text-error">{loginForm.formState.errors.password.message}</p>
                     )}
                   </div>
                   {login.isError && (
-                    <p className="text-body-sm text-error">Email hoặc mật khẩu không đúng</p>
+                    <p className="text-body-sm text-error">{t("invalidCredentials")}</p>
                   )}
                   <button
                     type="submit"
                     disabled={login.isPending}
                     className="mt-2 h-[44px] w-full rounded-lg bg-primary text-label-md text-on-primary transition-colors hover:bg-primary-fixed-dim hover:text-on-primary-fixed disabled:opacity-50"
                   >
-                    {login.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
+                    {login.isPending ? t("loggingIn") : t("login")}
                   </button>
                 </form>
 
                 <p className="mt-8 text-center text-body-sm text-on-surface-variant">
-                  Chưa có tài khoản?{" "}
+                  {t("noAccount")}{" "}
                   <a className="text-label-sm text-primary hover:underline" onClick={() => setTab("register")}>
-                    Đăng ký ngay
+                    {t("registerNow")}
                   </a>
                 </p>
               </div>
             ) : (
               <div>
-                <h2 className="mb-2 font-display text-headline-md text-on-surface">Tạo tài khoản</h2>
-                <p className="mb-6 text-body-sm text-on-surface-variant">
-                  Trở thành đối tác tuyển dụng của Remote IT
-                </p>
+                <h2 className="mb-2 font-display text-headline-md text-on-surface">{t("registerTitle")}</h2>
+                <p className="mb-6 text-body-sm text-on-surface-variant">{t("registerSubtitle")}</p>
 
                 <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
                   <div>
-                    <label className="mb-1 block text-label-sm text-on-surface">Tên</label>
-                    <input {...registerForm.register("name")} className={inputClass} placeholder="Tên của bạn" />
+                    <label className="mb-1 block text-label-sm text-on-surface">{t("name")}</label>
+                    <input {...registerForm.register("name")} className={inputClass} placeholder={t("namePlaceholder")} />
                     {registerForm.formState.errors.name && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.name.message}</p>
                     )}
                   </div>
                   <div>
-                    <label className="mb-1 block text-label-sm text-on-surface">Tên công ty</label>
-                    <input {...registerForm.register("company_name")} className={inputClass} placeholder="VD: Tech Corp" />
+                    <label className="mb-1 block text-label-sm text-on-surface">{t("companyName")}</label>
+                    <input {...registerForm.register("company_name")} className={inputClass} placeholder={t("companyPlaceholder")} />
                     {registerForm.formState.errors.company_name && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.company_name.message}</p>
                     )}
                   </div>
                   <div>
-                    <label className="mb-1 block text-label-sm text-on-surface">Email công việc</label>
-                    <input type="email" {...registerForm.register("email")} className={inputClass} placeholder="name@company.com" />
+                    <label className="mb-1 block text-label-sm text-on-surface">{t("email")}</label>
+                    <input type="email" {...registerForm.register("email")} className={inputClass} placeholder={t("emailPlaceholder")} />
                     {registerForm.formState.errors.email && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.email.message}</p>
                     )}
                   </div>
                   <div>
-                    <label className="mb-1 block text-label-sm text-on-surface">Mật khẩu</label>
-                    <input type="password" {...registerForm.register("password")} className={inputClass} placeholder="Tối thiểu 8 ký tự" />
+                    <label className="mb-1 block text-label-sm text-on-surface">{t("password")}</label>
+                    <input type="password" {...registerForm.register("password")} className={inputClass} placeholder={t("passwordPlaceholder")} />
                     {registerForm.formState.errors.password && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.password.message}</p>
                     )}
                   </div>
                   <div>
-                    <label className="mb-1 block text-label-sm text-on-surface">Nhập lại mật khẩu</label>
-                    <input type="password" {...registerForm.register("confirm_password")} className={inputClass} placeholder="Nhập lại mật khẩu" />
+                    <label className="mb-1 block text-label-sm text-on-surface">{t("confirmPassword")}</label>
+                    <input type="password" {...registerForm.register("confirm_password")} className={inputClass} placeholder={t("confirmPlaceholder")} />
                     {registerForm.formState.errors.confirm_password && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.confirm_password.message}</p>
                     )}
                   </div>
                   {registerUser.isError && (
-                    <p className="text-body-sm text-error">Đăng ký thất bại. Email có thể đã tồn tại.</p>
+                    <p className="text-body-sm text-error">{t("registerFailed")}</p>
                   )}
                   <div className="pt-2">
                     <p className="mb-4 text-[12px] text-on-surface-variant">
-                      Bằng việc đăng ký, bạn đồng ý với{" "}
-                      <a className="text-primary hover:underline">Điều khoản dịch vụ</a> và{" "}
-                      <a className="text-primary hover:underline">Chính sách bảo mật</a> của chúng tôi.
+                      {t("terms", { terms: t("termsOfService"), privacy: t("privacyPolicy") })}
                     </p>
                     <button
                       type="submit"
                       disabled={registerUser.isPending}
                       className="h-[44px] w-full rounded-lg bg-primary text-label-md text-on-primary transition-colors hover:bg-primary-fixed-dim hover:text-on-primary-fixed disabled:opacity-50"
                     >
-                      {registerUser.isPending ? "Đang tạo..." : "Tạo tài khoản"}
+                      {registerUser.isPending ? t("creating") : t("createAccount")}
                     </button>
                   </div>
                 </form>
 
                 <p className="mt-6 text-center text-body-sm text-on-surface-variant">
-                  Có tài khoản rồi?{" "}
+                  {t("haveAccount")}{" "}
                   <a className="text-label-sm text-primary hover:underline" onClick={() => setTab("login")}>
-                    Đăng nhập
+                    {t("loginNow")}
                   </a>
                 </p>
               </div>

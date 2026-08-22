@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   useAdminCategories,
   useAdminTags,
@@ -15,6 +16,7 @@ const inputClass =
   "w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-md focus:border-primary focus:outline-none";
 
 export function AdminCatalog() {
+  const t = useTranslations("admin");
   const { data: categories } = useAdminCategories();
   const { data: tags } = useAdminTags();
   const createCategory = useCreateCategory();
@@ -27,16 +29,16 @@ export function AdminCatalog() {
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-headline-lg">Quản lý catalog</h1>
+      <h1 className="mb-6 font-display text-headline-lg">{t("catalogTitle")}</h1>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <section>
-          <h2 className="mb-4 font-display text-headline-md">Categories</h2>
+          <h2 className="mb-4 font-display text-headline-md">{t("categories")}</h2>
           <div className="mb-4 flex gap-2">
             <input
               value={categoryName}
               onChange={(e) => setCategoryName(e.target.value)}
-              placeholder="Tên category mới..."
+              placeholder={t("newCategory")}
               className={inputClass}
             />
             <Button
@@ -47,7 +49,7 @@ export function AdminCatalog() {
                 }
               }}
             >
-              Thêm
+              {t("add")}
             </Button>
           </div>
           <div className="space-y-2">
@@ -59,11 +61,11 @@ export function AdminCatalog() {
                 <div>
                   <span className="font-medium">{c.name}</span>
                   <span className="ml-2 text-body-sm text-secondary">/{c.slug}</span>
-                  {!c.is_active && <span className="ml-2 text-body-sm text-error">(đã ẩn)</span>}
+                  {!c.is_active && <span className="ml-2 text-body-sm text-error">({t("hidden")})</span>}
                 </div>
                 {c.is_active && (
                   <Button variant="ghost" onClick={() => deactivateCategory.mutate(c.id)}>
-                    Ẩn
+                    {t("hide")}
                   </Button>
                 )}
               </div>
@@ -72,12 +74,12 @@ export function AdminCatalog() {
         </section>
 
         <section>
-          <h2 className="mb-4 font-display text-headline-md">Tags</h2>
+          <h2 className="mb-4 font-display text-headline-md">{t("tags")}</h2>
           <div className="mb-4 flex gap-2">
             <input
               value={tagName}
               onChange={(e) => setTagName(e.target.value)}
-              placeholder="Tên tag mới..."
+              placeholder={t("newTag")}
               className={inputClass}
             />
             <Button
@@ -88,25 +90,25 @@ export function AdminCatalog() {
                 }
               }}
             >
-              Thêm
+              {t("add")}
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {tags?.map((t) => (
+            {tags?.map((tg) => (
               <span
-                key={t.id}
+                key={tg.id}
                 className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-body-sm ${
-                  t.is_active
+                  tg.is_active
                     ? "border-outline-variant bg-surface-container-lowest"
                     : "border-outline-variant bg-surface-container-high text-secondary line-through"
                 }`}
               >
-                {t.name}
-                {t.is_active && (
+                {tg.name}
+                {tg.is_active && (
                   <button
-                    onClick={() => deactivateTag.mutate(t.id)}
+                    onClick={() => deactivateTag.mutate(tg.id)}
                     className="text-secondary hover:text-error"
-                    title="Ẩn tag"
+                    title={t("hide")}
                   >
                     ×
                   </button>
