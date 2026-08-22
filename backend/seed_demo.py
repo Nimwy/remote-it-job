@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from argon2 import PasswordHasher
 
+from app.core.slug import slugify, unique_slug
 from app.db.session import SessionLocal
 from app.models.category import Category
 from app.models.contact import ContactChannel, UserContact
@@ -39,12 +40,17 @@ def seed_demo():
 
         categories = {c.slug: c for c in db.query(Category).all()}
         tags = {t.slug: t for t in db.query(Tag).all()}
+        existing_slugs = {s for (s,) in db.query(Job.slug).all()}
 
         def add_job(title, cat_slug, tag_slugs, job_type, location, salary_min, salary_max, desc, reqs, status=JobStatus.approved):
+            base = slugify(title)
+            slug = unique_slug(base, existing_slugs)
+            existing_slugs.add(slug)
             job = Job(
                 hr_id=hr.id,
                 category_id=categories[cat_slug].id,
                 title=title,
+                slug=slug,
                 job_type=job_type,
                 location=location,
                 timezone="UTC+7",
