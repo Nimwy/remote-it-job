@@ -1,18 +1,18 @@
-import { Link } from 'react-router-dom'
-import type { JobListItem } from '../types'
-import { JOB_TYPE_LABELS } from '../types'
-import { Icon } from './ui/Icon'
+import Link from "next/link";
+import type { JobListItem } from "../types";
+import { JOB_TYPE_LABELS } from "../types";
+import { Icon } from "./ui/Icon";
 
 export function JobCard({ job }: { job: JobListItem }) {
   const salaryText =
     job.salary_min || job.salary_max
-      ? `${job.salary_min ?? '?'}${job.currency === 'USD' ? '$' : ''} - ${job.salary_max ?? '?'}${job.currency === 'USD' ? '$' : ''}`
-      : 'Thỏa thuận'
+      ? `${job.salary_min ?? "?"}${job.currency === "USD" ? "$" : ""} - ${job.salary_max ?? "?"}${job.currency === "USD" ? "$" : ""}`
+      : "Thỏa thuận";
 
   return (
     <Link
-      to={`/jobs/${job.id}`}
-      className="group relative flex flex-col gap-4 rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 transition-shadow hover:shadow-md"
+      href={`/jobs/${job.id}`}
+      className="group relative flex flex-col gap-4 rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 transition-shadow hover:shadow-card-hover"
     >
       <div className="absolute right-4 top-4 text-outline transition-colors hover:text-error">
         <Icon name="bookmark_border" className="text-[20px]" />
@@ -71,5 +71,5 @@ export function JobCard({ job }: { job: JobListItem }) {
         </div>
       )}
     </Link>
-  )
+  );
 }

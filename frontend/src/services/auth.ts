@@ -1,33 +1,39 @@
-import { api } from '../lib/api'
-import type { User } from '../types'
+import { apiFetch } from "../lib/api";
+import type { User } from "../types";
 
-export async function register(data: {
-  name: string
-  email: string
-  password: string
-  company_name: string
+export function register(data: {
+  name: string;
+  email: string;
+  password: string;
+  company_name: string;
 }): Promise<User> {
-  const res = await api.post('/auth/register', data)
-  return res.data
+  return apiFetch("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function login(data: { email: string; password: string }): Promise<User> {
-  const res = await api.post('/auth/login', data)
-  return res.data
+export function login(data: { email: string; password: string }): Promise<User> {
+  return apiFetch("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function logout(): Promise<void> {
-  await api.post('/auth/logout')
+export function logout(): Promise<void> {
+  return apiFetch("/auth/logout", { method: "POST" });
 }
 
-export async function me(): Promise<User> {
-  const res = await api.get('/auth/me')
-  return res.data
+export function me(): Promise<User> {
+  return apiFetch("/auth/me");
 }
 
-export async function changePassword(data: {
-  current_password: string
-  new_password: string
+export function changePassword(data: {
+  current_password: string;
+  new_password: string;
 }): Promise<void> {
-  await api.post('/auth/change-password', data)
+  return apiFetch("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }

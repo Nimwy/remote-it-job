@@ -1,70 +1,75 @@
-import { api } from '../lib/api'
-import type { Contact, HrJob, HrProfile, PaginatedResponse } from '../types'
+import { apiFetch } from "../lib/api";
+import type { Contact, HrJob, HrProfile, PaginatedResponse } from "../types";
 
 export interface JobInput {
-  title: string
-  category_id: number
-  job_type: string
-  location?: string | null
-  timezone?: string | null
-  salary_min?: number | null
-  salary_max?: number | null
-  currency?: string | null
-  description: string
-  requirements: string
-  expires_at?: string | null
-  tag_ids: number[]
+  title: string;
+  category_id: number;
+  job_type: string;
+  location?: string | null;
+  timezone?: string | null;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  currency?: string | null;
+  description: string;
+  requirements: string;
+  expires_at?: string | null;
+  tag_ids: number[];
 }
 
-export async function getProfile(): Promise<HrProfile> {
-  const res = await api.get('/hr/profile')
-  return res.data
+export function getProfile(): Promise<HrProfile> {
+  return apiFetch("/hr/profile");
 }
 
-export async function updateProfile(data: {
-  name?: string
-  company_name?: string
-  avatar?: string
-  contacts?: Contact[]
+export function updateProfile(data: {
+  name?: string;
+  company_name?: string;
+  avatar?: string;
+  contacts?: Contact[];
 }): Promise<HrProfile> {
-  const res = await api.patch('/hr/profile', data)
-  return res.data
+  return apiFetch("/hr/profile", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function listMyJobs(
+export function listMyJobs(
   status?: string,
   page = 1,
   page_size = 20,
 ): Promise<PaginatedResponse<HrJob>> {
-  const res = await api.get('/hr/jobs', { params: { status, page, page_size } })
-  return res.data
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  params.set("page", String(page));
+  params.set("page_size", String(page_size));
+  return apiFetch(`/hr/jobs?${params.toString()}`);
 }
 
-export async function createJob(data: JobInput): Promise<HrJob> {
-  const res = await api.post('/hr/jobs', data)
-  return res.data
+export function createJob(data: JobInput): Promise<HrJob> {
+  return apiFetch("/hr/jobs", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function getMyJob(id: number): Promise<HrJob> {
-  const res = await api.get(`/hr/jobs/${id}`)
-  return res.data
+export function getMyJob(id: number): Promise<HrJob> {
+  return apiFetch(`/hr/jobs/${id}`);
 }
 
-export async function updateJob(id: number, data: Partial<JobInput>): Promise<HrJob> {
-  const res = await api.patch(`/hr/jobs/${id}`, data)
-  return res.data
+export function updateJob(id: number, data: Partial<JobInput>): Promise<HrJob> {
+  return apiFetch(`/hr/jobs/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function deleteJob(id: number): Promise<void> {
-  await api.delete(`/hr/jobs/${id}`)
+export function deleteJob(id: number): Promise<void> {
+  return apiFetch(`/hr/jobs/${id}`, { method: "DELETE" });
 }
 
-export async function submitJob(id: number): Promise<HrJob> {
-  const res = await api.post(`/hr/jobs/${id}/submit`)
-  return res.data
+export function submitJob(id: number): Promise<HrJob> {
+  return apiFetch(`/hr/jobs/${id}/submit`, { method: "POST" });
 }
 
-export async function closeJob(id: number): Promise<HrJob> {
-  const res = await api.post(`/hr/jobs/${id}/close`)
-  return res.data
+export function closeJob(id: number): Promise<HrJob> {
+  return apiFetch(`/hr/jobs/${id}/close`, { method: "POST" });
 }
