@@ -24,6 +24,7 @@ class ContactInfo(BaseModel):
 class JobListItem(BaseModel):
     id: int
     title: str
+    slug: str
     company_name: str
     category: CategoryInfo
     job_type: str
@@ -33,6 +34,7 @@ class JobListItem(BaseModel):
     salary_max: float | None
     currency: str | None
     tags: list[str]
+    tag_slugs: list[str]
     created_at: datetime
 
 
@@ -77,6 +79,7 @@ class JobUpdate(BaseModel):
 class HrJobResponse(BaseModel):
     id: int
     title: str
+    slug: str
     category: CategoryInfo
     job_type: str
     location: str | None
