@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { JobListItem } from "../types";
 import { JOB_TYPE_LABELS } from "../types";
+import { jobUrl } from "../lib/url";
 import { Icon } from "./ui/Icon";
 
 export function JobCard({ job }: { job: JobListItem }) {
@@ -11,7 +12,7 @@ export function JobCard({ job }: { job: JobListItem }) {
 
   return (
     <Link
-      href={`/jobs/${job.id}`}
+      href={jobUrl(job.slug, job.id)}
       className="group relative flex flex-col gap-4 rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 transition-shadow hover:shadow-card-hover"
     >
       <div className="absolute right-4 top-4 text-outline transition-colors hover:text-error">

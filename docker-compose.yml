@@ -16,12 +16,13 @@ services:
 
   backend:
     build: ./backend
+    user: "1000:1000"
     ports:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg2://remoteit:remoteit@db:5432/remoteit
       SECRET_KEY: dev-secret-key-not-for-production
-      CORS_ORIGINS: '["http://localhost:5173"]'
+      CORS_ORIGINS: '["http://localhost:5173", "http://localhost:3000"]'
     depends_on:
       db:
         condition: service_healthy

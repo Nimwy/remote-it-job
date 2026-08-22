@@ -31,6 +31,7 @@ export interface Contact {
 export interface JobListItem {
   id: number;
   title: string;
+  slug: string;
   company_name: string;
   category: Category;
   job_type: "fulltime" | "parttime" | "freelance" | "contract";
@@ -40,6 +41,7 @@ export interface JobListItem {
   salary_max: number | null;
   currency: string | null;
   tags: string[];
+  tag_slugs: string[];
   created_at: string;
 }
 
@@ -54,6 +56,7 @@ export interface JobDetail extends JobListItem {
 export interface HrJob {
   id: number;
   title: string;
+  slug: string;
   category: Category;
   job_type: "fulltime" | "parttime" | "freelance" | "contract";
   location: string | null;

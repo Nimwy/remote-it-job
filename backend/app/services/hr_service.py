@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.slug import slugify, unique_slug
 from app.models.category import Category
 from app.models.contact import ContactChannel, UserContact
 from app.models.job import Job, JobStatus, JobType
@@ -57,6 +58,7 @@ def serialize_hr_job(job: Job) -> dict:
     return {
         "id": job.id,
         "title": job.title,
+        "slug": job.slug,
         "category": {"id": job.category.id, "name": job.category.name, "slug": job.category.slug},
         "job_type": job.job_type.value,
         "location": job.location,
@@ -113,6 +115,15 @@ def _validate_salary(salary_min: float | None, salary_max: float | None) -> None
         )
 
 
+def _generate_slug(db: Session, title: str, exclude_id: int | None = None) -> str:
+    base = slugify(title) or "job"
+    query = db.query(Job.slug).filter(Job.slug.like(f"{base}%"))
+    if exclude_id is not None:
+        query = query.filter(Job.id != exclude_id)
+    existing = {slug for (slug,) in query.all()}
+    return unique_slug(base, existing)
+
+
 def create_job(db: Session, user: User, data: JobCreate) -> Job:
     _validate_category(db, data.category_id)
     _validate_tags(db, data.tag_ids)
@@ -122,6 +133,7 @@ def create_job(db: Session, user: User, data: JobCreate) -> Job:
         hr_id=user.id,
         category_id=data.category_id,
         title=data.title,
+        slug=_generate_slug(db, data.title),
         job_type=JobType(data.job_type),
         location=data.location,
         timezone=data.timezone,
@@ -175,6 +187,9 @@ def update_job(db: Session, user: User, job_id: int, data: JobUpdate) -> Job:
 
     for field, value in data_dict.items():
         setattr(job, field, value)
+
+    if "title" in data_dict:
+        job.slug = _generate_slug(db, data_dict["title"], exclude_id=job.id)
 
     _validate_salary(job.salary_min, job.salary_max)
 

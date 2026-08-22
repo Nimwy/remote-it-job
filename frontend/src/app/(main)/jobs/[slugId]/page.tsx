@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Icon } from "@/components/ui/Icon";
 import { CONTACT_LABELS, JOB_TYPE_LABELS } from "@/types";
 import { serverGetJob } from "@/services/jobs";
+import { parseJobId } from "@/lib/url";
 
 const contactIcons: Record<string, string> = {
   zalo: "chat",
@@ -15,10 +16,10 @@ const contactIcons: Record<string, string> = {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slugId: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
-  const job = await serverGetJob(Number(id));
+  const { slugId } = await params;
+  const job = await serverGetJob(parseJobId(slugId));
   if (!job) return { title: "Không tìm thấy" };
   return {
     title: `${job.title} - ${job.company_name} | Remote IT`,
@@ -29,10 +30,10 @@ export async function generateMetadata({
 export default async function JobDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slugId: string }>;
 }) {
-  const { id } = await params;
-  const job = await serverGetJob(Number(id));
+  const { slugId } = await params;
+  const job = await serverGetJob(parseJobId(slugId));
 
   if (!job) {
     return (
@@ -67,6 +68,13 @@ export default async function JobDetailPage({
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href={`/category/${job.category.slug}`}
+                className="flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-label-sm text-secondary transition-colors hover:bg-primary hover:text-on-primary"
+              >
+                <Icon name="category" className="text-[16px]" />
+                {job.category.name}
+              </Link>
               {job.location && (
                 <span className="flex items-center gap-1.5 rounded-full bg-surface-container px-3 py-1 text-label-sm text-secondary">
                   <Icon name="location_on" className="text-[16px]" />
@@ -97,13 +105,14 @@ export default async function JobDetailPage({
             <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
               <h2 className="mb-3 font-display text-headline-md">Công nghệ</h2>
               <div className="flex flex-wrap gap-2">
-                {job.tags.map((tag) => (
-                  <span
+                {job.tags.map((tag, i) => (
+                  <Link
                     key={tag}
-                    className="rounded-full bg-surface-container-high px-3 py-1 font-mono text-body-sm text-secondary"
+                    href={`/tag/${job.tag_slugs[i] ?? tag}`}
+                    className="rounded-full bg-surface-container-high px-3 py-1 font-mono text-body-sm text-secondary transition-colors hover:bg-primary hover:text-on-primary"
                   >
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </section>

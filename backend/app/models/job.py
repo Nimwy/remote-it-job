@@ -31,6 +31,7 @@ class Job(Base):
     hr_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
     title: Mapped[str] = mapped_column(String(200))
+    slug: Mapped[str] = mapped_column(String(220), unique=True, index=True)
     job_type: Mapped[JobType] = mapped_column(Enum(JobType))
     location: Mapped[str | None] = mapped_column(String(150))
     timezone: Mapped[str | None] = mapped_column(String(50))

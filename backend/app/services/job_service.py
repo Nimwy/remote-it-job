@@ -82,6 +82,7 @@ def serialize_job_list_item(job: Job) -> dict:
     return {
         "id": job.id,
         "title": job.title,
+        "slug": job.slug,
         "company_name": job.hr.company_name or job.hr.name,
         "category": {"id": job.category.id, "name": job.category.name, "slug": job.category.slug},
         "job_type": job.job_type.value,
@@ -91,6 +92,7 @@ def serialize_job_list_item(job: Job) -> dict:
         "salary_max": float(job.salary_max) if job.salary_max is not None else None,
         "currency": job.currency,
         "tags": [jt.tag.name for jt in job.job_tags],
+        "tag_slugs": [jt.tag.slug for jt in job.job_tags],
         "created_at": job.created_at,
     }
 

@@ -32,7 +32,7 @@ export default async function HomePage() {
           {(categories ?? []).map((c) => (
             <Link
               key={c.id}
-              href={`/jobs?category=${c.slug}`}
+              href={`/category/${c.slug}`}
               className="rounded-full border border-outline-variant bg-surface-container px-4 py-1.5 text-label-md text-on-surface transition-colors hover:bg-surface-variant"
             >
               {c.name}
