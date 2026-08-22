@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { JobListItem } from "../types";
 import { JOB_TYPE_LABELS } from "../types";
 import { jobUrl } from "../lib/url";
+import { timeAgo } from "../lib/date";
 import { Icon } from "./ui/Icon";
 
 export function JobCard({ job }: { job: JobListItem }) {
@@ -55,7 +56,7 @@ export function JobCard({ job }: { job: JobListItem }) {
         )}
         <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
           <Icon name="schedule" className="text-[16px]" />
-          <span>{JOB_TYPE_LABELS[job.job_type] ?? job.job_type}</span>
+          <span>{timeAgo(job.created_at)}</span>
         </div>
       </div>
 

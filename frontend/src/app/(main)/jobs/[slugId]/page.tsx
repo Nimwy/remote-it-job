@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/Icon";
 import { CONTACT_LABELS, JOB_TYPE_LABELS } from "@/types";
 import { serverGetJob } from "@/services/jobs";
 import { parseJobId } from "@/lib/url";
+import { timeAgo, timeLeft } from "@/lib/date";
 
 const contactIcons: Record<string, string> = {
   zalo: "chat",
@@ -87,6 +88,20 @@ export default async function JobDetailPage({
               </span>
               <span className="rounded-full bg-tertiary-fixed px-3 py-1 text-label-sm uppercase text-on-surface">
                 Remote 100%
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-body-sm text-secondary">
+              <span className="flex items-center gap-1.5">
+                <Icon name="schedule" className="text-[16px]" />
+                Đăng {timeAgo(job.created_at)}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Icon name="event" className="text-[16px]" />
+                {timeLeft(job.expires_at)}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Icon name="visibility" className="text-[16px]" />
+                {job.views} lượt xem
               </span>
             </div>
           </section>
