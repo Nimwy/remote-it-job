@@ -13,13 +13,13 @@ Website tuyển dụng việc làm remote dành cho thị trường Việt Nam.
 ## Tech Stack
 
 ### Frontend
+- Next.js (App Router, SSR)
 - React
 - TypeScript
-- Vite
-- React Router
+- Tailwind CSS v4
 - TanStack Query
-- React Hook Form
-- Zod
+- React Hook Form + Zod
+- next-intl (i18n EN/VI)
 - Chạy trực tiếp bằng Node.js/npm, không Docker hóa trong MVP.
 
 ### Backend
@@ -36,6 +36,11 @@ Website tuyển dụng việc làm remote dành cho thị trường Việt Nam.
 - PostgreSQL
 - Chạy bằng Docker Compose.
 
+### Testing
+- pytest (unit + API)
+- Vitest (frontend unit)
+- Playwright (e2e)
+
 ### Authentication
 - Email/password
 - Google OAuth
@@ -48,8 +53,10 @@ Website tuyển dụng việc làm remote dành cho thị trường Việt Nam.
 
 - `AI_CONTEXT.md` — quy tắc và context cho AI coding agent.
 - `ARCHITECTURE.md` — kiến trúc hệ thống.
+- `DIAGRAMS.md` — sơ đồ flow/sequence/class (Mermaid).
 - `DATABASE_SCHEMA.md` — database schema và constraints.
-- `API_SPEC.md` — REST API contract.
+- `API_SPEC.md` — REST API contract (tổng quan).
+- `API_REFERENCE.md` — tài liệu kỹ thuật chi tiết từng API (request/response).
 - `SECURITY.md` — yêu cầu bảo mật.
 - `PROJECT_MAP.md` — cấu trúc source code.
 - `PROJECT_STATE.md` — trạng thái triển khai hiện tại.
