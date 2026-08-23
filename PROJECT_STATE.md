@@ -99,7 +99,7 @@ HR bị blocked không bị hard-delete và job của họ không hiển thị c
 - Frontend Next.js (SSR) — public, HR, Admin.
 - i18n EN/VI (next-intl) + slug URL cho SEO.
 - Trang category + tag + thời gian tương đối.
-- Unit test (pytest 80, Vitest 17) + e2e (Playwright 10).
+- Unit test (pytest 81, Vitest 17) + e2e (Playwright 10).
 - Tài liệu: API_REFERENCE.md, DIAGRAMS.md.
 
 ## Chưa triển khai / tồn đọng

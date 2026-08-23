@@ -219,10 +219,13 @@ Lộ trình triển khai dự án Remote IT Job theo hướng **backend-first**,
 
 ## Giai đoạn 7: Frontend
 
+> **Lưu ý:** Giai đoạn này ban đầu dự kiến dùng Vite + React Router, nhưng sau khi review
+> đã chuyển sang **Next.js (App Router, SSR)** cho tối ưu SEO. Chi tiết xem `ARCHITECTURE.md`.
+
 ### 7.1 Thiết lập
-- Khởi tạo Vite + React + TypeScript
-- Cài Tailwind CSS (cấu hình tokens từ `DESIGN.md` của Stitch)
-- Cài React Router, TanStack Query, React Hook Form, Zod
+- Khởi tạo Next.js + React + TypeScript (App Router)
+- Cài Tailwind CSS v4 (cấu hình tokens từ `DESIGN.md` của Stitch)
+- Cài TanStack Query, React Hook Form, Zod, next-intl
 - Cấu trúc thư mục theo `PROJECT_MAP.md`
 
 ### 7.2 Layout & Design System

@@ -40,13 +40,14 @@ Admin:
 ## 3. Tech Stack đã chốt
 
 Frontend:
+- Next.js (App Router, SSR)
 - React
 - TypeScript
-- Vite
-- React Router
+- Tailwind CSS v4
 - TanStack Query
 - React Hook Form
 - Zod
+- next-intl (i18n EN/VI)
 - Node.js/npm chạy trực tiếp, không Docker hóa frontend trong MVP.
 
 Backend:
