@@ -14,6 +14,8 @@
   "home": {
     "title": "Remote IT — Tìm việc làm remote dễ dàng",
     "subtitle": "Khám phá hàng ngàn cơ hội việc làm từ xa chất lượng cao, dành riêng cho các kỹ sư và chuyên gia công nghệ tại Việt Nam và toàn cầu.",
+    "searchPlaceholder": "Tìm kiếm theo vị trí, kỹ năng, công ty...",
+    "search": "Tìm kiếm",
     "all": "Tất cả",
     "featuredJobs": "Việc làm nổi bật",
     "jobsCount": "{count} việc làm",

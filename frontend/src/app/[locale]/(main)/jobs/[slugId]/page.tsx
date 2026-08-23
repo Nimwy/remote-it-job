@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/Icon";
 import { serverGetJob } from "@/services/jobs";
 import { parseJobId } from "@/lib/url";
 import { timeAgo, timeLeft } from "@/lib/date";
+import { CompanyLogo } from "@/components/CompanyLogo";
 
 const contactIcons: Record<string, string> = {
   zalo: "chat",
@@ -64,9 +65,12 @@ export default async function JobDetailPage({
         <div className="space-y-6 lg:col-span-2">
           <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <h1 className="font-display text-headline-lg text-on-surface">{job.title}</h1>
-                <p className="mt-1 text-headline-sm text-secondary">{job.company_name}</p>
+              <div className="flex items-center gap-4">
+                <CompanyLogo name={job.company_name} size="lg" />
+                <div>
+                  <h1 className="font-display text-headline-lg text-on-surface">{job.title}</h1>
+                  <p className="mt-1 text-headline-sm text-secondary">{job.company_name}</p>
+                </div>
               </div>
               <div className="text-right">
                 <p className="font-display text-headline-md text-primary">{salary}</p>

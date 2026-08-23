@@ -145,7 +145,10 @@ export default async function JobsPage({
               )}
             </>
           ) : (
-            <p className="text-body-md text-secondary">{t("noResults")}</p>
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-outline-variant bg-surface-container-lowest py-16 text-center">
+              <Icon name="search_off" className="text-[48px] text-outline" />
+              <p className="text-body-md text-secondary">{t("noResults")}</p>
+            </div>
           )}
         </div>
       </div>
