@@ -63,8 +63,8 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
 
   const onLogin = async (data: LoginFormData) => {
     try {
-      await login.mutateAsync(data);
-      router.push("/hr");
+      const user = await login.mutateAsync(data);
+      router.push(user.role === "admin" ? "/admin" : "/hr");
     } catch {
       /* handled below */
     }
