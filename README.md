@@ -49,6 +49,56 @@ Website tuyển dụng việc làm remote dành cho thị trường Việt Nam.
 - Session lưu trong PostgreSQL
 - Password hash bằng Argon2id
 
+## Chạy dự án
+
+### Yêu cầu
+- Docker + Docker Compose
+- Node.js 18+ và npm
+- Python 3.12 (chạy trong Docker, không cần cài local)
+
+### 1. Backend + Database
+
+```bash
+# Khởi động PostgreSQL + FastAPI
+docker compose up -d db
+docker compose run --rm backend alembic upgrade head   # chạy migration
+docker compose run --rm backend python seed.py         # seed admin + categories + tags
+docker compose run --rm backend python seed_demo.py    # (tùy chọn) seed dữ liệu mẫu
+docker compose up -d backend                           # chạy API tại :8000
+```
+
+Backend docs tự sinh: http://localhost:8000/docs
+
+### 2. Frontend
+
+```bash
+cd frontend
+cp .env.example .env.local   # nếu cần đổi BACKEND_URL
+npm install
+npm run dev                  # chạy tại :3000
+```
+
+### 3. Test
+
+```bash
+# Backend (unit + API)
+docker compose run --rm backend pytest
+
+# Frontend unit
+cd frontend && npm test
+
+# e2e (cần cài browser: npx playwright install chromium)
+# Linux cần: sudo npx playwright install-deps chromium
+cd frontend && npm run test:e2e
+```
+
+## Tài khoản mặc định
+
+| Vai trò | Email | Mật khẩu |
+|---------|-------|----------|
+| Admin | `admin@remoteit.vn` | `admin123` |
+| HR (demo) | `demo.hr@remoteit.vn` | `demo123` |
+
 ## Documentation
 
 - `AI_CONTEXT.md` — quy tắc và context cho AI coding agent.
