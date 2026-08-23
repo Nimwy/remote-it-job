@@ -1,0 +1,14 @@
+[project]
+name = "remote-it-job-backend"
+version = "0.1.0"
+description = "Backend for Remote IT Job"
+requires-python = ">=3.12"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "RUF"]
+# B008: FastAPI dùng Depends() trong default argument (pattern chuẩn, false positive)
+ignore = ["B008"]

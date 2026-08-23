@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.core.slug import slugify
 from app.models.category import Category
@@ -82,7 +82,7 @@ def setup_seed(db):
         hr,
         category,
         title="Expired Job",
-        expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        expires_at=datetime.now(UTC) - timedelta(days=1),
     )
 
     pending_job = create_job(db, hr, category, title="Pending Job", status=JobStatus.pending)

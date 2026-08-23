@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta, timezone
-
 import hashlib
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -55,7 +54,7 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
 
 def create_session(db: Session, user: User) -> str:
     raw_token, token_hash = generate_session_token()
-    expires_at = datetime.now(timezone.utc) + timedelta(seconds=settings.session_max_age_seconds)
+    expires_at = datetime.now(UTC) + timedelta(seconds=settings.session_max_age_seconds)
 
     session = SessionModel(
         user_id=user.id,

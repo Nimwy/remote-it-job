@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from argon2 import PasswordHasher
 
@@ -42,7 +42,18 @@ def seed_demo():
         tags = {t.slug: t for t in db.query(Tag).all()}
         existing_slugs = {s for (s,) in db.query(Job.slug).all()}
 
-        def add_job(title, cat_slug, tag_slugs, job_type, location, salary_min, salary_max, desc, reqs, status=JobStatus.approved):
+        def add_job(
+            title,
+            cat_slug,
+            tag_slugs,
+            job_type,
+            location,
+            salary_min,
+            salary_max,
+            desc,
+            reqs,
+            status=JobStatus.approved,
+        ):
             base = slugify(title)
             slug = unique_slug(base, existing_slugs)
             existing_slugs.add(slug)
@@ -60,7 +71,7 @@ def seed_demo():
                 description=desc,
                 requirements=reqs,
                 status=status,
-                expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+                expires_at=datetime.now(UTC) + timedelta(days=30),
             )
             db.add(job)
             db.flush()
@@ -75,8 +86,12 @@ def seed_demo():
             JobType.fulltime,
             "Việt Nam",
             2000, 3500,
-            "Xây dựng và duy trì các ứng dụng web fullstack cho nền tảng thương mại điện tử. Làm việc trực tiếp với team product và design.",
-            "- 3+ năm kinh nghiệm fullstack\n- Thành thạo React và Node.js\n- Kinh nghiệm PostgreSQL\n- Tiếng Anh giao tiếp",
+            "Xây dựng và duy trì các ứng dụng web fullstack cho nền tảng thương mại điện tử. "
+            "Làm việc trực tiếp với team product và design.",
+            "- 3+ năm kinh nghiệm fullstack\n"
+            "- Thành thạo React và Node.js\n"
+            "- Kinh nghiệm PostgreSQL\n"
+            "- Tiếng Anh giao tiếp",
         )
         add_job(
             "React Developer",

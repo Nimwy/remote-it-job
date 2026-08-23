@@ -1,7 +1,7 @@
 from argon2 import PasswordHasher
 
 from app.db.session import SessionLocal, engine
-from app.models import Base, User, Category, Tag
+from app.models import Base, Category, Tag, User
 from app.models.user import UserRole, UserStatus
 
 ph = PasswordHasher()

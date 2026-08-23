@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from app.models.category import Category
 from app.models.contact import ContactChannel, UserContact
-from app.models.job import Job, JobStatus
+from app.models.job import JobStatus
 from app.models.job_view import JobView
 from app.models.session import Session as SessionModel
 from app.models.tag import Tag
@@ -17,7 +17,6 @@ from app.repositories import (
     user_repository,
 )
 from tests.factories import create_category, create_job, create_tag, create_user
-
 
 # ---------- user_repository ----------
 
@@ -52,7 +51,7 @@ def test_user_repository_list_hr_users(db):
     db.add(admin)
     db.commit()
 
-    users, total = user_repository.list_hr_users(db)
+    _, total = user_repository.list_hr_users(db)
     assert total == 2
 
     pending, total = user_repository.list_hr_users(db, status=UserStatus.pending.value)
@@ -70,7 +69,7 @@ def test_session_repository(db):
     user = create_user(db, "hr@example.com")
     db.commit()
 
-    session = SessionModel(user_id=user.id, token_hash="hash123", expires_at=datetime.now(timezone.utc) + timedelta(days=1))
+    session = SessionModel(user_id=user.id, token_hash="hash123", expires_at=datetime.now(UTC) + timedelta(days=1))
     session_repository.create(db, session)
     db.commit()
 
@@ -151,7 +150,7 @@ def test_job_repository_get_public_filters(db):
     pending = create_job(db, hr, category, title="Pending", status=JobStatus.pending)
     expired = create_job(
         db, hr, category, title="Expired",
-        expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        expires_at=datetime.now(UTC) - timedelta(days=1),
     )
     blocked_owner = create_job(db, blocked, category, title="Blocked")
     db.commit()
@@ -220,7 +219,7 @@ def test_job_view_repository(db):
     db.commit()
 
     assert job_view_repository.find(db, job.id, "visitor-1") is None
-    job_view_repository.create(db, JobView(job_id=job.id, visitor_key="visitor-1", viewed_at=datetime.now(timezone.utc)))
+    job_view_repository.create(db, JobView(job_id=job.id, visitor_key="visitor-1", viewed_at=datetime.now(UTC)))
     db.commit()
     assert job_view_repository.find(db, job.id, "visitor-1") is not None
 

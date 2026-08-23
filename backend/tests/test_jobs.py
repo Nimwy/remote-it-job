@@ -2,7 +2,7 @@ from tests.factories import setup_seed
 
 
 def test_list_jobs_returns_only_public(client, db):
-    seed = setup_seed(db)
+    setup_seed(db)
     res = client.get("/api/jobs")
     assert res.status_code == 200
     data = res.json()

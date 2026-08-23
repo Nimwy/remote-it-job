@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -75,7 +75,7 @@ def serialize_job_detail(job: Job) -> dict:
 
 
 def record_view(db: Session, job: Job, visitor_key: str) -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     existing = job_view_repository.find(db, job.id, visitor_key)
 
     if existing:

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone as tz
+from datetime import UTC, datetime
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
@@ -18,7 +18,7 @@ def get_owned(db: Session, user_id: int, job_id: int) -> Job | None:
 
 
 def get_public(db: Session, job_id: int) -> Job | None:
-    now = datetime.now(tz.utc)
+    now = datetime.now(UTC)
     return (
         db.query(Job)
         .join(User, Job.hr_id == User.id)
@@ -49,7 +49,7 @@ def search_public(
     page: int,
     page_size: int,
 ) -> tuple[list[Job], int, int]:
-    now = datetime.now(tz.utc)
+    now = datetime.now(UTC)
     query = db.query(Job).join(User, Job.hr_id == User.id)
     query = query.filter(Job.status == JobStatus.approved)
     query = query.filter(or_(Job.expires_at.is_(None), Job.expires_at > now))

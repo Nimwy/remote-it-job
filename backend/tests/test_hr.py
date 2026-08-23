@@ -1,7 +1,5 @@
 from app.core.security import hash_password
-from app.models.category import Category
 from app.models.job import Job, JobStatus
-from app.models.tag import Tag
 from app.models.user import User, UserRole, UserStatus
 from tests.factories import create_category, create_tag
 
@@ -74,7 +72,7 @@ def test_update_profile_with_contacts(client, db):
 
 
 def test_create_job(client, db):
-    hr = create_hr(db)
+    create_hr(db)
     category = create_category(db)
     tag = create_tag(db)
     db.commit()
@@ -88,7 +86,7 @@ def test_create_job(client, db):
 
 
 def test_list_hr_jobs(client, db):
-    hr = create_hr(db)
+    create_hr(db)
     category = create_category(db)
     db.commit()
     login(client)
@@ -102,7 +100,7 @@ def test_list_hr_jobs(client, db):
 
 
 def test_update_job_substantive_reapproval(client, db):
-    hr = create_hr(db)
+    create_hr(db)
     category = create_category(db)
     db.commit()
     login(client)
@@ -121,7 +119,7 @@ def test_update_job_substantive_reapproval(client, db):
 
 
 def test_update_job_non_substantive(client, db):
-    hr = create_hr(db)
+    create_hr(db)
     category = create_category(db)
     db.commit()
     login(client)
@@ -139,7 +137,7 @@ def test_update_job_non_substantive(client, db):
 
 
 def test_submit_job(client, db):
-    hr = create_hr(db)
+    create_hr(db)
     category = create_category(db)
     db.commit()
     login(client)
@@ -153,7 +151,7 @@ def test_submit_job(client, db):
 
 
 def test_close_job(client, db):
-    hr = create_hr(db)
+    create_hr(db)
     category = create_category(db)
     db.commit()
     login(client)
@@ -171,7 +169,7 @@ def test_close_job(client, db):
 
 
 def test_delete_draft_job(client, db):
-    hr = create_hr(db)
+    create_hr(db)
     category = create_category(db)
     db.commit()
     login(client)
@@ -187,7 +185,7 @@ def test_delete_draft_job(client, db):
 
 
 def test_pending_hr_cannot_create_job(client, db):
-    hr = create_hr(db, status=UserStatus.pending)
+    create_hr(db, status=UserStatus.pending)
     category = create_category(db)
     db.commit()
     login(client)
@@ -197,8 +195,8 @@ def test_pending_hr_cannot_create_job(client, db):
 
 
 def test_hr_cannot_access_other_hr_job(client, db):
-    hr1 = create_hr(db, email="hr1@example.com")
-    hr2 = create_hr(db, email="hr2@example.com")
+    create_hr(db, email="hr1@example.com")
+    create_hr(db, email="hr2@example.com")
     category = create_category(db)
     db.commit()
 

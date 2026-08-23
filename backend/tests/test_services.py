@@ -1,12 +1,9 @@
-from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi import HTTPException
 
 from app.core.security import hash_password
-from app.models.category import Category
 from app.models.job import Job, JobStatus
-from app.models.tag import Tag
 from app.models.user import User, UserRole, UserStatus
 from app.schemas.admin import CategoryCreate, TagCreate
 from app.schemas.hr import HrProfileUpdate
@@ -14,7 +11,6 @@ from app.schemas.job import JobCreate, JobUpdate
 from app.schemas.user import UserCreate
 from app.services import admin_service, auth_service, hr_service, job_service
 from tests.factories import create_category, create_job, create_tag, create_user
-
 
 # ---------- auth_service ----------
 

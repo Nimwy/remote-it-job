@@ -2,7 +2,7 @@ import hashlib
 import secrets
 
 from argon2 import PasswordHasher
-from argon2.exceptions import VerificationError, InvalidHashError
+from argon2.exceptions import InvalidHashError, VerificationError
 
 ph = PasswordHasher()
 
