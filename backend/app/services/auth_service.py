@@ -1,10 +1,12 @@
 import hashlib
 from datetime import UTC, datetime, timedelta
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.exceptions import APIError
+from app.core.logging import logger
 from app.core.security import generate_session_token, hash_password, verify_password
 from app.models.session import Session as SessionModel
 from app.models.user import User, UserStatus
@@ -17,10 +19,7 @@ settings = get_settings()
 def register_user(db: Session, data: UserCreate) -> User:
     existing = user_repository.find_by_email(db, data.email)
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email đã được đăng ký",
-        )
+        raise APIError(status.HTTP_409_CONFLICT, "auth.email_exists", "Email đã được đăng ký")
 
     user = User(
         name=data.name,
@@ -32,23 +31,21 @@ def register_user(db: Session, data: UserCreate) -> User:
     user_repository.create(db, user)
     db.commit()
     db.refresh(user)
+    logger.info("HR registered email=%s id=%s", data.email, user.id)
     return user
 
 
 def authenticate_user(db: Session, email: str, password: str) -> User:
     user = user_repository.find_by_email(db, email)
     if not user or not user.password_hash:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email hoặc mật khẩu không đúng",
-        )
+        logger.warning("Login failed for email=%s reason=not_found", email)
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.invalid_credentials", "Email hoặc mật khẩu không đúng")
 
     if not verify_password(password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email hoặc mật khẩu không đúng",
-        )
+        logger.warning("Login failed for email=%s reason=bad_password", email)
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.invalid_credentials", "Email hoặc mật khẩu không đúng")
 
+    logger.info("Login success email=%s id=%s", email, user.id)
     return user
 
 
@@ -76,6 +73,7 @@ def resolve_google_user(db: Session, google_id: str, email: str, name: str) -> U
         user.google_id = google_id
         db.commit()
         db.refresh(user)
+        logger.info("Google linked to existing user id=%s email=%s", user.id, email)
         return user
 
     user = User(
@@ -87,6 +85,7 @@ def resolve_google_user(db: Session, google_id: str, email: str, name: str) -> U
     user_repository.create(db, user)
     db.commit()
     db.refresh(user)
+    logger.info("Google new HR id=%s email=%s", user.id, email)
     return user
 
 
@@ -100,16 +99,10 @@ def delete_session(db: Session, token: str) -> None:
 
 def change_password(db: Session, user: User, current_password: str, new_password: str) -> None:
     if not user.password_hash:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tài khoản không có mật khẩu",
-        )
+        raise APIError(status.HTTP_400_BAD_REQUEST, "auth.no_password", "Tài khoản không có mật khẩu")
 
     if not verify_password(current_password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Mật khẩu hiện tại không đúng",
-        )
+        raise APIError(status.HTTP_400_BAD_REQUEST, "auth.invalid_current_password", "Mật khẩu hiện tại không đúng")
 
     user.password_hash = hash_password(new_password)
     db.commit()

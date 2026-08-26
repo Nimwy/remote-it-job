@@ -1,8 +1,9 @@
 from datetime import UTC, datetime, timedelta
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import APIError
 from app.models.job import Job, JobType
 from app.models.job_view import JobView
 from app.repositories import job_repository, job_view_repository
@@ -60,7 +61,7 @@ def serialize_job_list_item(job: Job) -> dict:
 def get_public_job(db: Session, job_id: int) -> Job:
     job = job_repository.get_public(db, job_id)
     if not job:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tin tuyển dụng")
+        raise APIError(status.HTTP_404_NOT_FOUND, "job.not_found", "Không tìm thấy tin tuyển dụng")
     return job
 
 

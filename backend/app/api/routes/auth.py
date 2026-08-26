@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, get_db
 from app.core.config import get_settings
+from app.core.exceptions import APIError
 from app.core.oauth import oauth
 from app.models.user import User
 from app.schemas.user import ChangePasswordRequest, UserCreate, UserLogin, UserResponse
@@ -46,10 +47,7 @@ def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
 @router.get("/google/login")
 async def google_login(request: Request):
     if not settings.google_client_id:
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Google OAuth chưa được cấu hình",
-        )
+        raise APIError(status.HTTP_501_NOT_IMPLEMENTED, "auth.google_not_configured", "Google OAuth chưa được cấu hình")
     return await oauth.google.authorize_redirect(request, settings.google_redirect_uri)
 
 
@@ -58,20 +56,14 @@ async def google_callback(request: Request, response: Response, db: Session = De
     token = await oauth.google.authorize_access_token(request)
     userinfo = token.get("userinfo")
     if not userinfo:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Không lấy được thông tin Google",
-        )
+        raise APIError(status.HTTP_400_BAD_REQUEST, "auth.google_missing_info", "Không lấy được thông tin Google")
 
     google_id = userinfo.get("sub")
     email = userinfo.get("email")
     name = userinfo.get("name") or email
 
     if not google_id or not email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Thiếu thông tin Google identity",
-        )
+        raise APIError(status.HTTP_400_BAD_REQUEST, "auth.google_missing_identity", "Thiếu thông tin Google identity")
 
     user = resolve_google_user(db, google_id, email, name)
     raw_token = create_session(db, user)

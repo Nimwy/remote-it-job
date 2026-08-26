@@ -1,6 +1,8 @@
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import APIError
+from app.core.logging import logger
 from app.core.slug import slugify, unique_slug
 from app.models.contact import ContactChannel, UserContact
 from app.models.job import Job, JobStatus, JobType
@@ -86,7 +88,7 @@ def list_hr_jobs(db: Session, user: User, status_filter: str | None, page: int, 
 
 def _validate_category(db: Session, category_id: int) -> None:
     if not category_repository.get_active_by_id(db, category_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category không hợp lệ")
+        raise APIError(status.HTTP_400_BAD_REQUEST, "job.category_invalid", "Category không hợp lệ")
 
 
 def _validate_tags(db: Session, tag_ids: list[int]) -> None:
@@ -94,14 +96,13 @@ def _validate_tags(db: Session, tag_ids: list[int]) -> None:
         return
     tags = tag_repository.get_active_by_ids(db, tag_ids)
     if len(tags) != len(set(tag_ids)):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tag không hợp lệ")
+        raise APIError(status.HTTP_400_BAD_REQUEST, "job.tag_invalid", "Tag không hợp lệ")
 
 
 def _validate_salary(salary_min: float | None, salary_max: float | None) -> None:
     if salary_min is not None and salary_max is not None and salary_min > salary_max:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="salary_min phải nhỏ hơn hoặc bằng salary_max",
+        raise APIError(
+            status.HTTP_400_BAD_REQUEST, "job.salary_invalid", "salary_min phải nhỏ hơn hoặc bằng salary_max"
         )
 
 
@@ -144,7 +145,7 @@ def create_job(db: Session, user: User, data: JobCreate) -> Job:
 def get_owned_job(db: Session, user: User, job_id: int) -> Job:
     job = job_repository.get_owned(db, user.id, job_id)
     if not job:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tin tuyển dụng")
+        raise APIError(status.HTTP_404_NOT_FOUND, "job.not_found", "Không tìm thấy tin tuyển dụng")
     return job
 
 
@@ -187,13 +188,15 @@ def update_job(db: Session, user: User, job_id: int, data: JobUpdate) -> Job:
 def submit_job(db: Session, user: User, job_id: int) -> Job:
     job = get_owned_job(db, user, job_id)
     if job.status not in (JobStatus.draft, JobStatus.rejected):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Chỉ job ở trạng thái draft hoặc rejected mới được gửi duyệt",
+        raise APIError(
+            status.HTTP_400_BAD_REQUEST,
+            "job.only_draft_or_rejected_can_submit",
+            "Chỉ job ở trạng thái draft hoặc rejected mới được gửi duyệt",
         )
     job.status = JobStatus.pending
     job.rejection_reason = None
     db.commit()
+    logger.info("HR submitted job id=%s by user=%s", job.id, user.id)
     db.refresh(job)
     return job
 
@@ -201,10 +204,7 @@ def submit_job(db: Session, user: User, job_id: int) -> Job:
 def close_job(db: Session, user: User, job_id: int) -> Job:
     job = get_owned_job(db, user, job_id)
     if job.status != JobStatus.approved:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Chỉ job đã approved mới được đóng",
-        )
+        raise APIError(status.HTTP_400_BAD_REQUEST, "job.only_approved_can_close", "Chỉ job đã approved mới được đóng")
     job.status = JobStatus.closed
     db.commit()
     db.refresh(job)
@@ -215,9 +215,8 @@ def delete_job(db: Session, user: User, job_id: int) -> None:
     job = get_owned_job(db, user, job_id)
     allowed = (JobStatus.draft, JobStatus.rejected, JobStatus.closed, JobStatus.expired)
     if job.status not in allowed:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Không thể xóa job ở trạng thái hiện tại",
+        raise APIError(
+            status.HTTP_400_BAD_REQUEST, "job.cannot_delete_status", "Không thể xóa job ở trạng thái hiện tại"
         )
     job_repository.delete(db, job)
     db.commit()

@@ -1,7 +1,7 @@
 
 import pytest
-from fastapi import HTTPException
 
+from app.core.exceptions import APIError
 from app.core.security import hash_password
 from app.models.job import Job, JobStatus
 from app.models.user import User, UserRole, UserStatus
@@ -25,7 +25,7 @@ def test_auth_register_user(db):
 def test_auth_register_duplicate_email(db):
     data = UserCreate(name="HR", email="hr@example.com", password="secret123", company_name="Corp")
     auth_service.register_user(db, data)
-    with pytest.raises(HTTPException) as e:
+    with pytest.raises(APIError) as e:
         auth_service.register_user(db, data)
     assert e.value.status_code == 409
 
@@ -39,7 +39,7 @@ def test_auth_authenticate_user(db):
     db.commit()
 
     assert auth_service.authenticate_user(db, "hr@example.com", "secret123") is not None
-    with pytest.raises(HTTPException):
+    with pytest.raises(APIError):
         auth_service.authenticate_user(db, "hr@example.com", "wrong")
 
 
@@ -75,7 +75,7 @@ def test_auth_change_password_wrong_current(db):
     db.add(user)
     db.commit()
 
-    with pytest.raises(HTTPException):
+    with pytest.raises(APIError):
         auth_service.change_password(db, user, "wrong", "newpass123")
 
 
@@ -92,7 +92,7 @@ def test_job_service_get_public_job(db):
 
     pending = create_job(db, hr, category, title="Pending", status=JobStatus.pending)
     db.commit()
-    with pytest.raises(HTTPException):
+    with pytest.raises(APIError):
         job_service.get_public_job(db, pending.id)
 
 
@@ -138,7 +138,7 @@ def test_hr_service_create_job_invalid_category(db):
     hr = create_user(db, "hr@example.com")
     db.commit()
 
-    with pytest.raises(HTTPException):
+    with pytest.raises(APIError):
         hr_service.create_job(
             db, hr,
             JobCreate(
