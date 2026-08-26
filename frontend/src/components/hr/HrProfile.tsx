@@ -26,6 +26,7 @@ export function HrProfile() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   if (profile && !loaded) {
     setName(profile.name);
@@ -51,15 +52,21 @@ export function HrProfile() {
     contacts.find((c) => c.channel === channel)?.value ?? "";
 
   const save = async () => {
-    await hrService.updateProfile({
-      name,
-      company_name: companyName,
-      contacts,
-    });
-    queryClient.invalidateQueries({ queryKey: ["hr-profile"] });
-    queryClient.invalidateQueries({ queryKey: ["me"] });
-    setMessage(t("saved"));
-    setTimeout(() => setMessage(""), 3000);
+    setError(null);
+    setMessage("");
+    try {
+      await hrService.updateProfile({
+        name,
+        company_name: companyName,
+        contacts,
+      });
+      queryClient.invalidateQueries({ queryKey: ["hr-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      setMessage(t("saved"));
+      setTimeout(() => setMessage(""), 3000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("save"));
+    }
   };
 
   return (
@@ -111,9 +118,12 @@ export function HrProfile() {
           </div>
         </section>
 
-        <div className="flex items-center gap-3">
-          <Button onClick={save}>{t("save")}</Button>
-          {message && <span className="text-body-md text-primary">{message}</span>}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <Button onClick={save}>{t("save")}</Button>
+            {message && <span className="text-body-md text-primary">{message}</span>}
+          </div>
+          {error && <p className="text-body-sm text-error">{error}</p>}
         </div>
       </div>
     </div>
