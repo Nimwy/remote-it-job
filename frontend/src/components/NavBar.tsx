@@ -31,6 +31,30 @@ function NavLink({
   );
 }
 
+function MobileNavLink({
+  href,
+  label,
+  active,
+  onClick,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`block rounded-lg px-4 py-2.5 text-label-md transition-colors ${
+        active ? "bg-primary-container text-on-primary-container" : "text-on-surface hover:bg-surface-container-low"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
 export function NavBar() {
   const t = useTranslations("nav");
   const { data: user, isLoading } = useMe();
@@ -38,8 +62,10 @@ export function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const [query, setQuery] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
+    setMobileOpen(false);
     await logout.mutateAsync();
     router.push("/");
   };
@@ -48,6 +74,10 @@ export function NavBar() {
     e.preventDefault();
     router.push(query.trim() ? `/jobs?q=${encodeURIComponent(query.trim())}` : "/jobs");
   };
+
+  const activeJobs = pathname.startsWith("/jobs");
+  const activeHr = pathname.startsWith("/hr");
+  const activeAdmin = pathname.startsWith("/admin");
 
   return (
     <header className="sticky top-0 z-40 border-b border-outline-variant bg-surface shadow-sm">
@@ -61,12 +91,12 @@ export function NavBar() {
           </Link>
 
           <nav className="hidden items-center gap-4 md:flex">
-            <NavLink href="/jobs" label={t("findJobs")} active={pathname.startsWith("/jobs")} />
+            <NavLink href="/jobs" label={t("findJobs")} active={activeJobs} />
             {user?.role === "hr" && (
-              <NavLink href="/hr" label={t("dashboard")} active={pathname.startsWith("/hr")} />
+              <NavLink href="/hr" label={t("dashboard")} active={activeHr} />
             )}
             {user?.role === "admin" && (
-              <NavLink href="/admin" label={t("admin")} active={pathname.startsWith("/admin")} />
+              <NavLink href="/admin" label={t("admin")} active={activeAdmin} />
             )}
           </nav>
         </div>
@@ -87,10 +117,15 @@ export function NavBar() {
               <Link href="/login" className="hidden sm:block">
                 <Button variant="outline">{t("login")}</Button>
               </Link>
-              <Link href="/register">
+              <Link href="/register" className="hidden sm:block">
                 <Button>
                   <Icon name="add" className="text-[18px]" />
-                  <span className="hidden sm:inline">{t("postJob")}</span>
+                  {t("postJob")}
+                </Button>
+              </Link>
+              <Link href="/register" className="sm:hidden">
+                <Button>
+                  <Icon name="add" className="text-[18px]" />
                 </Button>
               </Link>
             </>
@@ -119,9 +154,50 @@ export function NavBar() {
               {t("logout")}
             </button>
           )}
+
           <LanguageSwitcher />
+
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="Menu"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-low md:hidden"
+          >
+            <Icon name={mobileOpen ? "close" : "menu"} />
+          </button>
         </div>
       </div>
+
+      {mobileOpen && (
+        <nav className="border-t border-outline-variant bg-surface px-4 py-3 md:hidden">
+          <div className="flex flex-col gap-1">
+            <MobileNavLink href="/jobs" label={t("findJobs")} active={activeJobs} onClick={() => setMobileOpen(false)} />
+            {user?.role === "hr" && (
+              <>
+                <MobileNavLink href="/hr" label={t("dashboard")} active={activeHr} onClick={() => setMobileOpen(false)} />
+                <MobileNavLink href="/hr/jobs/new" label={t("postJob")} active={false} onClick={() => setMobileOpen(false)} />
+                <MobileNavLink href="/hr/profile" label={t("profile")} active={pathname.startsWith("/hr/profile")} onClick={() => setMobileOpen(false)} />
+              </>
+            )}
+            {user?.role === "admin" && (
+              <MobileNavLink href="/admin" label={t("admin")} active={activeAdmin} onClick={() => setMobileOpen(false)} />
+            )}
+            {!user && (
+              <>
+                <MobileNavLink href="/login" label={t("login")} active={false} onClick={() => setMobileOpen(false)} />
+                <MobileNavLink href="/register" label={t("postJob")} active={false} onClick={() => setMobileOpen(false)} />
+              </>
+            )}
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="rounded-lg px-4 py-2.5 text-left text-label-md text-on-surface hover:bg-surface-container-low"
+              >
+                {t("logout")}
+              </button>
+            )}
+          </div>
+        </nav>
+      )}
     </header>
   );
 }
