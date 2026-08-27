@@ -53,6 +53,11 @@ def create_session(db: Session, user: User) -> str:
     raw_token, token_hash = generate_session_token()
     expires_at = datetime.now(UTC) + timedelta(seconds=settings.session_max_age_seconds)
 
+    # B-07: xoá session cũ của user khi đăng nhập lại — chỉ giữ 1 session hiện hành
+    session_repository.delete_for_user(db, user.id)
+    # Dọn các session hết hạn (vệ sinh dữ liệu, chạy nhẹ nhàng khi login)
+    session_repository.delete_expired(db)
+
     session = SessionModel(
         user_id=user.id,
         token_hash=token_hash,
@@ -60,6 +65,7 @@ def create_session(db: Session, user: User) -> str:
     )
     session_repository.create(db, session)
     db.commit()
+    db.flush()
     return raw_token
 
 

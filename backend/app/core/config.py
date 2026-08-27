@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     session_max_age_seconds: int = 60 * 60 * 24 * 7
     visitor_cookie_name: str = "visitor_id"
     cookie_secure: bool = False
+    rate_limit_enabled: bool = True
     page_size_default: int = 20
     page_size_max: int = 100
 

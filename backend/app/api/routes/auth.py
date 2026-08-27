@@ -8,6 +8,7 @@ from app.core.cookies import clear_session_cookie, set_session_cookie
 from app.core.exceptions import APIError
 from app.core.logging import logger
 from app.core.oauth import oauth
+from app.core.rate_limit import RateLimiter, rate_limit_dependency
 from app.models.user import User
 from app.schemas.user import ChangePasswordRequest, UserCreate, UserLogin, UserResponse
 from app.services.auth_service import (
@@ -23,14 +24,24 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 settings = get_settings()
 
+login_limiter = RateLimiter(10, 60)
+register_limiter = RateLimiter(10, 3600)
+password_limiter = RateLimiter(5, 300)
+google_limiter = RateLimiter(10, 300)
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit_dependency(register_limiter))],
+)
 def register(data: UserCreate, db: Session = Depends(get_db)):
     user = register_user(db, data)
     return user
 
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login", response_model=UserResponse, dependencies=[Depends(rate_limit_dependency(login_limiter))])
 def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     user = authenticate_user(db, data.email, data.password)
     raw_token = create_session(db, user)
@@ -39,7 +50,7 @@ def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     return user
 
 
-@router.get("/google/login")
+@router.get("/google/login", dependencies=[Depends(rate_limit_dependency(google_limiter))])
 async def google_login(request: Request):
     if not settings.google_client_id:
         raise APIError(status.HTTP_501_NOT_IMPLEMENTED, "auth.google_not_configured", "Google OAuth chưa được cấu hình")
@@ -87,7 +98,7 @@ def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/change-password")
+@router.post("/change-password", dependencies=[Depends(rate_limit_dependency(password_limiter))])
 def change_password_endpoint(
     data: ChangePasswordRequest,
     current_user: User = Depends(get_current_user),
