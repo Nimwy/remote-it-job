@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as hrService from "@/services/hr";
 import type { Contact } from "@/types";
 import { Button } from "@/components/ui/Button";
+import { getApiErrorMessage } from "@/lib/errors";
 
 const CHANNELS = ["zalo", "telegram", "linkedin", "phone", "email"] as const;
 
@@ -15,6 +16,7 @@ const inputClass =
 export function HrProfile() {
   const t = useTranslations("profile");
   const ct = useTranslations("contact");
+  const e = useTranslations("errors");
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useQuery({
     queryKey: ["hr-profile"],
@@ -64,8 +66,8 @@ export function HrProfile() {
       queryClient.invalidateQueries({ queryKey: ["me"] });
       setMessage(t("saved"));
       setTimeout(() => setMessage(""), 3000);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("save"));
+    } catch (err) {
+      setError(getApiErrorMessage(e, err));
     }
   };
 

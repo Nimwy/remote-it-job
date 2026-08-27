@@ -5,10 +5,11 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { JobForm, type JobFormData } from "@/components/JobForm";
 import { useCreateJob } from "@/hooks/useHr";
+import { getApiErrorMessage } from "@/lib/errors";
 
 export function PostJob() {
   const t = useTranslations("jobForm");
-  const hr = useTranslations("hr");
+  const e = useTranslations("errors");
   const createJob = useCreateJob();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +31,8 @@ export function PostJob() {
         tag_ids: data.tag_ids,
       });
       router.push("/hr");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : hr("loading"));
+    } catch (err) {
+      setError(getApiErrorMessage(e, err));
     }
   };
 

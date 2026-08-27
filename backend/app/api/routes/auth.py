@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, get_db
 from app.core.config import get_settings
+from app.core.cookies import clear_session_cookie, set_session_cookie
 from app.core.exceptions import APIError
+from app.core.logging import logger
 from app.core.oauth import oauth
 from app.models.user import User
 from app.schemas.user import ChangePasswordRequest, UserCreate, UserLogin, UserResponse
@@ -33,14 +35,7 @@ def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     user = authenticate_user(db, data.email, data.password)
     raw_token = create_session(db, user)
 
-    response.set_cookie(
-        key=settings.session_cookie_name,
-        value=raw_token,
-        max_age=settings.session_max_age_seconds,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-    )
+    set_session_cookie(response, raw_token)
     return user
 
 
@@ -53,7 +48,12 @@ async def google_login(request: Request):
 
 @router.get("/google/callback")
 async def google_callback(request: Request, response: Response, db: Session = Depends(get_db)):
-    token = await oauth.google.authorize_access_token(request)
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except Exception as exc:
+        logger.warning("Google OAuth callback failed: %s", exc)
+        raise APIError(status.HTTP_400_BAD_REQUEST, "auth.google_callback_failed", "Đăng nhập Google thất bại") from exc
+
     userinfo = token.get("userinfo")
     if not userinfo:
         raise APIError(status.HTTP_400_BAD_REQUEST, "auth.google_missing_info", "Không lấy được thông tin Google")
@@ -68,14 +68,7 @@ async def google_callback(request: Request, response: Response, db: Session = De
     user = resolve_google_user(db, google_id, email, name)
     raw_token = create_session(db, user)
 
-    response.set_cookie(
-        key=settings.session_cookie_name,
-        value=raw_token,
-        max_age=settings.session_max_age_seconds,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-    )
+    set_session_cookie(response, raw_token)
     return RedirectResponse(url=settings.frontend_url)
 
 
@@ -85,7 +78,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     if token:
         delete_session(db, token)
 
-    response.delete_cookie(settings.session_cookie_name)
+    clear_session_cookie(response)
     return {"detail": "Đã đăng xuất"}
 
 

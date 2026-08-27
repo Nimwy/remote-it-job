@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.routes import admin, auth, catalog, hr, jobs
 from app.core.config import get_settings
@@ -28,6 +29,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Cần cho Google OAuth state; dùng SECRET_KEY (B-12)
+app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
 
 @app.exception_handler(APIError)

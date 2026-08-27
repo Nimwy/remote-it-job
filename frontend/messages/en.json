@@ -230,5 +230,54 @@
     "linkedin": "LinkedIn",
     "phone": "Phone",
     "email": "Email"
+  },
+  "errors": {
+    "auth": {
+      "unauthorized": "Not logged in",
+      "invalid_session": "Invalid session",
+      "session_expired": "Session expired",
+      "user_not_found": "User not found",
+      "forbidden_hr": "HR access required",
+      "hr_not_active": "HR account not approved or blocked",
+      "forbidden_admin": "Admin access required",
+      "admin_not_active": "Admin account not active",
+      "email_exists": "Email is already registered",
+      "invalid_credentials": "Incorrect email or password",
+      "no_password": "Account has no password",
+      "invalid_current_password": "Current password is incorrect",
+      "google_not_configured": "Google OAuth is not configured",
+      "google_missing_info": "Could not get Google info",
+      "google_missing_identity": "Missing Google identity info",
+      "google_callback_failed": "Google sign-in failed"
+    },
+    "job": {
+      "not_found": "Job not found",
+      "category_invalid": "Invalid category",
+      "tag_invalid": "Invalid tag",
+      "salary_invalid": "Minimum salary must be less than or equal to maximum",
+      "only_draft_or_rejected_can_submit": "Only draft or rejected jobs can be submitted",
+      "only_approved_can_close": "Only approved jobs can be closed",
+      "cannot_delete_status": "Cannot delete job in current status",
+      "only_pending_can_approve": "Only pending jobs can be approved",
+      "only_pending_can_reject": "Only pending jobs can be rejected",
+      "only_approved_can_hide": "Only approved jobs can be hidden",
+      "only_hidden_can_unhide": "Only hidden jobs can be restored"
+    },
+    "user": {
+      "hr_not_found": "HR account not found",
+      "only_pending_can_approve": "Only pending accounts can be approved",
+      "only_blocked_can_unblock": "Only blocked accounts can be unblocked"
+    },
+    "catalog": {
+      "category_slug_exists": "Category slug already exists",
+      "category_not_found": "Category not found",
+      "tag_slug_exists": "Tag slug already exists",
+      "tag_not_found": "Tag not found"
+    },
+    "http_401": "Not logged in",
+    "http_403": "Permission denied",
+    "http_404": "Not found",
+    "http_409": "Resource already exists",
+    "unknown_error": "Something went wrong"
   }
 }

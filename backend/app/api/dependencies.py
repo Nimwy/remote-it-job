@@ -61,4 +61,7 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != UserRole.admin:
         raise APIError(status.HTTP_403_FORBIDDEN, "auth.forbidden_admin", "Không có quyền Admin")
 
+    if current_user.status != UserStatus.active:
+        raise APIError(status.HTTP_403_FORBIDDEN, "auth.admin_not_active", "Tài khoản Admin không hoạt động")
+
     return current_user

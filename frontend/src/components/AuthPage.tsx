@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLogin, useRegister } from "../hooks/useAuth";
 import { Icon } from "./ui/Icon";
+import { getApiErrorMessage } from "../lib/errors";
 
 type LoginFormData = {
   email: string;
@@ -27,6 +28,7 @@ const inputClass =
 
 export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
   const t = useTranslations("auth");
+  const e = useTranslations("errors");
   const [tab, setTab] = useState<"login" | "register">(initialTab);
   const login = useLogin();
   const registerUser = useRegister();
@@ -190,7 +192,9 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
                     )}
                   </div>
                   {login.isError && (
-                    <p className="text-body-sm text-error">{t("invalidCredentials")}</p>
+                    <p className="text-body-sm text-error">
+                      {getApiErrorMessage(e, login.error)}
+                    </p>
                   )}
                   <button
                     type="submit"
@@ -250,7 +254,9 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
                     )}
                   </div>
                   {registerUser.isError && (
-                    <p className="text-body-sm text-error">{t("registerFailed")}</p>
+                    <p className="text-body-sm text-error">
+                      {getApiErrorMessage(e, registerUser.error)}
+                    </p>
                   )}
                   <div className="pt-2">
                     <p className="mb-4 text-[12px] text-on-surface-variant">

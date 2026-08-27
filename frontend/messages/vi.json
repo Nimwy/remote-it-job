@@ -230,5 +230,54 @@
     "linkedin": "LinkedIn",
     "phone": "Điện thoại",
     "email": "Email"
+  },
+  "errors": {
+    "auth": {
+      "unauthorized": "Chưa đăng nhập",
+      "invalid_session": "Phiên đăng nhập không hợp lệ",
+      "session_expired": "Phiên đăng nhập đã hết hạn",
+      "user_not_found": "Người dùng không tồn tại",
+      "forbidden_hr": "Không có quyền HR",
+      "hr_not_active": "Tài khoản HR chưa được duyệt hoặc đã bị khóa",
+      "forbidden_admin": "Không có quyền Admin",
+      "admin_not_active": "Tài khoản Admin không hoạt động",
+      "email_exists": "Email đã được đăng ký",
+      "invalid_credentials": "Email hoặc mật khẩu không đúng",
+      "no_password": "Tài khoản không có mật khẩu",
+      "invalid_current_password": "Mật khẩu hiện tại không đúng",
+      "google_not_configured": "Google OAuth chưa được cấu hình",
+      "google_missing_info": "Không lấy được thông tin Google",
+      "google_missing_identity": "Thiếu thông tin Google identity",
+      "google_callback_failed": "Đăng nhập Google thất bại"
+    },
+    "job": {
+      "not_found": "Không tìm thấy tin tuyển dụng",
+      "category_invalid": "Category không hợp lệ",
+      "tag_invalid": "Tag không hợp lệ",
+      "salary_invalid": "Lương tối thiểu phải nhỏ hơn hoặc bằng tối đa",
+      "only_draft_or_rejected_can_submit": "Chỉ job draft hoặc rejected mới được gửi duyệt",
+      "only_approved_can_close": "Chỉ job approved mới được đóng",
+      "cannot_delete_status": "Không thể xóa job ở trạng thái hiện tại",
+      "only_pending_can_approve": "Chỉ job pending mới được duyệt",
+      "only_pending_can_reject": "Chỉ job pending mới được từ chối",
+      "only_approved_can_hide": "Chỉ job approved mới được ẩn",
+      "only_hidden_can_unhide": "Chỉ job hidden mới được khôi phục"
+    },
+    "user": {
+      "hr_not_found": "Không tìm thấy tài khoản HR",
+      "only_pending_can_approve": "Chỉ tài khoản pending mới được duyệt",
+      "only_blocked_can_unblock": "Chỉ tài khoản blocked mới được mở khóa"
+    },
+    "catalog": {
+      "category_slug_exists": "Slug category đã tồn tại",
+      "category_not_found": "Không tìm thấy category",
+      "tag_slug_exists": "Slug tag đã tồn tại",
+      "tag_not_found": "Không tìm thấy tag"
+    },
+    "http_401": "Chưa đăng nhập",
+    "http_403": "Không có quyền",
+    "http_404": "Không tìm thấy",
+    "http_409": "Dữ liệu đã tồn tại",
+    "unknown_error": "Có lỗi xảy ra"
   }
 }

@@ -69,7 +69,7 @@ def get_job(
             value=visitor_key,
             max_age=60 * 60 * 24 * 365,
             httponly=True,
-            secure=False,
+            secure=settings.cookie_secure,
             samesite="lax",
         )
 

@@ -8,10 +8,12 @@ import { JobForm, type JobFormData } from "@/components/JobForm";
 import { useHrJob, useUpdateJob, useSubmitJob } from "@/hooks/useHr";
 import { Button } from "@/components/ui/Button";
 import { type JobInput } from "@/services/hr";
+import { getApiErrorMessage } from "@/lib/errors";
 
 export function EditJob() {
   const t = useTranslations("jobForm");
   const hr = useTranslations("hr");
+  const e = useTranslations("errors");
   const params = useParams<{ id: string }>();
   const jobId = Number(params.id);
   const { data: job, isLoading } = useHrJob(jobId);
@@ -53,8 +55,8 @@ export function EditJob() {
     try {
       await updateJob.mutateAsync({ id: jobId, data: payload });
       router.push("/hr");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("notFound"));
+    } catch (err) {
+      setError(getApiErrorMessage(e, err));
     }
   };
 
@@ -63,8 +65,8 @@ export function EditJob() {
     try {
       await submitJob.mutateAsync(jobId);
       router.push("/hr");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : hr("loading"));
+    } catch (err) {
+      setError(getApiErrorMessage(e, err));
     }
   };
 
