@@ -9,5 +9,6 @@ itsdangerous
 pydantic[email]
 authlib
 pytest
+pytest-cov
 httpx
 ruff

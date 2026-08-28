@@ -63,7 +63,6 @@ export async function JobCard({ job }: { job: JobListItem }) {
             <Link
               key={tag}
               href={`/tag/${job.tag_slugs[i] ?? tag}`}
-              onClick={(e) => e.stopPropagation()}
               className="relative z-10 rounded-md border border-outline-variant/50 bg-surface-container-low px-2 py-1 font-mono text-label-sm text-secondary transition-colors hover:bg-primary hover:text-on-primary"
             >
               {tag}
