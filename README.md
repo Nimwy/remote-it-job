@@ -103,13 +103,17 @@ cd frontend && npm run test:e2e
 
 - `AI_CONTEXT.md` — quy tắc và context cho AI coding agent.
 - `ARCHITECTURE.md` — kiến trúc hệ thống.
-- `DIAGRAMS.md` — sơ đồ flow/sequence/class (Mermaid).
+- `DIAGRAMS.md` — sơ đồ flow/sequence/class + hành trình người dùng (Mermaid).
 - `DATABASE_SCHEMA.md` — database schema và constraints.
-- `API_SPEC.md` — REST API contract (tổng quan).
-- `API_REFERENCE.md` — tài liệu kỹ thuật chi tiết từng API (request/response).
+- `API_SPEC.md` — API contract (quy ước chung; chi tiết từng endpoint xem API_REFERENCE.md).
+- `API_REFERENCE.md` — nguồn sự thật chi tiết từng API (request/response/constraint).
+- `SCREENS.md` — tài liệu màn hình (wireframe, trạng thái rỗng/lỗi, mobile).
 - `SECURITY.md` — yêu cầu bảo mật.
 - `PROJECT_MAP.md` — cấu trúc source code.
 - `PROJECT_STATE.md` — trạng thái triển khai hiện tại.
+- `TESTING.md` — tầng test, dựng DB test, quy ước đặt tên, coverage.
+- `CONTRIBUTING.md` — quy ước nhánh, commit, checklist PR.
+- `DEPLOYMENT.md` — biến môi trường production, migration, log, sao lưu DB.
 
 ## MVP Non-goals
 

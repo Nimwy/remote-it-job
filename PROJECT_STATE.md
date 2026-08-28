@@ -2,9 +2,9 @@
 
 ## Giai đoạn hiện tại
 
-**Đã triển khai xong MVP — chờ review (branch `feat/nextjs-migration`)**
+**MVP đã triển khai xong — đang xử lý review vòng 2 (branch `fix/review-round2`)**
 
-Toàn bộ backend, frontend, test và tài liệu đã hoàn thành theo yêu cầu review của người hướng dẫn.
+Toàn bộ backend, frontend, test và tài liệu đã hoàn thành theo yêu cầu review của người hướng dẫn. Vòng review thứ hai đang được xử lý tuần tự theo `yeucau.md` (tách test theo tầng, i18n, cô lập DB e2e, tài liệu màn hình...).
 
 ## Quyết định đã chốt
 
@@ -99,8 +99,8 @@ HR bị blocked không bị hard-delete và job của họ không hiển thị c
 - Frontend Next.js (SSR) — public, HR, Admin.
 - i18n EN/VI (next-intl) + slug URL cho SEO.
 - Trang category + tag + thời gian tương đối.
-- Unit test (pytest 81, Vitest 17) + e2e (Playwright 10).
-- Tài liệu: API_REFERENCE.md, DIAGRAMS.md.
+- Test backend/frontend/e2e (số lượng lấy từ lệnh chạy test — xem `TESTING.md`; không ghi con số cố định ở đây để tránh đóng băng theo ngày).
+- Tài liệu: API_REFERENCE.md, DIAGRAMS.md, SCREENS.md, TESTING.md.
 
 ## Chưa triển khai / tồn đọng
 
@@ -110,10 +110,11 @@ HR bị blocked không bị hard-delete và job của họ không hiển thị c
 
 ## Bước tiếp theo
 
-1. Review branch `feat/nextjs-migration`, tạo PR để người hướng dẫn kiểm tra.
-2. Merge PR vào `main` sau khi review OK.
-3. Config Google OAuth credentials thật.
-4. Cân nhắc deploy thử lên hosting.
+1. Hoàn tất các mục còn lại của review vòng 2 trong `yeucau.md` (tài liệu màn hình, quy trình, API).
+2. Review branch `fix/review-round2`, tạo PR để người hướng dẫn kiểm tra (mỗi task tách nhánh riêng, review qua PR — xem `CONTRIBUTING.md`).
+3. Merge PR vào `main` sau khi review OK.
+4. Config Google OAuth credentials thật.
+5. Cân nhắc deploy thử lên hosting (xem `DEPLOYMENT.md`).
 
 ## Ràng buộc quan trọng
 
