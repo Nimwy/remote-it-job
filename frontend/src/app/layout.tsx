@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Inter } from "next/font/google";
+import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 
 const geist = Geist({
@@ -12,18 +13,22 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Remote IT — Việc làm IT Remote",
-  description: "Website tuyển dụng việc làm IT remote dành cho thị trường Việt Nam.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("siteTitle"),
+    description: t("siteDescription"),
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="vi" className={`${geist.variable} ${inter.variable}`}>
+    <html lang={locale} className={`${geist.variable} ${inter.variable}`}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"

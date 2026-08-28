@@ -7,10 +7,20 @@
     "postJob": "Đăng tin",
     "login": "Đăng nhập",
     "logout": "Đăng xuất",
-    "searchPlaceholder": "Tìm kiếm từ khóa..."
+    "searchPlaceholder": "Tìm kiếm từ khóa...",
+    "home": "Trang chủ",
+    "jobsCount": "{count} việc làm",
+    "categoryTitle": "Việc làm {name} Remote",
+    "categoryFallback": "Việc làm Remote",
+    "noJobsInCategory": "Chưa có tin tuyển dụng trong danh mục này.",
+    "noJobsForTag": "Chưa có tin tuyển dụng cho tag này."
   },
   "footer": {
     "tagline": "Việc làm IT remote cho developer Việt Nam"
+  },
+  "metadata": {
+    "siteTitle": "Remote IT — Việc làm IT Remote",
+    "siteDescription": "Website tuyển dụng việc làm IT remote dành cho thị trường Việt Nam."
   },
   "home": {
     "title": "Remote IT — Tìm việc làm remote dễ dàng",
@@ -161,6 +171,7 @@
     "contactsHint": "Thông tin này sẽ hiển thị trên tin tuyển dụng để job seeker liên hệ.",
     "save": "Lưu thay đổi",
     "saved": "Đã lưu thông tin",
+    "loading": "Đang tải...",
     "name": "Tên",
     "companyName": "Tên công ty",
     "email": "Email"
@@ -211,6 +222,7 @@
     "confirmDelete": "Xóa tin \"{title}\"?",
     "manageHrTitle": "Quản lý HR",
     "noHr": "Chưa có tài khoản HR nào.",
+    "loading": "Đang tải...",
     "name": "Tên",
     "email": "Email",
     "company": "Công ty",

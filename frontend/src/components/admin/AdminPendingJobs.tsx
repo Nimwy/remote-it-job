@@ -18,7 +18,7 @@ export function AdminPendingJobs() {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
 
   if (isLoading) {
-    return <div className="text-body-md text-secondary">{t("noPending")}</div>;
+    return <div className="text-body-md text-secondary">{t("loading")}</div>;
   }
 
   const jobs = data?.items ?? [];

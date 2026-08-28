@@ -38,7 +38,7 @@ export function HrProfile() {
   }
 
   if (isLoading) {
-    return <div className="mx-auto max-w-2xl px-6 py-8 text-body-md text-secondary">Loading...</div>;
+    return <div className="mx-auto max-w-2xl px-6 py-8 text-body-md text-secondary">{t("loading")}</div>;
   }
 
   const setContact = (channel: Contact["channel"], value: string) => {

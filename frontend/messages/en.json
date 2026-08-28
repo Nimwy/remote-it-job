@@ -7,10 +7,20 @@
     "postJob": "Post a Job",
     "login": "Login",
     "logout": "Logout",
-    "searchPlaceholder": "Search keywords..."
+    "searchPlaceholder": "Search keywords...",
+    "home": "Home",
+    "jobsCount": "{count} jobs",
+    "categoryTitle": "{name} Remote jobs",
+    "categoryFallback": "Remote jobs",
+    "noJobsInCategory": "No jobs in this category.",
+    "noJobsForTag": "No jobs for this tag."
   },
   "footer": {
     "tagline": "Remote IT jobs for Vietnamese developers"
+  },
+  "metadata": {
+    "siteTitle": "Remote IT — Remote IT Jobs",
+    "siteDescription": "A remote IT job board for the Vietnamese market."
   },
   "home": {
     "title": "Remote IT — Find remote jobs easily",
@@ -161,6 +171,7 @@
     "contactsHint": "This information will be shown on job listings for job seekers to contact you.",
     "save": "Save changes",
     "saved": "Saved",
+    "loading": "Loading...",
     "name": "Name",
     "companyName": "Company name",
     "email": "Email"
@@ -211,6 +222,7 @@
     "confirmDelete": "Delete \"{title}\"?",
     "manageHrTitle": "Manage HR",
     "noHr": "No HR accounts yet.",
+    "loading": "Loading...",
     "name": "Name",
     "email": "Email",
     "company": "Company",

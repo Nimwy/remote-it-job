@@ -13,7 +13,7 @@ export function AdminUsers() {
   const action = useAdminHrAction();
 
   if (isLoading) {
-    return <div className="text-body-md text-secondary">{t("noHr")}</div>;
+    return <div className="text-body-md text-secondary">{t("loading")}</div>;
   }
 
   const hrs = data?.items ?? [];

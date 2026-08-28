@@ -53,7 +53,7 @@ export function AdminManageJobs() {
       </div>
 
       {isLoading ? (
-        <p className="text-body-md text-secondary">Loading...</p>
+        <p className="text-body-md text-secondary">{t("loading")}</p>
       ) : jobs.length === 0 ? (
         <p className="text-body-md text-secondary">{t("noJobs")}</p>
       ) : (
