@@ -2,13 +2,14 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { JobCard } from "@/components/JobCard";
 import { Icon } from "@/components/ui/Icon";
-import { serverListCategories, serverListJobs } from "@/services/jobs";
+import { serverListCategories, serverListJobs, serverListTags } from "@/services/jobs";
 
 export default async function HomePage() {
   const t = await getTranslations("home");
-  const [jobsData, categories] = await Promise.all([
+  const [jobsData, categories, tags] = await Promise.all([
     serverListJobs({ page: 1, page_size: 9 }),
     serverListCategories(),
+    serverListTags(),
   ]);
 
   return (
@@ -91,6 +92,23 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {tags && tags.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-4 font-display text-headline-md">{t("popularSkills")}</h2>
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <Link
+                key={tag.id}
+                href={`/tag/${tag.slug}`}
+                className="rounded-full border border-outline-variant bg-surface-container-low px-4 py-1.5 text-label-md text-secondary transition-colors hover:border-primary hover:bg-primary hover:text-on-primary"
+              >
+                {tag.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
