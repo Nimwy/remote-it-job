@@ -86,6 +86,25 @@ def list_hr_jobs(db: Session, user: User, status_filter: str | None, page: int, 
     return job_repository.list_by_hr(db, user.id, status_filter, page, page_size)
 
 
+def job_stats(db: Session, user: User) -> dict:
+    jobs = db.query(Job).filter(Job.hr_id == user.id).all()
+    counts = {
+        "total": len(jobs),
+        "open": 0,
+        "pending": 0,
+        "closed": 0,
+        "rejected": 0,
+        "draft": 0,
+        "expired": 0,
+        "hidden": 0,
+    }
+    for job in jobs:
+        status = job.status.value
+        if status in counts:
+            counts[status] += 1
+    return counts
+
+
 def _validate_category(db: Session, category_id: int) -> None:
     if not category_repository.get_active_by_id(db, category_id):
         raise APIError(status.HTTP_400_BAD_REQUEST, "job.category_invalid", "Category không hợp lệ")

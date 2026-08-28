@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
@@ -22,7 +23,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slugId } = await params;
   const job = await serverGetJob(parseJobId(slugId));
-  if (!job) return { title: "404" };
+  if (!job) notFound();
   return {
     title: `${job.title} - ${job.company_name} | Remote IT`,
     description: job.description.slice(0, 160),
@@ -36,19 +37,12 @@ export default async function JobDetailPage({
 }) {
   const { slugId } = await params;
   const job = await serverGetJob(parseJobId(slugId));
+  if (!job) notFound();
 
   const t = await getTranslations("jobDetail");
   const jt = await getTranslations("jobType");
   const ct = await getTranslations("contact");
   const locale = await getLocale();
-
-  if (!job) {
-    return (
-      <div className="mx-auto max-w-[1280px] px-6 py-8">
-        <p className="text-body-md text-secondary">{t("notFound")}</p>
-      </div>
-    );
-  }
 
   const salary =
     job.salary_min || job.salary_max

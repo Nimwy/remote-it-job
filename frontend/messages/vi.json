@@ -117,6 +117,7 @@
     "delete": "Xóa",
     "noJobs": "Bạn chưa có tin tuyển dụng nào.",
     "postFirst": "Đăng tin đầu tiên",
+    "pendingApproval": "Tài khoản của bạn đang chờ Admin duyệt. Vui lòng quay lại sau khi được duyệt.",
     "loading": "Đang tải..."
   },
   "jobForm": {
@@ -207,6 +208,9 @@
     "approveHr": "Duyệt",
     "block": "Khóa",
     "unblock": "Mở khóa",
+    "page": "Trang {page} / {total}",
+    "prev": "Trước",
+    "next": "Sau",
     "catalogTitle": "Quản lý catalog",
     "categories": "Categories",
     "tags": "Tags",

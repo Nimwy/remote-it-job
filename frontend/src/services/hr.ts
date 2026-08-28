@@ -44,6 +44,10 @@ export function listMyJobs(
   return apiFetch(`/hr/jobs?${params.toString()}`);
 }
 
+export function getHrStats(): Promise<Record<string, number>> {
+  return apiFetch("/hr/jobs/stats");
+}
+
 export function createJob(data: JobInput): Promise<HrJob> {
   return apiFetch("/hr/jobs", {
     method: "POST",

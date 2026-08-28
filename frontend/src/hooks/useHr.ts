@@ -10,6 +10,13 @@ export function useHrJobs(status?: string) {
   });
 }
 
+export function useHrStats() {
+  return useQuery({
+    queryKey: ["hr-stats"],
+    queryFn: hrService.getHrStats,
+  });
+}
+
 export function useHrJob(id: number | undefined) {
   return useQuery({
     queryKey: ["hr-job", id],

@@ -10,10 +10,10 @@ export function useAdminJobs(params: Parameters<typeof adminService.listAllJobs>
   });
 }
 
-export function useAdminPendingJobs() {
+export function useAdminPendingJobs(page = 1) {
   return useQuery({
-    queryKey: ["admin-jobs-pending"],
-    queryFn: adminService.listPendingJobs,
+    queryKey: ["admin-jobs-pending", page],
+    queryFn: () => adminService.listPendingJobs(page),
   });
 }
 

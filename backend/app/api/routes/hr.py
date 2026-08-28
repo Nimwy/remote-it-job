@@ -47,6 +47,11 @@ def list_jobs(
     }
 
 
+@router.get("/jobs/stats")
+def job_stats(current_user: User = Depends(require_active_hr), db: Session = Depends(get_db)):
+    return hr_service.job_stats(db, current_user)
+
+
 @router.post("/jobs", response_model=HrJobResponse, status_code=status.HTTP_201_CREATED)
 def create_job(
     data: JobCreate,

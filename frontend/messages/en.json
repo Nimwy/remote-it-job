@@ -117,6 +117,7 @@
     "delete": "Delete",
     "noJobs": "You don't have any job listings yet.",
     "postFirst": "Post your first job",
+    "pendingApproval": "Your account is awaiting Admin approval. Please come back once approved.",
     "loading": "Loading..."
   },
   "jobForm": {
@@ -207,6 +208,9 @@
     "approveHr": "Approve",
     "block": "Block",
     "unblock": "Unblock",
+    "page": "Page {page} / {total}",
+    "prev": "Previous",
+    "next": "Next",
     "catalogTitle": "Catalog Management",
     "categories": "Categories",
     "tags": "Tags",
