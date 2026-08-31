@@ -93,7 +93,14 @@ export function NavBar() {
           <nav className="hidden items-center gap-4 md:flex">
             <NavLink href="/jobs" label={t("findJobs")} active={activeJobs} />
             {user?.role === "hr" && (
-              <NavLink href="/hr" label={t("dashboard")} active={activeHr} />
+              <>
+                <NavLink href="/hr" label={t("dashboard")} active={activeHr} />
+                <NavLink
+                  href="/hr/profile"
+                  label={t("profile")}
+                  active={pathname.startsWith("/hr/profile")}
+                />
+              </>
             )}
             {user?.role === "admin" && (
               <NavLink href="/admin" label={t("admin")} active={activeAdmin} />

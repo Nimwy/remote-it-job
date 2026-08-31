@@ -69,12 +69,20 @@ export function HrDashboard() {
           <h1 className="font-display text-headline-lg">{t("hello")}</h1>
           <p className="text-body-md text-secondary">{t("subtitle")}</p>
         </div>
-        <Link href="/hr/jobs/new">
-          <Button>
-            <Icon name="add" className="text-[18px]" />
-            {t("postNew")}
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/hr/profile">
+            <Button variant="outline">
+              <Icon name="manage_accounts" className="text-[18px]" />
+              {t("profile")}
+            </Button>
+          </Link>
+          <Link href="/hr/jobs/new">
+            <Button>
+              <Icon name="add" className="text-[18px]" />
+              {t("postNew")}
+            </Button>
+          </Link>
+        </div>
       </header>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
