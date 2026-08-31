@@ -1,23 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAdminJobs, useAdminJobAction, useAdminDeleteJob } from "@/hooks/useAdmin";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 
+const PAGE_SIZE = 20;
+
 export function AdminManageJobs() {
   const t = useTranslations("admin");
   const st = useTranslations("status");
   const jt = useTranslations("jobType");
   const [status, setStatus] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const { data, isLoading } = useAdminJobs({ status: status || undefined, q: search || undefined });
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminJobs({
+    status: status || undefined,
+    q: search || undefined,
+    page,
+    page_size: PAGE_SIZE,
+  });
   const action = useAdminJobAction();
   const deleteJob = useAdminDeleteJob();
 
   const jobs = data?.items ?? [];
+  const totalPages = data?.total_pages ?? 0;
+
+  // Debounce search (~300ms) để không bắn request mỗi ký tự (F-12)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const statusOptions = ["draft", "pending", "approved", "rejected", "closed", "hidden", "expired"];
 
@@ -32,15 +51,18 @@ export function AdminManageJobs() {
         <div className="relative">
           <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
           <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t("searchPlaceholder")}
             className="h-10 w-64 rounded-lg border border-outline-variant bg-surface-container-lowest pl-10 pr-4 text-body-sm focus:border-primary focus:outline-none"
           />
         </div>
         <select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            setPage(1);
+          }}
           className="h-10 cursor-pointer rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-sm focus:border-primary focus:outline-none"
         >
           <option value="">{t("allStatuses")}</option>
@@ -112,6 +134,20 @@ export function AdminManageJobs() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            {t("prev")}
+          </Button>
+          <span className="text-body-sm text-secondary">
+            {t("page", { page, total: totalPages })}
+          </span>
+          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+            {t("next")}
+          </Button>
         </div>
       )}
     </div>
