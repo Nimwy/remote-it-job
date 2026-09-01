@@ -67,7 +67,12 @@ docker compose run --rm backend python seed_demo.py    # (tùy chọn) seed dữ
 docker compose up -d backend                           # chạy API tại :8000
 ```
 
-Backend docs tự sinh: http://localhost:8000/docs
+Backend docs tự sinh:
+- Swagger UI (thử API trực tiếp): http://localhost:8000/docs
+- Đặc tả OpenAPI (source of truth): http://localhost:8000/openapi.json
+- ReDoc (bản đọc gọn): http://localhost:8000/redoc
+
+Để thử các endpoint cần đăng nhập (HR/Admin) trong Swagger: đăng nhập trước qua `POST /api/auth/login` trong cùng phiên (cookie `session`) rồi bấm "Try it out". Tài khoản mẫu: `admin@remoteit.vn / admin123`, `demo.hr@remoteit.vn / demo123`.
 
 ### 2. Frontend
 
