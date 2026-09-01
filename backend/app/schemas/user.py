@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserCreate(BaseModel):
@@ -13,6 +13,12 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [{"email": "demo.hr@remoteit.vn", "password": "demo123"}]
+        }
+    )
 
 
 class UserResponse(BaseModel):
