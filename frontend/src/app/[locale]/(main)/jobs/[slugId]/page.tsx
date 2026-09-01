@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
-import { serverGetJob } from "@/services/jobs";
+import { CompanyLogo } from "@/components/CompanyLogo";
+import { RichText } from "@/components/RichText";
+import { serverGetJob, serverListJobs } from "@/services/jobs";
 import { parseJobId } from "@/lib/url";
 import { timeAgo, timeLeft } from "@/lib/date";
-import { CompanyLogo } from "@/components/CompanyLogo";
 
 const contactIcons: Record<string, string> = {
   zalo: "chat",
@@ -22,7 +24,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slugId } = await params;
   const job = await serverGetJob(parseJobId(slugId));
-  if (!job) return { title: "404" };
+  if (!job) notFound();
   return {
     title: `${job.title} - ${job.company_name} | Remote IT`,
     description: job.description.slice(0, 160),
@@ -36,30 +38,40 @@ export default async function JobDetailPage({
 }) {
   const { slugId } = await params;
   const job = await serverGetJob(parseJobId(slugId));
+  if (!job) notFound();
 
   const t = await getTranslations("jobDetail");
   const jt = await getTranslations("jobType");
   const ct = await getTranslations("contact");
   const locale = await getLocale();
 
-  if (!job) {
-    return (
-      <div className="mx-auto max-w-[1280px] px-6 py-8">
-        <p className="text-body-md text-secondary">{t("notFound")}</p>
-      </div>
-    );
-  }
-
   const salary =
     job.salary_min || job.salary_max
       ? `${job.salary_min ?? "?"} - ${job.salary_max ?? "?"} ${job.currency ?? ""}`.trim()
       : t("negotiable");
 
+  const paymentLabel =
+    job.job_type === "contract"
+      ? t("perContract")
+      : job.job_type === "freelance"
+        ? t("perProject")
+        : t("monthlyPayment");
+
+  const similar = await serverListJobs({ category: job.category.slug, page_size: 4 });
+
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-8">
-      <Link href="/jobs" className="mb-6 inline-block text-body-md text-secondary hover:text-primary">
-        ← {t("backToList")}
-      </Link>
+      <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-body-sm text-secondary">
+        <Link href="/" className="hover:text-primary">
+          {t("home")}
+        </Link>
+        <span>/</span>
+        <Link href="/jobs" className="hover:text-primary">
+          {t("backToList")}
+        </Link>
+        <span>/</span>
+        <span className="truncate text-on-surface">{job.title}</span>
+      </nav>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -74,7 +86,7 @@ export default async function JobDetailPage({
               </div>
               <div className="text-right">
                 <p className="font-display text-headline-md text-primary">{salary}</p>
-                <p className="text-body-sm text-secondary">{t("monthlyPayment")}</p>
+                <p className="text-body-sm text-secondary">{paymentLabel}</p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -117,12 +129,12 @@ export default async function JobDetailPage({
 
           <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
             <h2 className="mb-3 font-display text-headline-md">{t("description")}</h2>
-            <p className="whitespace-pre-wrap text-body-md text-on-surface-variant">{job.description}</p>
+            <RichText text={job.description} />
           </section>
 
           <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
             <h2 className="mb-3 font-display text-headline-md">{t("requirements")}</h2>
-            <p className="whitespace-pre-wrap text-body-md text-on-surface-variant">{job.requirements}</p>
+            <RichText text={job.requirements} />
           </section>
 
           {job.tags.length > 0 && (
@@ -138,6 +150,33 @@ export default async function JobDetailPage({
                     {tag}
                   </Link>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {similar && similar.items.length > 0 && (
+            <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
+              <h2 className="mb-3 font-display text-headline-md">{t("similarJobs")}</h2>
+              <div className="space-y-3">
+                {similar.items
+                  .filter((s) => s.id !== job.id)
+                  .slice(0, 3)
+                  .map((s) => (
+                    <Link
+                      key={s.id}
+                      href={`/jobs/${s.slug}-${s.id}`}
+                      className="flex items-center justify-between gap-4 rounded-lg border border-outline-variant bg-surface p-3 transition-colors hover:border-primary"
+                    >
+                      <div className="flex items-center gap-3">
+                        <CompanyLogo name={s.company_name} size="sm" />
+                        <div>
+                          <p className="text-label-md text-on-surface">{s.title}</p>
+                          <p className="text-body-sm text-secondary">{s.company_name}</p>
+                        </div>
+                      </div>
+                      <Icon name="arrow_forward" className="text-secondary" />
+                    </Link>
+                  ))}
               </div>
             </section>
           )}
@@ -171,7 +210,7 @@ export default async function JobDetailPage({
             ) : (
               <p className="mt-4 text-body-sm text-secondary">{t("noContacts")}</p>
             )}
-            <div className="mt-6 rounded-lg border border-error-container/50 bg-error-container/30 p-3 text-body-sm text-on-error-container">
+            <div className="mt-6 rounded-lg border border-outline-variant bg-surface-container p-3 text-body-sm text-secondary">
               {t("noCvNotice")}
             </div>
           </section>

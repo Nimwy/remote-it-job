@@ -12,3 +12,10 @@ line-length = 120
 select = ["E", "F", "W", "I", "UP", "B", "RUF"]
 # B008: FastAPI dùng Depends() trong default argument (pattern chuẩn, false positive)
 ignore = ["B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=app --cov-report=term-missing"
+markers = [
+    "slow: tạm đánh dấu test chạy chậm, không chạy khi dùng -m 'not slow'",
+]

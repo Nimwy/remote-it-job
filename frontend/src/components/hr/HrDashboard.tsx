@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { useHrJobs, useSubmitJob, useCloseJob, useDeleteJob } from "@/hooks/useHr";
+import { useHrJobs, useHrStats, useSubmitJob, useCloseJob, useDeleteJob } from "@/hooks/useHr";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
@@ -38,7 +38,8 @@ function StatCard({
 export function HrDashboard() {
   const t = useTranslations("hr");
   const st = useTranslations("status");
-  const { data, isLoading } = useHrJobs();
+  const { data, isLoading, isError } = useHrJobs();
+  const { data: stats } = useHrStats();
   const submitJob = useSubmitJob();
   const closeJob = useCloseJob();
   const deleteJob = useDeleteJob();
@@ -47,11 +48,19 @@ export function HrDashboard() {
     return <div className="mx-auto max-w-[1280px] px-6 py-8 text-body-md text-secondary">{t("loading")}</div>;
   }
 
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-[1280px] px-6 py-8">
+        <p className="text-body-md text-error">{t("pendingApproval")}</p>
+      </div>
+    );
+  }
+
   const jobs = data?.items ?? [];
-  const total = data?.total ?? 0;
-  const openCount = jobs.filter((j) => j.status === "approved").length;
-  const pendingCount = jobs.filter((j) => j.status === "pending").length;
-  const closedCount = jobs.filter((j) => j.status === "closed").length;
+  const total = stats?.total ?? 0;
+  const openCount = stats?.open ?? 0;
+  const pendingCount = stats?.pending ?? 0;
+  const closedCount = stats?.closed ?? 0;
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-8">
@@ -60,12 +69,20 @@ export function HrDashboard() {
           <h1 className="font-display text-headline-lg">{t("hello")}</h1>
           <p className="text-body-md text-secondary">{t("subtitle")}</p>
         </div>
-        <Link href="/hr/jobs/new">
-          <Button>
-            <Icon name="add" className="text-[18px]" />
-            {t("postNew")}
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/hr/profile">
+            <Button variant="outline">
+              <Icon name="manage_accounts" className="text-[18px]" />
+              {t("profile")}
+            </Button>
+          </Link>
+          <Link href="/hr/jobs/new">
+            <Button>
+              <Icon name="add" className="text-[18px]" />
+              {t("postNew")}
+            </Button>
+          </Link>
+        </div>
       </header>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

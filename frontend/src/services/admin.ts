@@ -18,8 +18,8 @@ export function listAllJobs(params: {
   return apiFetch(`/admin/jobs${qs.toString() ? `?${qs}` : ""}`);
 }
 
-export function listPendingJobs(): Promise<PaginatedResponse<AdminJob>> {
-  return apiFetch("/admin/jobs/pending");
+export function listPendingJobs(page = 1, page_size = 20): Promise<PaginatedResponse<AdminJob>> {
+  return apiFetch(`/admin/jobs/pending?page=${page}&page_size=${page_size}`);
 }
 
 export function approveJob(id: number): Promise<AdminJob> {

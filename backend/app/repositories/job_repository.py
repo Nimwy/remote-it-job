@@ -87,7 +87,7 @@ def search_public(
     if timezone:
         query = query.filter(Job.timezone == timezone)
 
-    query = query.order_by(Job.created_at.desc())
+    query = query.order_by(Job.created_at.desc(), Job.id.desc())
 
     total = query.count()
     total_pages = (total + page_size - 1) // page_size if total > 0 else 0
@@ -105,7 +105,7 @@ def list_by_hr(
     query = db.query(Job).filter(Job.hr_id == user_id)
     if status:
         query = query.filter(Job.status == status)
-    query = query.order_by(Job.created_at.desc())
+    query = query.order_by(Job.created_at.desc(), Job.id.desc())
 
     total = query.count()
     total_pages = (total + page_size - 1) // page_size if total > 0 else 0
@@ -132,7 +132,7 @@ def list_all(
         query = query.filter(Job.hr_id == hr_id)
     if category_id:
         query = query.filter(Job.category_id == category_id)
-    query = query.order_by(Job.created_at.desc())
+    query = query.order_by(Job.created_at.desc(), Job.id.desc())
 
     total = query.count()
     total_pages = (total + page_size - 1) // page_size if total > 0 else 0

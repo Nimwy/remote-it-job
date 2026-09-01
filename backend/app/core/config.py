@@ -6,14 +6,16 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg2://remoteit:remoteit@localhost:5432/remoteit"
     secret_key: str = "change-me-in-production"
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = ["http://localhost:3000"]
     google_client_id: str = ""
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "http://localhost:3000"
     session_cookie_name: str = "session"
     session_max_age_seconds: int = 60 * 60 * 24 * 7
     visitor_cookie_name: str = "visitor_id"
+    cookie_secure: bool = False
+    rate_limit_enabled: bool = True
     page_size_default: int = 20
     page_size_max: int = 100
 

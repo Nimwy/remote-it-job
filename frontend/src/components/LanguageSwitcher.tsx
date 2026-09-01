@@ -2,19 +2,18 @@
 
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { routing } from "@/i18n/routing";
 
 export function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const params = useParams();
+  const searchParams = useSearchParams();
 
   const switchTo = (nextLocale: string) => {
     router.replace(
-      // @ts-expect-error params from useParams are loose
-      { pathname, params },
+      { pathname, query: Object.fromEntries(searchParams) },
       { locale: nextLocale },
     );
   };

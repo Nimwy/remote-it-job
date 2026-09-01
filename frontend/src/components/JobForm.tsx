@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,7 +26,7 @@ export type JobFormData = {
 
 interface JobFormProps {
   initialValues?: HrJob;
-  onSubmit: (data: JobFormData) => Promise<void>;
+  onSubmit: (data: JobFormData, dirtyFields: string[]) => Promise<void>;
   submitLabel: string;
 }
 
@@ -66,7 +66,7 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useForm<JobFormData>({
     resolver: zodResolver(schema),
     defaultValues: initialValues
@@ -89,6 +89,20 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
         },
   });
 
+  // F-01: Khi query tags chạy xong nhưng JobForm đã mount trước đó,
+  // useForm chỉ đọc defaultValues ở lần render đầu nên tag_ids = [].
+  // Cần đồng bộ lại tag_ids từ initialValues một lần khi tags có dữ liệu.
+  const didInitTagsRef = useRef(false);
+  useEffect(() => {
+    if (tags && initialValues && !didInitTagsRef.current) {
+      didInitTagsRef.current = true;
+      setValue(
+        "tag_ids",
+        tags.filter((tg) => initialValues.tags.includes(tg.name)).map((tg) => tg.id),
+      );
+    }
+  }, [tags, initialValues, setValue]);
+
   const selectedTags = watch("tag_ids") ?? [];
 
   const toggleTag = (id: number) => {
@@ -100,7 +114,13 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form
+      onSubmit={handleSubmit(async (data) => {
+        const dirty = Object.keys(dirtyFields);
+        await onSubmit(data, dirty);
+      })}
+      className="space-y-6"
+    >
       <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
         <h2 className="mb-4 font-display text-headline-sm">{t("basicInfo")}</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

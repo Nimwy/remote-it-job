@@ -42,22 +42,22 @@ export function listTags(): Promise<Tag[]> {
   return apiFetch("/tags");
 }
 
-// Server-side fetchers (SSR)
+// Server-side fetchers (SSR) — trả null khi lỗi để caller quyết định (notFound/error boundary)
 export function serverListJobs(
   filters: JobFilters = {},
-): Promise<PaginatedResponse<JobListItem>> {
+): Promise<PaginatedResponse<JobListItem> | null> {
   return serverFetch(`/jobs${buildQuery(filters)}`);
 }
 
-export function serverGetJob(id: number): Promise<JobDetail> {
+export function serverGetJob(id: number): Promise<JobDetail | null> {
   return serverFetch(`/jobs/${id}`);
 }
 
-export function serverListCategories(): Promise<Category[]> {
+export function serverListCategories(): Promise<Category[] | null> {
   return serverFetch("/categories");
 }
 
-export function serverListTags(): Promise<Tag[]> {
+export function serverListTags(): Promise<Tag[] | null> {
   return serverFetch("/tags");
 }
 

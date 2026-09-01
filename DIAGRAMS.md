@@ -196,3 +196,73 @@ classDiagram
     Tag "1" --> "0..*" JobTag : used_by
     Job "1" --> "0..*" JobView : viewed_by
 ```
+
+## 10. Hành trình người dùng (User Journey)
+
+> Mô tả trạng thái màn hình tương ứng ở `SCREENS.md`; sơ đồ này bổ sung sequence, nhánh lỗi và trạng thái rỗng.
+
+### 10.1 Job seeker: tìm việc → xem chi tiết → liên hệ HR
+
+```mermaid
+sequenceDiagram
+    actor K as Job seeker
+    participant F as Frontend (SSR)
+    participant B as Backend
+    participant D as DB
+
+    K->>F: Mở trang chủ `/`
+    F->>B: GET /jobs (featured)
+    B->>D: job approved + chưa hết hạn + owner active
+    alt Không có job
+        F-->>K: "Chưa có tin tuyển dụng nổi bật"
+    else Có job
+        F-->>K: danh sách JobCard
+    end
+    K->>F: Bấm tìm kiếm / bộ lọc `/jobs`
+    F-->>K: danh sách kết quả (filter, pagination)
+    alt Không tìm thấy
+        F-->>K: "Không tìm thấy việc làm nào phù hợp"
+    end
+    K->>F: Mở chi tiết `/jobs/{slug}-{id}`
+    F->>B: GET /jobs/{id} (visitor cookie)
+    alt Job không public (pending/hidden/expired/blocked owner)
+        B-->>F: 404 -> F-->>K: "Việc làm không tồn tại hoặc đã ẩn"
+    else Job public
+        B->>D: đếm view (max 1/24h)
+        F-->>K: mô tả + yêu cầu + kênh liên hệ + tags
+        K->>K: liên hệ HR qua kênh ngoài (không nộp CV trên nền tảng)
+    end
+```
+
+### 10.2 HR: đăng ký → chờ duyệt → đăng tin → bị từ chối → sửa → gửi lại
+
+```mermaid
+sequenceDiagram
+    actor H as HR
+    actor A as Admin
+    participant F as Frontend
+    participant B as Backend
+    participant D as DB
+
+    H->>F: Đăng ký `/register`
+    F->>B: POST /auth/register
+    B->>D: tạo HR (status=pending)
+    B-->>H: "Tài khoản đang chờ phê duyệt"
+    A->>F: Duyệt HR `/admin/users`
+    F->>B: POST /admin/users/{id}/approve -> status=active
+    H->>F: Đăng nhập `/login` -> `/hr`
+    H->>F: Đăng tin `/hr/jobs/new`
+    F->>B: POST /hr/jobs -> status=draft
+    H->>F: Gửi duyệt (job) -> status=pending
+    alt Admin TỪ CHỐI
+        A->>B: POST /admin/jobs/{id}/reject
+        B-->>H: job=rejected + rejection_reason
+        H->>F: Sửa `/hr/jobs/{id}/edit` -> gửi lại -> status=pending
+    else Admin CHẤP THUẬN
+        A->>B: POST /admin/jobs/{id}/approve -> status=approved
+        B-->>K: job public
+    end
+    H->>F: Đóng/Xoá tin tại `/hr`
+```
+
+Trạng thái rỗng liên quan: `/hr` chưa có tin nào → "Bạn chưa có tin tuyển dụng nào"; `/admin/pending` không còn tin → "Không có tin nào đang chờ duyệt".

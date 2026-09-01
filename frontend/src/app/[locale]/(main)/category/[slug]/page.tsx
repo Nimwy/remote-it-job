@@ -10,10 +10,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const t = await getTranslations("nav");
   const categories = await serverListCategories();
   const category = categories?.find((c) => c.slug === slug);
   return {
-    title: category ? `Việc làm ${category.name} Remote | Remote IT` : "Việc làm Remote",
+    title: category
+      ? `${t("categoryTitle", { name: category.name })} | Remote IT`
+      : t("categoryFallback"),
   };
 }
 
@@ -35,7 +38,7 @@ export default async function CategoryPage({
     <div className="mx-auto max-w-[1280px] px-6 py-8">
       <nav className="mb-4 text-body-sm text-secondary">
         <Link href="/" className="hover:text-primary">
-          Home
+          {t("home")}
         </Link>
         <span className="mx-2">/</span>
         <span className="text-on-surface">{category?.name ?? slug}</span>
@@ -45,7 +48,7 @@ export default async function CategoryPage({
         {category?.name ?? slug} · {t("findJobs")}
       </h1>
       <p className="mb-6 text-body-md text-secondary">
-        {jobsData?.total ?? 0} {category?.name ?? ""}
+        {t("jobsCount", { count: jobsData?.total ?? 0 })}
       </p>
 
       {jobsData && jobsData.items.length > 0 ? (
@@ -55,7 +58,7 @@ export default async function CategoryPage({
           ))}
         </div>
       ) : (
-        <p className="text-body-md text-secondary">No jobs in this category.</p>
+        <p className="text-body-md text-secondary">{t("noJobsInCategory")}</p>
       )}
     </div>
   );

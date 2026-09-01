@@ -1,14 +1,14 @@
 const PALETTE = [
-  "bg-[#0d9488]", // teal
-  "bg-[#2563eb]", // blue
-  "bg-[#7c3aed]", // violet
-  "bg-[#db2777]", // pink
-  "bg-[#ea580c]", // orange
-  "bg-[#16a34a]", // green
-  "bg-[#dc2626]", // red
-  "bg-[#0891b2]", // cyan
-  "bg-[#ca8a04]", // amber
-  "bg-[#4f46e5]", // indigo
+  "bg-[#0f766e]", // teal-700
+  "bg-[#1d4ed8]", // blue-700
+  "bg-[#475569]", // slate-600
+  "bg-[#0369a1]", // sky-700
+  "bg-[#6d28d9]", // violet-700
+  "bg-[#b45309]", // amber-700
+  "bg-[#15803d]", // green-700
+  "bg-[#0e7490]", // cyan-700
+  "bg-[#7e22ce]", // purple-700
+  "bg-[#334155]", // slate-700
 ];
 
 function hashString(text: string): number {

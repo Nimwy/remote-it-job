@@ -29,13 +29,13 @@ export function timeAgo(date: string, locale: Locale = "vi"): string {
   return relativeFormatter[locale].format(Math.round(diff / (30 * DAY_MS)), "month");
 }
 
-export function timeLeft(expiresAt: string | null, locale: Locale = "vi"): string {
+export function timeLeft(expiresAt: string | null, locale: Locale = "vi", now: number = Date.now()): string {
   if (!expiresAt) {
     return locale === "vi" ? "Không giới hạn" : "No deadline";
   }
 
   const target = new Date(expiresAt);
-  const diffMs = target.getTime() - Date.now();
+  const diffMs = target.getTime() - now;
 
   if (diffMs <= 0) {
     return locale === "vi" ? "Đã hết hạn" : "Expired";

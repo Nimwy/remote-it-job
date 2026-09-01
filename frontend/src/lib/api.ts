@@ -1,3 +1,13 @@
+export class ApiError extends Error {
+  code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "ApiError";
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options?: RequestInit,
@@ -18,11 +28,15 @@ export async function apiFetch<T>(
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
+    const code =
+      (data as { error?: { code?: string } })?.error?.code ??
+      (data as { code?: string })?.code ??
+      "unknown_error";
     const message =
-      (data as { detail?: string })?.detail ??
       (data as { error?: { message?: string } })?.error?.message ??
+      (data as { detail?: string })?.detail ??
       "Có lỗi xảy ra";
-    throw new Error(message);
+    throw new ApiError(code, message);
   }
 
   return data as T;

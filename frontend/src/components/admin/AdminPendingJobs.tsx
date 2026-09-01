@@ -5,26 +5,30 @@ import { useTranslations } from "next-intl";
 import { useAdminPendingJobs, useAdminJobAction } from "@/hooks/useAdmin";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Icon } from "@/components/ui/Icon";
 
 export function AdminPendingJobs() {
   const t = useTranslations("admin");
   const st = useTranslations("status");
   const jt = useTranslations("jobType");
-  const { data, isLoading } = useAdminPendingJobs();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminPendingJobs(page);
   const action = useAdminJobAction();
   const [rejectReason, setRejectReason] = useState("");
   const [rejectingId, setRejectingId] = useState<number | null>(null);
 
   if (isLoading) {
-    return <div className="text-body-md text-secondary">Loading...</div>;
+    return <div className="text-body-md text-secondary">{t("loading")}</div>;
   }
 
   const jobs = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.total_pages ?? 0;
 
   return (
     <div>
       <h1 className="mb-2 font-display text-headline-lg">{t("pendingTitle")}</h1>
-      <p className="mb-6 text-body-md text-secondary">{t("pendingSubtitle", { count: jobs.length })}</p>
+      <p className="mb-6 text-body-md text-secondary">{t("pendingSubtitle", { count: total })}</p>
 
       {jobs.length === 0 ? (
         <p className="text-body-md text-secondary">{t("noPending")}</p>
@@ -46,7 +50,7 @@ export function AdminPendingJobs() {
                     </span>
                     {job.location && (
                       <span className="rounded-full bg-surface-container px-2.5 py-0.5 text-label-sm text-secondary">
-                        📍 {job.location}
+                        <Icon name="location_on" className="text-[16px]" /> {job.location}
                       </span>
                     )}
                   </div>
@@ -104,6 +108,20 @@ export function AdminPendingJobs() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            {t("prev")}
+          </Button>
+          <span className="text-body-sm text-secondary">
+            {t("page", { page, total: totalPages })}
+          </span>
+          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+            {t("next")}
+          </Button>
         </div>
       )}
     </div>

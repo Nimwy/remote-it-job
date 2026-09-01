@@ -10,22 +10,33 @@ Tài liệu kỹ thuật chi tiết cho REST API. Base URL: `/api`.
 
 ### 1.1 Response lỗi
 
+Mọi lỗi (APIError, validation, 404...) trả về cùng dạng `{ "error": { "code", "message" } }`:
+
 ```json
 {
-  "detail": "Email đã được đăng ký"
+  "error": {
+    "code": "email_exists",
+    "message": "Email đã được đăng ký"
+  }
 }
 ```
 
-| HTTP status | Ý nghĩa |
-|---|---|
-| 200 | Thành công |
-| 201 | Tạo mới thành công |
-| 204 | Thành công, không có body |
-| 400 | Dữ liệu không hợp lệ |
-| 401 | Chưa đăng nhập / phiên hết hạn |
-| 403 | Không có quyền |
-| 404 | Không tìm thấy |
-| 409 | Xung đột (email/slug đã tồn tại) |
+- `code`: mã lỗi ổn định (dùng trong frontend để hiển thị bản dịch).
+- `message`: mô tả (nội bộ/fallback khi không có bản dịch).
+- Lỗi chưa xử lý thêm `request_id` để truy vết log.
+
+| HTTP status | Ý nghĩa | Ví dụ `code` |
+|---|---|---|
+| 200 | Thành công | — |
+| 201 | Tạo mới thành công | — |
+| 204 | Thành công, không có body | — |
+| 400 | Dữ liệu không hợp lệ / validation | `http_422` / `invalid_input` |
+| 401 | Chưa đăng nhập / phiên hết hạn | `not_authenticated` |
+| 403 | Không có quyền | `forbidden` / `require_admin` |
+| 404 | Không tìm thấy | `not_found` |
+| 409 | Xung đột (email/slug đã tồn tại) | `email_exists`, `slug_exists` |
+| 429 | Vượt giới hạn rate limit | `rate_limit_exceeded` |
+| 501 | Tính năng chưa cấu hình (Google OAuth) | `oauth_not_configured` |
 
 ### 1.2 Phân trang
 
@@ -146,6 +157,28 @@ Query chung: `?page=1&page_size=20`
 | `channel` (contact) | `zalo`, `telegram`, `linkedin`, `phone`, `email` |
 | `currency` | `VND`, `USD`, `EUR`, `SGD`, `JPY`, `GBP` |
 
+### 1.5 Ràng buộc và kiểu dữ liệu
+
+Các ràng buộc lấy từ `app/schemas/` và `app/core/config.py` (nguồn sự thật: `GET /openapi.json`).
+
+| Field | Ràng buộc |
+|---|---|
+| `title` (job) | bắt buộc, 1–200 ký tự |
+| `description`, `requirements` | bắt buộc, tối thiểu 1 ký tự |
+| `salary_min` ≤ `salary_max` | nếu có salary thì min ≤ max (kiểm tra ở service) |
+| `currency` | tối đa 10 ký tự |
+| `name` (category) | bắt buộc, 1–100 ký tự |
+| `slug` (category/tag) | tùy chọn, tự sinh; max 120 / 60 ký tự |
+| `name` (tag) | bắt buộc, 1–50 ký tự |
+| `company_name` | bắt buộc khi tạo HR |
+| `password` | độ dài tối thiểu theo service validation |
+| `page` | ≥ 1 (mặc định 1) |
+| `page_size` | 1–100 (mặc định 20, cấu hình `page_size_max=100`) |
+| `channel` (contact) | `zalo` \| `telegram` \| `linkedin` \| `phone` \| `email`; `value` 1–255 ký tự |
+| `tag_ids` (create job) | mảng số nguyên id tag, mặc định `[]` |
+
+> Để đảm bảo tài liệu không lệch code, có thể đối chiếu tự động với `GET /openapi.json` (FastAPI tự sinh theo schema).
+
 ---
 
 ## 2. Authentication
@@ -154,7 +187,15 @@ Query chung: `?page=1&page_size=20`
 
 Tạo tài khoản HR (trạng thái `pending`).
 
-**Body:**
+**Body (tất cả đều bắt buộc):**
+
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `name` | string | ✔ | Họ tên |
+| `email` | string | ✔ | Email hợp lệ (định dạng email) |
+| `password` | string | ✔ | Mật khẩu |
+| `company_name` | string | ✔ | Tên công ty |
+
 ```json
 {
   "name": "HR Test",
@@ -164,9 +205,12 @@ Tạo tài khoản HR (trạng thái `pending`).
 }
 ```
 
-**Response 201:** `UserResponse`
+**Response 201:** `UserResponse` (role=hr, status=`pending`)
 
-**Lỗi:** `409` nếu email đã tồn tại.
+**Lỗi mẫu:**
+```json
+{ "error": { "code": "email_exists", "message": "Email đã được đăng ký" } }
+```
 
 ### POST /api/auth/login
 
@@ -231,23 +275,24 @@ Hủy session hiện tại, xóa cookie.
 
 Danh sách job công khai (approved, chưa hết hạn, HR không bị khóa).
 
-**Query params:**
+**Query params (tất cả đều tùy chọn):**
 
-| Param | Type | Mô tả |
-|---|---|---|
-| `q` | string | Tìm kiếm trong title/description |
-| `category` | string | Slug category |
-| `tags` | string | Danh sách slug tag, phân tách bằng `,` |
-| `job_type` | string | fulltime/parttime/freelance/contract |
-| `salary_min` | number | Lương tối thiểu |
-| `salary_max` | number | Lương tối đa |
-| `location` | string | Địa điểm (khớp một phần) |
-| `timezone` | string | Múi giờ |
-| `page` | number | Trang (mặc định 1) |
-| `page_size` | number | Số item/trang (mặc định 20) |
-| `sort` | string | `latest` (mặc định) |
+| Param | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `q` | string | ✕ | Tìm kiếm trong title/description |
+| `category` | string | ✕ | Slug category |
+| `tags` | string | ✕ | Danh sách slug tag, phân tách bằng `,` |
+| `job_type` | string | ✕ | fulltime/parttime/freelance/contract |
+| `salary_min` | number | ✕ | Lương tối thiểu |
+| `salary_max` | number | ✕ | Lương tối đa |
+| `location` | string | ✕ | Địa điểm (khớp một phần) |
+| `timezone` | string | ✕ | Múi giờ |
+| `page` | number | ✕ | Trang (≥ 1, mặc định 1) |
+| `page_size` | number | ✕ | Số item/trang (1–100, mặc định 20) |
 
-**Response 200:** `PaginatedResponse<JobListItem>`
+> Không có tham số `sort` hay `currency` — thứ tự mặc định cố định (mới nhất + tie-breaker theo id) và `currency` chỉ là một field trong response.
+
+**Response 200:** `PaginatedResponse<JobListItem>` (hình dạng phẳng, xem mục 1.2).
 
 ### GET /api/jobs/{job_id}
 
@@ -316,9 +361,25 @@ Danh sách job của HR hiện tại.
 
 ### POST /api/hr/jobs
 
-Tạo draft job.
+Tạo draft job. `slug` tự sinh, có thể thêm hậu tố số nếu trùng.
 
 **Body:**
+
+| Field | Type | Bắt buộc | Mô tả |
+|---|---|---|---|
+| `title` | string | ✔ | 1–200 ký tự |
+| `category_id` | int | ✔ | Id category đang active |
+| `job_type` | string | ✔ | `fulltime` \| `parttime` \| `freelance` \| `contract` |
+| `description` | string | ✔ | ≥ 1 ký tự |
+| `requirements` | string | ✔ | ≥ 1 ký tự |
+| `location` | string | ✕ | Địa điểm |
+| `timezone` | string | ✕ | Múi giờ |
+| `salary_min` | number | ✕ | ≤ `salary_max` |
+| `salary_max` | number | ✕ | ≥ `salary_min` |
+| `currency` | string | ✕ | ≤ 10 ký tự |
+| `expires_at` | datetime | ✕ | Thời hạn tin |
+| `tag_ids` | int[] | ✕ | Mảng id tag, mặc định `[]` |
+
 ```json
 {
   "title": "React Developer",
@@ -336,7 +397,12 @@ Tạo draft job.
 }
 ```
 
-**Response 201:** `HrJobResponse` (status `draft`, `slug` tự sinh từ title)
+**Response 201:** `HrJobResponse` (status `draft`)
+
+**Lỗi mẫu:**
+```json
+{ "error": { "code": "invalid_category", "message": "Chuyên mục không hợp lệ" } }
+```
 
 ### GET /api/hr/jobs/{job_id}
 

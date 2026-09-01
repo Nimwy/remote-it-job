@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { JobCard } from "@/components/JobCard";
 import { Icon } from "@/components/ui/Icon";
-import { serverListCategories, serverListJobs } from "@/services/jobs";
+import { serverListCategories, serverListJobs, serverListTags } from "@/services/jobs";
 
 function readParam(value: string | string[] | undefined): string {
   return typeof value === "string" ? value : "";
@@ -17,14 +17,20 @@ export default async function JobsPage({
   const q = readParam(params.q);
   const category = readParam(params.category);
   const jobType = readParam(params.job_type);
+  const location = readParam(params.location);
+  const timezone = readParam(params.timezone);
+  const tags = readParam(params.tags);
+  const salaryMin = readParam(params.salary_min);
+  const salaryMax = readParam(params.salary_max);
   const page = Number(readParam(params.page) || "1") || 1;
 
   const t = await getTranslations("jobs");
   const jt = await getTranslations("jobType");
 
-  const [jobsData, categories] = await Promise.all([
-    serverListJobs({ q, category, job_type: jobType, page }),
+  const [jobsData, categories, tagList] = await Promise.all([
+    serverListJobs({ q, category, job_type: jobType, location, timezone, tags, salary_min: Number(salaryMin) || undefined, salary_max: Number(salaryMax) || undefined, page }),
     serverListCategories(),
+    serverListTags(),
   ]);
 
   const totalPages = jobsData?.total_pages ?? 0;
@@ -34,9 +40,16 @@ export default async function JobsPage({
     if (q) qs.set("q", q);
     if (category) qs.set("category", category);
     if (jobType) qs.set("job_type", jobType);
+    if (location) qs.set("location", location);
+    if (timezone) qs.set("timezone", timezone);
+    if (tags) qs.set("tags", tags);
+    if (salaryMin) qs.set("salary_min", salaryMin);
+    if (salaryMax) qs.set("salary_max", salaryMax);
     qs.set("page", String(p));
     return `/jobs?${qs.toString()}`;
   };
+
+  const timezones = ["UTC+7", "UTC+8", "UTC+0", "UTC+9", "UTC-5", "UTC-8"];
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-8">
@@ -74,6 +87,11 @@ export default async function JobsPage({
         >
           <h2 className="text-label-md text-on-surface">{t("filter")}</h2>
           {q && <input type="hidden" name="q" value={q} />}
+          {location && <input type="hidden" name="location" value={location} />}
+          {timezone && <input type="hidden" name="timezone" value={timezone} />}
+          {tags && <input type="hidden" name="tags" value={tags} />}
+          {salaryMin && <input type="hidden" name="salary_min" value={salaryMin} />}
+          {salaryMax && <input type="hidden" name="salary_max" value={salaryMax} />}
 
           <div>
             <label className="mb-1 block text-label-sm text-secondary">{t("category")}</label>
@@ -106,6 +124,69 @@ export default async function JobsPage({
             </select>
           </div>
 
+          <div>
+            <label className="mb-1 block text-label-sm text-secondary">{t("location")}</label>
+            <input
+              name="location"
+              defaultValue={location}
+              placeholder="Việt Nam, Singapore..."
+              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-label-sm text-secondary">{t("timezone")}</label>
+            <select
+              name="timezone"
+              defaultValue={timezone}
+              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md focus:border-primary focus:outline-none"
+            >
+              <option value="">{t("all")}</option>
+              {timezones.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-label-sm text-secondary">{t("tags")}</label>
+            <select
+              name="tags"
+              defaultValue={tags}
+              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md focus:border-primary focus:outline-none"
+            >
+              <option value="">{t("all")}</option>
+              {tagList?.map((tag) => (
+                <option key={tag.id} value={tag.slug}>
+                  {tag.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="mb-1 block text-label-sm text-secondary">{t("salaryMin")}</label>
+              <input
+                type="number"
+                name="salary_min"
+                defaultValue={salaryMin}
+                className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-label-sm text-secondary">{t("salaryMax")}</label>
+              <input
+                type="number"
+                name="salary_max"
+                defaultValue={salaryMax}
+                className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
             className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-label-md text-on-surface hover:bg-surface-container-low"
@@ -114,14 +195,14 @@ export default async function JobsPage({
           </button>
         </form>
 
-        <div className="space-y-4 lg:col-span-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:col-span-3">
           {jobsData && jobsData.items.length > 0 ? (
             <>
               {jobsData.items.map((job) => (
                 <JobCard key={job.id} job={job} />
               ))}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-4">
+                <div className="col-span-full flex items-center justify-center gap-2 pt-4">
                   {page > 1 && (
                     <Link
                       href={buildPageUrl(page - 1)}
@@ -145,7 +226,7 @@ export default async function JobsPage({
               )}
             </>
           ) : (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-outline-variant bg-surface-container-lowest py-16 text-center">
+            <div className="col-span-full flex flex-col items-center gap-3 rounded-2xl border border-dashed border-outline-variant bg-surface-container-lowest py-16 text-center">
               <Icon name="search_off" className="text-[48px] text-outline" />
               <p className="text-body-md text-secondary">{t("noResults")}</p>
             </div>

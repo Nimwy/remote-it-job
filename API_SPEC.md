@@ -1,325 +1,62 @@
 # API Specification — Remote IT Job
 
-## 1. Quy ước
+> **Nguồn sự thật duy nhất cho từng endpoint là [`API_REFERENCE.md`](./API_REFERENCE.md).**
+> File này chỉ giữ phần quy ước chung (xác thực, phân trang, định dạng lỗi, quy tắc authorization) để tránh tài liệu song song bị lệch nhau.
+> Muốn xem endpoint + param + response + mã lỗi cụ thể: mở `API_REFERENCE.md` hoặc tự sinh từ code tại `GET /api/openapi.json` (Swagger `/docs`).
 
-Base path:
+## Quy ước chung
+
+### Base path
 
 ```text
 /api
 ```
 
-Định dạng:
+### Định dạng
+
 - REST
-- JSON
-- UTF-8
+- JSON (UTF-8)
+- Đối chiếu schema theo code: `GET /api/openapi.json` (FastAPI tự sinh)
 
-Xác thực:
-- session phía server
-- cookie HTTP-only
+### Xác thực & authorization
 
-Tất cả endpoint được bảo vệ yêu cầu backend authorization.
+- Xác thực bằng session phía server, lưu trong cookie **HTTP-only** (`session`).
+- Các nhóm rule:
+  - **Public** (job seeker, không cần session): `GET /api/jobs`, `GET /api/jobs/{id}`, `GET /api/categories`, `GET /api/tags`, `POST /api/auth/register`, `POST /api/auth/login`, OAuth callbacks.
+  - **HR**: mọi route `/api/hr/*` → cần đăng nhập với `role=hr` **và** `status=active`.
+  - **Admin**: mọi route `/api/admin/*` → cần đăng nhập với `role=admin`.
+  - HR chưa được admin duyệt hoặc bị block sẽ nhận `403`.
+- Chi tiết từng endpoint (kể cả quyền): xem `API_REFERENCE.md` mục tương ứng.
 
-## 2. Public jobs
+### Định dạng lỗi
 
-### GET /api/jobs
-
-Tìm kiếm/lọc public jobs.
-
-Query parameters:
-
-```text
-q
-category
-tags
-job_type
-salary_min
-salary_max
-currency
-location
-timezone
-page
-page_size
-sort
-```
-
-Mặc định:
-- `page=1`
-- `page_size=20`
-- `sort=latest`
-
-Chỉ trả về job public/đủ điều kiện.
-
-Conceptual response:
-
-```json
-{
-  "items": [
-    {
-      "id": 123,
-      "title": "React Developer",
-      "company_name": "ABC",
-      "category": {
-        "id": 1,
-        "name": "Frontend",
-        "slug": "frontend"
-      },
-      "job_type": "fulltime",
-      "location": "Vietnam",
-      "timezone": "UTC+7",
-      "salary_min": 1800,
-      "salary_max": 3000,
-      "currency": "USD",
-      "tags": ["react", "typescript"],
-      "created_at": "2026-08-05T10:00:00Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "page_size": 20,
-    "total": 24,
-    "total_pages": 2
-  }
-}
-```
-
-### GET /api/jobs/{job_id}
-
-Trả về chi tiết job public và các kênh liên hệ HR.
-
-Không tiết lộ dữ liệu riêng tư của HR ngoài thông tin profile/contact được công khai.
-
-Request chi tiết job public hợp lệ được tính là một lượt xem.
-
-## 3. Authentication
-
-### POST /api/auth/register
-
-Tạo tài khoản HR bằng email/password.
-
-Trạng thái tài khoản ban đầu:
-
-```text
-pending
-```
-
-Đăng ký chỉ yêu cầu thông tin tối thiểu cần thiết.
-
-### POST /api/auth/login
-
-Xác thực email/password.
-
-Khi thành công:
-- tạo session phía server
-- đặt cookie HTTP-only
-
-HR đang pending có thể xác thực nhưng không thể thực hiện thao tác HR đã được duyệt cho đến khi Admin duyệt.
-
-### GET /api/auth/google/login
-
-Bắt đầu Google OAuth flow.
-
-### GET /api/auth/google/callback
-
-OAuth callback.
-
-HR mới qua Google:
-- tạo tài khoản nếu cần
-- status = pending
-- tạo session sau khi xác thực thành công
-
-Google không bypass HR approval.
-
-### POST /api/auth/logout
-
-Hủy session hiện tại và xóa cookie.
-
-### GET /api/auth/me
-
-Trả về thông tin user đang xác thực.
-
-### POST /api/auth/change-password
-
-Đổi password cho tài khoản có password credential.
-
-Yêu cầu password hiện tại và password mới.
-
-Không cần dịch vụ email reset password trong MVP.
-
-## 4. HR profile
-
-### GET /api/hr/profile
-
-Trả về profile HR hiện tại.
-
-### PATCH /api/hr/profile
-
-Cập nhật các trường profile như:
-- name
-- company_name
-- avatar
-- contacts
-
-Implementation phải xác thực quyền sở hữu qua session hiện tại.
-
-## 5. HR jobs
-
-### GET /api/hr/jobs
-
-Danh sách job của HR hiện tại với pagination và filter status tùy chọn.
-
-### POST /api/hr/jobs
-
-Tạo draft job.
-
-### GET /api/hr/jobs/{job_id}
-
-Lấy job thuộc sở hữu của HR hiện tại.
-
-### PATCH /api/hr/jobs/{job_id}
-
-Cập nhật job thuộc sở hữu.
-
-Nếu job đã approved nhận thay đổi substantive, backend đặt status về `pending`.
-
-### POST /api/hr/jobs/{job_id}/submit
-
-Gửi job draft/rejected để kiểm duyệt.
-
-### POST /api/hr/jobs/{job_id}/close
-
-Đóng job đã approved.
-
-### DELETE /api/hr/jobs/{job_id}
-
-Xóa job khi được phép bởi lifecycle policy. Ưu tiên giữ lại bản ghi phục vụ kiểm duyệt thay vì xóa hủy diệt.
-
-## 6. Admin
-
-Tất cả endpoint `/api/admin/*` yêu cầu:
-- session đã xác thực
-- role = admin
-- tài khoản active
-
-### GET /api/admin/jobs
-
-Danh sách tất cả job với filter.
-
-### GET /api/admin/jobs/pending
-
-Danh sách job đang pending.
-
-### POST /api/admin/jobs/{job_id}/approve
-
-Duyệt job đang pending.
-
-### POST /api/admin/jobs/{job_id}/reject
-
-Từ chối job đang pending.
-
-Request:
-
-```json
-{
-  "reason": "Tin tuyển dụng thiếu thông tin về yêu cầu công việc."
-}
-```
-
-### POST /api/admin/jobs/{job_id}/hide
-
-Ẩn job công khai.
-
-### POST /api/admin/jobs/{job_id}/unhide
-
-Khôi phục job bị ẩn chỉ khi lifecycle rules cho phép.
-
-### DELETE /api/admin/jobs/{job_id}
-
-Xóa job theo deletion policy (dọn cả job_tags và job_views).
-
-### GET /api/admin/users
-
-Danh sách tài khoản HR với pagination/filter.
-
-### POST /api/admin/users/{user_id}/approve
-
-Duyệt HR đang pending.
-
-### POST /api/admin/users/{user_id}/block
-
-Khóa HR.
-
-### POST /api/admin/users/{user_id}/unblock
-
-Mở khóa HR.
-
-### GET /api/admin/categories
-
-Danh sách category.
-
-### POST /api/admin/categories
-
-Tạo category.
-
-### PATCH /api/admin/categories/{id}
-
-Cập nhật category.
-
-### POST /api/admin/categories/{id}/deactivate
-
-Vô hiệu hóa category.
-
-### GET /api/admin/tags
-
-Danh sách tag.
-
-### POST /api/admin/tags
-
-Tạo tag.
-
-### PATCH /api/admin/tags/{id}
-
-Cập nhật tag.
-
-### POST /api/admin/tags/{id}/deactivate
-
-Vô hiệu hóa tag.
-
-## 7. Quy tắc authorization
-
-Backend phải thực thi:
-
-| Hành động | Job seeker | HR | Admin |
-|---|---|---|---|
-| Xem public jobs | Có | Có | Có |
-| Tạo job | Không | Active HR | Có |
-| Sửa job của mình | Không | Có | Có |
-| Sửa job của HR khác | Không | Không | Có |
-| Gửi duyệt job | Không | Active HR | Có |
-| Duyệt job | Không | Không | Có |
-| Từ chối job | Không | Không | Có |
-| Khóa HR | Không | Không | Có |
-| Quản lý catalog | Không | Không | Có |
-
-## 8. Định dạng lỗi
-
-Sử dụng cấu trúc JSON nhất quán, ví dụ:
+Mọi lỗi trả về cùng dạng:
 
 ```json
 {
   "error": {
-    "code": "JOB_NOT_FOUND",
-    "message": "Không tìm thấy tin tuyển dụng."
+    "code": "email_exists",
+    "message": "Email đã được đăng ký",
+    "request_id": "a1b2c3d4e5f6" // chỉ có với lỗi chưa xử lý (500)
   }
 }
 ```
 
-Validation errors sử dụng quy ước FastAPI/Pydantic nhất quán.
+- `code`: mã ổn định — xem bảng mã lỗi trong `API_REFERENCE.md` mục 1.1.
+- `message`: fallback khi frontend không có bản dịch cho `code`.
 
-## 9. Quy tắc API
+### Phân trang
 
-- Không tin `user_id` do client gửi để xác định quyền sở hữu.
-- Lấy thông tin user hiện tại từ session phía server.
-- Validate tất cả input ở backend.
-- Không tiết lộ password hash, session token hoặc dữ liệu bảo mật nội bộ.
-- Giữ API naming nhất quán.
-- Mọi thay đổi API breaking yêu cầu cập nhật file này.
+Query chung: `?page=1&page_size=20`. Response dạng **phẳng**:
+
+```json
+{
+  "items": [],
+  "page": 1,
+  "page_size": 20,
+  "total": 24,
+  "total_pages": 2
+}
+```
+
+- `page` mặc định `1` (`>= 1`), `page_size` mặc định `20` (`1–100`).

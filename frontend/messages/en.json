@@ -3,13 +3,24 @@
     "findJobs": "Find Jobs",
     "dashboard": "Dashboard",
     "admin": "Admin",
+    "profile": "Profile",
     "postJob": "Post a Job",
     "login": "Login",
     "logout": "Logout",
-    "searchPlaceholder": "Search keywords..."
+    "searchPlaceholder": "Search keywords...",
+    "home": "Home",
+    "jobsCount": "{count} jobs",
+    "categoryTitle": "{name} Remote jobs",
+    "categoryFallback": "Remote jobs",
+    "noJobsInCategory": "No jobs in this category.",
+    "noJobsForTag": "No jobs for this tag."
   },
   "footer": {
     "tagline": "Remote IT jobs for Vietnamese developers"
+  },
+  "metadata": {
+    "siteTitle": "Remote IT — Remote IT Jobs",
+    "siteDescription": "A remote IT job board for the Vietnamese market."
   },
   "home": {
     "title": "Remote IT — Find remote jobs easily",
@@ -18,6 +29,7 @@
     "search": "Search",
     "all": "All",
     "featuredJobs": "Featured Jobs",
+    "popularSkills": "Popular skills",
     "jobsCount": "{count} jobs",
     "viewMore": "View more jobs",
     "noJobs": "No jobs available yet."
@@ -31,6 +43,11 @@
     "category": "Category",
     "all": "All",
     "jobType": "Job type",
+    "location": "Location",
+    "timezone": "Timezone",
+    "tags": "Skills",
+    "salaryMin": "Min salary",
+    "salaryMax": "Max salary",
     "apply": "Apply",
     "prev": "Previous",
     "next": "Next",
@@ -39,6 +56,7 @@
   },
   "jobDetail": {
     "backToList": "Back to list",
+    "home": "Home",
     "description": "Job description",
     "requirements": "Requirements",
     "technologies": "Technologies",
@@ -46,6 +64,9 @@
     "negotiable": "Negotiable",
     "remote": "100% Remote",
     "monthlyPayment": "Monthly payment",
+    "perContract": "Per contract",
+    "perProject": "Per project",
+    "similarJobs": "Similar jobs",
     "postedAt": "Posted {time}",
     "views": "{count} views",
     "noCvNotice": "Job seekers contact HR directly; no CV submission through the platform.",
@@ -83,7 +104,7 @@
     "heroTitle": "Connecting global tech talent.",
     "heroSubtitle": "A specialized recruitment platform for software engineers, DevOps and IT professionals who want to work remotely.",
     "fastPosting": "Fast job posting",
-    "reachCandidates": "Reach 50,000+ candidates",
+    "reachCandidates": "Free to post",
     "invalidEmail": "Invalid email",
     "invalidCredentials": "Incorrect email or password",
     "passwordMin": "Password must be at least 8 characters",
@@ -105,6 +126,7 @@
     "hello": "Hello",
     "subtitle": "Here is an overview of your job listings.",
     "postNew": "Post a Job",
+    "profile": "Profile & contacts",
     "totalJobs": "Total jobs",
     "open": "Open",
     "pending": "Pending",
@@ -116,6 +138,7 @@
     "delete": "Delete",
     "noJobs": "You don't have any job listings yet.",
     "postFirst": "Post your first job",
+    "pendingApproval": "Your account is awaiting Admin approval. Please come back once approved.",
     "loading": "Loading..."
   },
   "jobForm": {
@@ -149,6 +172,7 @@
     "contactsHint": "This information will be shown on job listings for job seekers to contact you.",
     "save": "Save changes",
     "saved": "Saved",
+    "loading": "Loading...",
     "name": "Name",
     "companyName": "Company name",
     "email": "Email"
@@ -199,6 +223,7 @@
     "confirmDelete": "Delete \"{title}\"?",
     "manageHrTitle": "Manage HR",
     "noHr": "No HR accounts yet.",
+    "loading": "Loading...",
     "name": "Name",
     "email": "Email",
     "company": "Company",
@@ -206,6 +231,9 @@
     "approveHr": "Approve",
     "block": "Block",
     "unblock": "Unblock",
+    "page": "Page {page} / {total}",
+    "prev": "Previous",
+    "next": "Next",
     "catalogTitle": "Catalog Management",
     "categories": "Categories",
     "tags": "Tags",
@@ -229,5 +257,54 @@
     "linkedin": "LinkedIn",
     "phone": "Phone",
     "email": "Email"
+  },
+  "errors": {
+    "auth": {
+      "unauthorized": "Not logged in",
+      "invalid_session": "Invalid session",
+      "session_expired": "Session expired",
+      "user_not_found": "User not found",
+      "forbidden_hr": "HR access required",
+      "hr_not_active": "HR account not approved or blocked",
+      "forbidden_admin": "Admin access required",
+      "admin_not_active": "Admin account not active",
+      "email_exists": "Email is already registered",
+      "invalid_credentials": "Incorrect email or password",
+      "no_password": "Account has no password",
+      "invalid_current_password": "Current password is incorrect",
+      "google_not_configured": "Google OAuth is not configured",
+      "google_missing_info": "Could not get Google info",
+      "google_missing_identity": "Missing Google identity info",
+      "google_callback_failed": "Google sign-in failed"
+    },
+    "job": {
+      "not_found": "Job not found",
+      "category_invalid": "Invalid category",
+      "tag_invalid": "Invalid tag",
+      "salary_invalid": "Minimum salary must be less than or equal to maximum",
+      "only_draft_or_rejected_can_submit": "Only draft or rejected jobs can be submitted",
+      "only_approved_can_close": "Only approved jobs can be closed",
+      "cannot_delete_status": "Cannot delete job in current status",
+      "only_pending_can_approve": "Only pending jobs can be approved",
+      "only_pending_can_reject": "Only pending jobs can be rejected",
+      "only_approved_can_hide": "Only approved jobs can be hidden",
+      "only_hidden_can_unhide": "Only hidden jobs can be restored"
+    },
+    "user": {
+      "hr_not_found": "HR account not found",
+      "only_pending_can_approve": "Only pending accounts can be approved",
+      "only_blocked_can_unblock": "Only blocked accounts can be unblocked"
+    },
+    "catalog": {
+      "category_slug_exists": "Category slug already exists",
+      "category_not_found": "Category not found",
+      "tag_slug_exists": "Tag slug already exists",
+      "tag_not_found": "Tag not found"
+    },
+    "http_401": "Not logged in",
+    "http_403": "Permission denied",
+    "http_404": "Not found",
+    "http_409": "Resource already exists",
+    "unknown_error": "Something went wrong"
   }
 }

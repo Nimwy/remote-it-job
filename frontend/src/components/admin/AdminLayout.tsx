@@ -89,7 +89,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="ml-64 w-full max-w-[1280px] px-8 py-8">{children}</main>
+      <div className="ml-64 w-full max-w-[1280px] px-8 py-8">{children}</div>
     </div>
   );
 }

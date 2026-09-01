@@ -3,7 +3,7 @@ const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8000";
 export async function serverFetch<T>(
   path: string,
   options?: { searchParams?: Record<string, string | number | undefined> },
-): Promise<T> {
+): Promise<T | null> {
   const url = new URL(`${BACKEND_URL}/api${path}`);
   if (options?.searchParams) {
     for (const [key, value] of Object.entries(options.searchParams)) {
@@ -15,7 +15,7 @@ export async function serverFetch<T>(
 
   const res = await fetch(url.toString(), { cache: "no-store" });
   if (!res.ok) {
-    return null as T;
+    return null;
   }
   return res.json();
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAdminHrs, useAdminHrAction } from "@/hooks/useAdmin";
 import { Badge } from "@/components/ui/Badge";
@@ -7,14 +8,16 @@ import { Button } from "@/components/ui/Button";
 
 export function AdminUsers() {
   const t = useTranslations("admin");
-  const { data, isLoading } = useAdminHrs();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAdminHrs({ page });
   const action = useAdminHrAction();
 
   if (isLoading) {
-    return <div className="text-body-md text-secondary">Loading...</div>;
+    return <div className="text-body-md text-secondary">{t("loading")}</div>;
   }
 
   const hrs = data?.items ?? [];
+  const totalPages = data?.total_pages ?? 0;
 
   return (
     <div>
@@ -68,6 +71,20 @@ export function AdminUsers() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            {t("prev")}
+          </Button>
+          <span className="text-body-sm text-secondary">
+            {t("page", { page, total: totalPages })}
+          </span>
+          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+            {t("next")}
+          </Button>
         </div>
       )}
     </div>

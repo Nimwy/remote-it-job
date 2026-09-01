@@ -1,6 +1,8 @@
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import APIError
+from app.core.logging import logger
 from app.core.slug import slugify
 from app.models.category import Category
 from app.models.job import Job, JobStatus
@@ -57,17 +59,18 @@ def list_pending_jobs(db: Session, page: int, page_size: int):
 def get_job(db: Session, job_id: int) -> Job:
     job = job_repository.get_by_id(db, job_id)
     if not job:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tin tuyển dụng")
+        raise APIError(status.HTTP_404_NOT_FOUND, "job.not_found", "Không tìm thấy tin tuyển dụng")
     return job
 
 
 def approve_job(db: Session, job_id: int) -> Job:
     job = get_job(db, job_id)
     if job.status != JobStatus.pending:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Chỉ job pending mới được duyệt")
+        raise APIError(status.HTTP_400_BAD_REQUEST, "job.only_pending_can_approve", "Chỉ job pending mới được duyệt")
     job.status = JobStatus.approved
     job.rejection_reason = None
     db.commit()
+    logger.info("Admin approved job id=%s", job.id)
     db.refresh(job)
     return job
 
@@ -75,10 +78,11 @@ def approve_job(db: Session, job_id: int) -> Job:
 def reject_job(db: Session, job_id: int, reason: str) -> Job:
     job = get_job(db, job_id)
     if job.status != JobStatus.pending:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Chỉ job pending mới được từ chối")
+        raise APIError(status.HTTP_400_BAD_REQUEST, "job.only_pending_can_reject", "Chỉ job pending mới được từ chối")
     job.status = JobStatus.rejected
     job.rejection_reason = reason
     db.commit()
+    logger.info("Admin rejected job id=%s reason=%s", job.id, reason)
     db.refresh(job)
     return job
 
@@ -86,7 +90,7 @@ def reject_job(db: Session, job_id: int, reason: str) -> Job:
 def hide_job(db: Session, job_id: int) -> Job:
     job = get_job(db, job_id)
     if job.status != JobStatus.approved:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Chỉ job approved mới được ẩn")
+        raise APIError(status.HTTP_400_BAD_REQUEST, "job.only_approved_can_hide", "Chỉ job approved mới được ẩn")
     job.status = JobStatus.hidden
     db.commit()
     db.refresh(job)
@@ -96,7 +100,7 @@ def hide_job(db: Session, job_id: int) -> Job:
 def unhide_job(db: Session, job_id: int) -> Job:
     job = get_job(db, job_id)
     if job.status != JobStatus.hidden:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Chỉ job hidden mới được khôi phục")
+        raise APIError(status.HTTP_400_BAD_REQUEST, "job.only_hidden_can_unhide", "Chỉ job hidden mới được khôi phục")
     job.status = JobStatus.approved
     db.commit()
     db.refresh(job)
@@ -135,7 +139,7 @@ def list_users(db: Session, search: str | None, status_filter: str | None, page:
 def get_hr_user(db: Session, user_id: int) -> User:
     user = user_repository.find_hr_by_id(db, user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tài khoản HR")
+        raise APIError(status.HTTP_404_NOT_FOUND, "user.hr_not_found", "Không tìm thấy tài khoản HR")
     return user
 
 
@@ -146,7 +150,9 @@ def serialize_hr_user(db: Session, user: User) -> dict:
 def approve_user(db: Session, user_id: int) -> User:
     user = get_hr_user(db, user_id)
     if user.status != UserStatus.pending:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Chỉ tài khoản pending mới được duyệt")
+        raise APIError(
+            status.HTTP_400_BAD_REQUEST, "user.only_pending_can_approve", "Chỉ tài khoản pending mới được duyệt"
+        )
     user.status = UserStatus.active
     db.commit()
     db.refresh(user)
@@ -157,6 +163,7 @@ def block_user(db: Session, user_id: int) -> User:
     user = get_hr_user(db, user_id)
     user.status = UserStatus.blocked
     db.commit()
+    logger.info("Admin blocked user id=%s", user.id)
     db.refresh(user)
     return user
 
@@ -164,7 +171,9 @@ def block_user(db: Session, user_id: int) -> User:
 def unblock_user(db: Session, user_id: int) -> User:
     user = get_hr_user(db, user_id)
     if user.status != UserStatus.blocked:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Chỉ tài khoản blocked mới được mở khóa")
+        raise APIError(
+            status.HTTP_400_BAD_REQUEST, "user.only_blocked_can_unblock", "Chỉ tài khoản blocked mới được mở khóa"
+        )
     user.status = UserStatus.active
     db.commit()
     db.refresh(user)
@@ -188,7 +197,7 @@ def list_categories(db: Session):
 def create_category(db: Session, data: CategoryCreate) -> Category:
     slug = data.slug or slugify(data.name)
     if category_repository.get_by_slug(db, slug):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug category đã tồn tại")
+        raise APIError(status.HTTP_409_CONFLICT, "catalog.category_slug_exists", "Slug category đã tồn tại")
     category = Category(name=data.name, slug=slug, sort_order=data.sort_order)
     category_repository.create(db, category)
     db.commit()
@@ -199,13 +208,13 @@ def create_category(db: Session, data: CategoryCreate) -> Category:
 def update_category(db: Session, category_id: int, data: CategoryUpdate) -> Category:
     category = category_repository.get_by_id(db, category_id)
     if not category:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy category")
+        raise APIError(status.HTTP_404_NOT_FOUND, "catalog.category_not_found", "Không tìm thấy category")
 
     if data.name is not None:
         category.name = data.name
     if data.slug is not None:
         if category_repository.get_by_slug(db, data.slug) and category.slug != data.slug:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug category đã tồn tại")
+            raise APIError(status.HTTP_409_CONFLICT, "catalog.category_slug_exists", "Slug category đã tồn tại")
         category.slug = data.slug
     if data.sort_order is not None:
         category.sort_order = data.sort_order
@@ -218,7 +227,7 @@ def update_category(db: Session, category_id: int, data: CategoryUpdate) -> Cate
 def deactivate_category(db: Session, category_id: int) -> Category:
     category = category_repository.get_by_id(db, category_id)
     if not category:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy category")
+        raise APIError(status.HTTP_404_NOT_FOUND, "catalog.category_not_found", "Không tìm thấy category")
     category.is_active = False
     db.commit()
     db.refresh(category)
@@ -236,7 +245,7 @@ def list_tags(db: Session):
 def create_tag(db: Session, data: TagCreate) -> Tag:
     slug = data.slug or slugify(data.name)
     if tag_repository.get_by_slug(db, slug):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug tag đã tồn tại")
+        raise APIError(status.HTTP_409_CONFLICT, "catalog.tag_slug_exists", "Slug tag đã tồn tại")
     tag = Tag(name=data.name, slug=slug)
     tag_repository.create(db, tag)
     db.commit()
@@ -247,13 +256,13 @@ def create_tag(db: Session, data: TagCreate) -> Tag:
 def update_tag(db: Session, tag_id: int, data: TagUpdate) -> Tag:
     tag = tag_repository.get_by_id(db, tag_id)
     if not tag:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tag")
+        raise APIError(status.HTTP_404_NOT_FOUND, "catalog.tag_not_found", "Không tìm thấy tag")
 
     if data.name is not None:
         tag.name = data.name
     if data.slug is not None:
         if tag_repository.get_by_slug(db, data.slug) and tag.slug != data.slug:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug tag đã tồn tại")
+            raise APIError(status.HTTP_409_CONFLICT, "catalog.tag_slug_exists", "Slug tag đã tồn tại")
         tag.slug = data.slug
 
     db.commit()
@@ -264,7 +273,7 @@ def update_tag(db: Session, tag_id: int, data: TagUpdate) -> Tag:
 def deactivate_tag(db: Session, tag_id: int) -> Tag:
     tag = tag_repository.get_by_id(db, tag_id)
     if not tag:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tag")
+        raise APIError(status.HTTP_404_NOT_FOUND, "catalog.tag_not_found", "Không tìm thấy tag")
     tag.is_active = False
     db.commit()
     db.refresh(tag)

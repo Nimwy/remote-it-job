@@ -2,30 +2,31 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { JobCard } from "@/components/JobCard";
 import { Icon } from "@/components/ui/Icon";
-import { serverListCategories, serverListJobs } from "@/services/jobs";
+import { serverListCategories, serverListJobs, serverListTags } from "@/services/jobs";
 
 export default async function HomePage() {
   const t = await getTranslations("home");
-  const [jobsData, categories] = await Promise.all([
+  const [jobsData, categories, tags] = await Promise.all([
     serverListJobs({ page: 1, page_size: 9 }),
     serverListCategories(),
+    serverListTags(),
   ]);
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-8">
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-tertiary px-6 py-14 text-center md:py-20">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-tertiary px-6 py-10 text-center md:py-20">
         <div className="pointer-events-none absolute inset-0 opacity-10">
           <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white" />
           <div className="absolute -bottom-16 -left-10 h-72 w-72 rounded-full bg-white" />
         </div>
-        <h1 className="relative mx-auto max-w-3xl font-display text-display leading-tight text-on-primary">
+        <h1 className="relative mx-auto max-w-3xl font-display text-[28px] leading-tight text-on-primary sm:text-[32px] md:text-display">
           {t("title")}
         </h1>
-        <p className="relative mx-auto mt-4 max-w-2xl text-body-lg text-on-primary/85">
+        <p className="relative mx-auto mt-4 max-w-2xl text-body-md text-on-primary/85 md:text-body-lg">
           {t("subtitle")}
         </p>
 
-        <form method="GET" action="/jobs" className="relative mx-auto mt-8 flex max-w-xl gap-2">
+        <form method="GET" action="/jobs" className="relative mx-auto mt-8 flex w-full max-w-xl flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
             <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" />
             <input
@@ -36,7 +37,7 @@ export default async function HomePage() {
           </div>
           <button
             type="submit"
-            className="rounded-lg bg-on-primary px-6 text-label-md font-semibold text-primary transition-colors hover:bg-on-primary/90"
+            className="h-12 w-full rounded-lg bg-on-primary px-6 text-label-md font-semibold text-primary transition-colors hover:bg-on-primary/90 sm:w-auto"
           >
             {t("search")}
           </button>
@@ -91,6 +92,23 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {tags && tags.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-4 font-display text-headline-md">{t("popularSkills")}</h2>
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <Link
+                key={tag.id}
+                href={`/tag/${tag.slug}`}
+                className="rounded-full border border-outline-variant bg-surface-container-low px-4 py-1.5 text-label-md text-secondary transition-colors hover:border-primary hover:bg-primary hover:text-on-primary"
+              >
+                {tag.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

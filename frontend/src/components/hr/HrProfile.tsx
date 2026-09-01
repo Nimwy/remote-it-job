@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as hrService from "@/services/hr";
 import type { Contact } from "@/types";
 import { Button } from "@/components/ui/Button";
+import { getApiErrorMessage } from "@/lib/errors";
 
 const CHANNELS = ["zalo", "telegram", "linkedin", "phone", "email"] as const;
 
@@ -15,6 +16,7 @@ const inputClass =
 export function HrProfile() {
   const t = useTranslations("profile");
   const ct = useTranslations("contact");
+  const e = useTranslations("errors");
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useQuery({
     queryKey: ["hr-profile"],
@@ -26,6 +28,7 @@ export function HrProfile() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   if (profile && !loaded) {
     setName(profile.name);
@@ -35,7 +38,7 @@ export function HrProfile() {
   }
 
   if (isLoading) {
-    return <div className="mx-auto max-w-2xl px-6 py-8 text-body-md text-secondary">Loading...</div>;
+    return <div className="mx-auto max-w-2xl px-6 py-8 text-body-md text-secondary">{t("loading")}</div>;
   }
 
   const setContact = (channel: Contact["channel"], value: string) => {
@@ -51,15 +54,21 @@ export function HrProfile() {
     contacts.find((c) => c.channel === channel)?.value ?? "";
 
   const save = async () => {
-    await hrService.updateProfile({
-      name,
-      company_name: companyName,
-      contacts,
-    });
-    queryClient.invalidateQueries({ queryKey: ["hr-profile"] });
-    queryClient.invalidateQueries({ queryKey: ["me"] });
-    setMessage(t("saved"));
-    setTimeout(() => setMessage(""), 3000);
+    setError(null);
+    setMessage("");
+    try {
+      await hrService.updateProfile({
+        name,
+        company_name: companyName,
+        contacts,
+      });
+      queryClient.invalidateQueries({ queryKey: ["hr-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      setMessage(t("saved"));
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      setError(getApiErrorMessage(e, err));
+    }
   };
 
   return (
@@ -111,9 +120,12 @@ export function HrProfile() {
           </div>
         </section>
 
-        <div className="flex items-center gap-3">
-          <Button onClick={save}>{t("save")}</Button>
-          {message && <span className="text-body-md text-primary">{message}</span>}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <Button onClick={save}>{t("save")}</Button>
+            {message && <span className="text-body-md text-primary">{message}</span>}
+          </div>
+          {error && <p className="text-body-sm text-error">{error}</p>}
         </div>
       </div>
     </div>
