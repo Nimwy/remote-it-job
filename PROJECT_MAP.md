@@ -5,32 +5,44 @@
 ```text
 remote-it-job/
 ├── stitch_remote_it_job_board/     # Stitch UI reference; not production source
-├── frontend/
+├── frontend/                       # Next.js (App Router)
 │   ├── src/
-│   │   ├── components/
-│   │   ├── features/
-│   │   ├── pages/
-│   │   ├── hooks/
-│   │   ├── lib/
-│   │   ├── services/
-│   │   ├── types/
-│   │   └── ...
-│   ├── public/
+│   │   ├── app/                    # route segments (App Router)
+│   │   │   ├── [locale]/
+│   │   │   │   ├── (main)/         # NavBar + Footer (home, jobs, category, tag, hr, admin)
+│   │   │   │   ├── login/
+│   │   │   │   └── register/
+│   │   │   ├── layout.tsx          # root layout (html/body)
+│   │   │   └── globals.css         # Tailwind v4 + design tokens
+│   │   ├── components/             # UI tái sử dụng
+│   │   ├── hooks/                  # React hooks (useAuth, useHr, useAdmin)
+│   │   ├── lib/                    # helper (api client, server fetch, url, date)
+│   │   ├── services/               # API client functions
+│   │   ├── types/                  # shared TypeScript types
+│   │   └── i18n/                   # next-intl config (routing, request, navigation)
+│   ├── messages/                   # vi.json + en.json
+│   ├── e2e/                        # Playwright tests
+│   ├── proxy.ts                    # locale middleware
+│   ├── next.config.ts
+│   ├── playwright.config.ts
+│   ├── vitest.config.ts
 │   ├── package.json
-│   └── ...
+│   └── .env.example
 │
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   ├── core/
-│   │   ├── db/
-│   │   ├── models/
-│   │   ├── repositories/
-│   │   ├── schemas/
-│   │   ├── services/
+│   │   │   └── routes/             # auth, jobs, catalog, hr, admin
+│   │   ├── core/                   # config, security, slug, oauth
+│   │   ├── db/                     # engine/session
+│   │   ├── models/                 # SQLAlchemy models
+│   │   ├── repositories/           # data access
+│   │   ├── schemas/                # Pydantic schemas
+│   │   ├── services/               # business logic
 │   │   └── main.py
-│   ├── migrations/
-│   ├── tests/
+│   ├── migrations/                 # Alembic (mỗi bảng 1 file)
+│   ├── tests/                      # pytest
+│   ├── pyproject.toml              # Ruff config
 │   ├── Dockerfile
 │   └── requirements.txt
 │
@@ -38,8 +50,10 @@ remote-it-job/
 ├── README.md
 ├── AI_CONTEXT.md
 ├── ARCHITECTURE.md
+├── DIAGRAMS.md
 ├── DATABASE_SCHEMA.md
 ├── API_SPEC.md
+├── API_REFERENCE.md
 ├── SECURITY.md
 ├── PROJECT_MAP.md
 └── PROJECT_STATE.md
@@ -47,51 +61,46 @@ remote-it-job/
 
 ## 2. Frontend boundaries
 
-### pages/
-View cấp route cao nhất.
+### app/
+Route segments (Next.js App Router). Mỗi thư mục là một route.
 
 Ví dụ:
-- HomePage
-- JobsPage
-- JobDetailPage
-- LoginPage
-- RegisterPage
-- HrDashboardPage
-- AdminDashboardPage
+- `app/[locale]/(main)/page.tsx` — Home
+- `app/[locale]/(main)/jobs/page.tsx` — Job list
+- `app/[locale]/(main)/jobs/[slugId]/page.tsx` — Job detail
+- `app/[locale]/(main)/category/[slug]/page.tsx` — Category
+- `app/[locale]/(main)/tag/[slug]/page.tsx` — Tag
+- `app/[locale]/(main)/hr/...` — HR pages
+- `app/[locale]/(main)/admin/...` — Admin pages
+- `app/[locale]/login/`, `app/[locale]/register/` — Auth
 
-### features/
-Logic frontend theo domain.
-
-Ví dụ:
-- auth
-- jobs
-- hr
-- admin
-- search
+Route group `(main)` dùng chung NavBar + Footer; `login`/`register` không có NavBar.
 
 ### components/
 Component UI tái sử dụng, không thuộc riêng một domain.
 
 Ví dụ:
-- Button
-- Modal
-- Pagination
-- JobCard
-- FormField
+- Button, Icon, Badge (ui/)
+- JobCard, CompanyLogo, Skeleton
+- NavBar, Footer, AuthPage, JobForm
 
-Component có thể chuyển thành domain-specific và chuyển vào feature khi phù hợp.
+### hooks/
+React hooks dùng chung (useAuth, useHr, useAdmin).
 
 ### services/
 Hàm gọi API client.
 
-### hooks/
-React hooks tái sử dụng.
-
 ### lib/
-Thiết lập infrastructure/helper như query client và hàm tiện ích.
+Helper: api client (`api.ts`), server fetch (`server.ts`), `url.ts`, `date.ts`, `queryClient.ts`.
+
+### i18n/
+Cấu hình next-intl: `routing.ts`, `request.ts`, `navigation.ts`.
+
+### messages/
+File dịch `vi.json` + `en.json`.
 
 ### types/
-TypeScript types dùng chung khi không thuộc riêng một feature.
+TypeScript types dùng chung.
 
 ## 3. Backend boundaries
 

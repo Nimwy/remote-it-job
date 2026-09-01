@@ -1,20 +1,20 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import String, Enum, ForeignKey, Text, Integer, DateTime, Numeric, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
 
 
-class JobType(str, enum.Enum):
+class JobType(enum.StrEnum):
     fulltime = "fulltime"
     parttime = "parttime"
     freelance = "freelance"
     contract = "contract"
 
 
-class JobStatus(str, enum.Enum):
+class JobStatus(enum.StrEnum):
     draft = "draft"
     pending = "pending"
     approved = "approved"
@@ -31,6 +31,7 @@ class Job(Base):
     hr_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
     title: Mapped[str] = mapped_column(String(200))
+    slug: Mapped[str] = mapped_column(String(220), unique=True, index=True)
     job_type: Mapped[JobType] = mapped_column(Enum(JobType))
     location: Mapped[str | None] = mapped_column(String(150))
     timezone: Mapped[str | None] = mapped_column(String(50))
@@ -44,7 +45,9 @@ class Job(Base):
     views: Mapped[int] = mapped_column(Integer, default=0)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     hr = relationship("User", back_populates="jobs")
     category = relationship("Category", back_populates="jobs")

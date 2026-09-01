@@ -1,7 +1,7 @@
 from app.core.security import hash_password
-from app.models.job import Job, JobStatus
+from app.models.job import JobStatus
 from app.models.user import User, UserRole, UserStatus
-from tests.factories import create_category, create_job, create_tag, create_user
+from tests.factories import create_category, create_job, create_user
 
 
 def create_admin(db, email="admin@example.com"):
@@ -176,7 +176,7 @@ def test_blocked_hr_job_not_public(client, db):
     create_admin(db)
     hr = create_user(db, "hr@example.com", status=UserStatus.active)
     category = create_category(db)
-    job = create_job(db, hr, category, status=JobStatus.approved)
+    create_job(db, hr, category, status=JobStatus.approved)
     db.commit()
 
     public_before = client.get("/api/jobs")

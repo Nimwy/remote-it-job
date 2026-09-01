@@ -1,44 +1,65 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useCategories, useTags } from '../hooks/useJobs'
-import type { HrJob } from '../types'
-import { Button } from './ui/Button'
+"use client";
 
-const schema = z.object({
-  title: z.string().min(1, 'Vui lòng nhập tiêu đề'),
-  category_id: z.number().min(1, 'Chọn category'),
-  job_type: z.enum(['fulltime', 'parttime', 'freelance', 'contract']),
-  location: z.string().optional(),
-  timezone: z.string().optional(),
-  salary_min: z.number().nullable().optional(),
-  salary_max: z.number().nullable().optional(),
-  currency: z.string().optional(),
-  description: z.string().min(1, 'Vui lòng nhập mô tả'),
-  requirements: z.string().min(1, 'Vui lòng nhập yêu cầu'),
-  tag_ids: z.array(z.number()),
-})
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useTranslations } from "next-intl";
+import { useQuery } from "@tanstack/react-query";
+import { listCategories, listTags } from "../services/jobs";
+import type { HrJob } from "../types";
+import { Button } from "./ui/Button";
 
-export type JobFormData = z.infer<typeof schema>
+export type JobFormData = {
+  title: string;
+  category_id: number;
+  job_type: "fulltime" | "parttime" | "freelance" | "contract";
+  location?: string;
+  timezone?: string;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  currency?: string;
+  description: string;
+  requirements: string;
+  tag_ids: number[];
+};
 
 interface JobFormProps {
-  initialValues?: HrJob
-  onSubmit: (data: JobFormData) => Promise<void>
-  submitLabel: string
+  initialValues?: HrJob;
+  onSubmit: (data: JobFormData) => Promise<void>;
+  submitLabel: string;
 }
 
 const inputClass =
-  'w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-md focus:border-primary focus:outline-none'
+  "w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-md focus:border-primary focus:outline-none";
 
 export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) {
-  const { data: categories } = useCategories()
-  const { data: tags } = useTags()
+  const t = useTranslations("jobForm");
+  const jt = useTranslations("jobType");
+  const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: listCategories });
+  const { data: tags } = useQuery({ queryKey: ["tags"], queryFn: listTags });
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        title: z.string().min(1, "Required"),
+        category_id: z.number().min(1, "Required"),
+        job_type: z.enum(["fulltime", "parttime", "freelance", "contract"]),
+        location: z.string().optional(),
+        timezone: z.string().optional(),
+        salary_min: z.number().nullable().optional(),
+        salary_max: z.number().nullable().optional(),
+        currency: z.string().optional(),
+        description: z.string().min(1, "Required"),
+        requirements: z.string().min(1, "Required"),
+        tag_ids: z.array(z.number()),
+      }),
+    [],
+  );
 
   const defaultTags = initialValues
-    ? (tags ?? [])
-        .filter((t) => initialValues.tags.includes(t.name))
-        .map((t) => t.id)
-    : []
+    ? (tags ?? []).filter((tg) => initialValues.tags.includes(tg.name)).map((tg) => tg.id)
+    : [];
 
   const {
     register,
@@ -53,45 +74,45 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
           title: initialValues.title,
           category_id: initialValues.category.id,
           job_type: initialValues.job_type,
-          location: initialValues.location ?? '',
-          timezone: initialValues.timezone ?? '',
+          location: initialValues.location ?? "",
+          timezone: initialValues.timezone ?? "",
           salary_min: initialValues.salary_min ?? null,
           salary_max: initialValues.salary_max ?? null,
-          currency: initialValues.currency ?? '',
+          currency: initialValues.currency ?? "",
           description: initialValues.description,
           requirements: initialValues.requirements,
           tag_ids: defaultTags,
         }
       : {
-          job_type: 'fulltime',
+          job_type: "fulltime",
           tag_ids: [],
         },
-  })
+  });
 
-  const selectedTags = watch('tag_ids') ?? []
+  const selectedTags = watch("tag_ids") ?? [];
 
   const toggleTag = (id: number) => {
     if (selectedTags.includes(id)) {
-      setValue('tag_ids', selectedTags.filter((t) => t !== id))
+      setValue("tag_ids", selectedTags.filter((tg) => tg !== id));
     } else {
-      setValue('tag_ids', [...selectedTags, id])
+      setValue("tag_ids", [...selectedTags, id]);
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
-        <h2 className="mb-4 font-display text-headline-sm">Thông tin cơ bản</h2>
+        <h2 className="mb-4 font-display text-headline-sm">{t("basicInfo")}</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Tiêu đề *</label>
-            <input {...register('title')} className={inputClass} />
+            <label className="mb-1 block text-label-sm text-secondary">{t("title")} *</label>
+            <input {...register("title")} className={inputClass} />
             {errors.title && <p className="mt-1 text-body-sm text-error">{errors.title.message}</p>}
           </div>
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Category *</label>
-            <select {...register('category_id', { valueAsNumber: true })} className={inputClass}>
-              <option value={0}>Chọn category</option>
+            <label className="mb-1 block text-label-sm text-secondary">{t("category")} *</label>
+            <select {...register("category_id", { valueAsNumber: true })} className={inputClass}>
+              <option value={0}>{t("chooseCategory")}</option>
               {categories?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -103,47 +124,47 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
             )}
           </div>
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Loại công việc *</label>
-            <select {...register('job_type')} className={inputClass}>
-              <option value="fulltime">Toàn thời gian</option>
-              <option value="parttime">Bán thời gian</option>
-              <option value="freelance">Freelance</option>
-              <option value="contract">Hợp đồng</option>
+            <label className="mb-1 block text-label-sm text-secondary">{t("jobType")} *</label>
+            <select {...register("job_type")} className={inputClass}>
+              <option value="fulltime">{jt("fulltime")}</option>
+              <option value="parttime">{jt("parttime")}</option>
+              <option value="freelance">{jt("freelance")}</option>
+              <option value="contract">{jt("contract")}</option>
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Địa điểm</label>
-            <input {...register('location')} className={inputClass} placeholder="Việt Nam, Remote..." />
+            <label className="mb-1 block text-label-sm text-secondary">{t("location")}</label>
+            <input {...register("location")} className={inputClass} />
           </div>
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Múi giờ</label>
-            <input {...register('timezone')} className={inputClass} placeholder="UTC+7" />
+            <label className="mb-1 block text-label-sm text-secondary">{t("timezone")}</label>
+            <input {...register("timezone")} className={inputClass} placeholder="UTC+7" />
           </div>
         </div>
       </section>
 
       <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
-        <h2 className="mb-4 font-display text-headline-sm">Mức lương</h2>
+        <h2 className="mb-4 font-display text-headline-sm">{t("salary")}</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Lương từ</label>
+            <label className="mb-1 block text-label-sm text-secondary">{t("salaryFrom")}</label>
             <input
               type="number"
-              {...register('salary_min', { setValueAs: (v) => (v === '' ? null : Number(v)) })}
+              {...register("salary_min", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
               className={inputClass}
             />
           </div>
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Lương đến</label>
+            <label className="mb-1 block text-label-sm text-secondary">{t("salaryTo")}</label>
             <input
               type="number"
-              {...register('salary_max', { setValueAs: (v) => (v === '' ? null : Number(v)) })}
+              {...register("salary_max", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
               className={inputClass}
             />
           </div>
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Đơn vị</label>
-            <select {...register('currency')} className={inputClass}>
+            <label className="mb-1 block text-label-sm text-secondary">{t("currency")}</label>
+            <select {...register("currency")} className={inputClass}>
               <option value="USD">USD</option>
               <option value="VND">VND</option>
               <option value="EUR">EUR</option>
@@ -156,18 +177,18 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
       </section>
 
       <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
-        <h2 className="mb-4 font-display text-headline-sm">Chi tiết công việc</h2>
+        <h2 className="mb-4 font-display text-headline-sm">{t("details")}</h2>
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Mô tả *</label>
-            <textarea rows={5} {...register('description')} className={inputClass} />
+            <label className="mb-1 block text-label-sm text-secondary">{t("description")} *</label>
+            <textarea rows={5} {...register("description")} className={inputClass} />
             {errors.description && (
               <p className="mt-1 text-body-sm text-error">{errors.description.message}</p>
             )}
           </div>
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">Yêu cầu *</label>
-            <textarea rows={5} {...register('requirements')} className={inputClass} />
+            <label className="mb-1 block text-label-sm text-secondary">{t("requirements")} *</label>
+            <textarea rows={5} {...register("requirements")} className={inputClass} />
             {errors.requirements && (
               <p className="mt-1 text-body-sm text-error">{errors.requirements.message}</p>
             )}
@@ -176,7 +197,7 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
       </section>
 
       <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
-        <h2 className="mb-4 font-display text-headline-sm">Công nghệ / Kỹ năng</h2>
+        <h2 className="mb-4 font-display text-headline-sm">{t("skills")}</h2>
         <div className="flex flex-wrap gap-2">
           {tags?.map((tag) => (
             <button
@@ -185,8 +206,8 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
               onClick={() => toggleTag(tag.id)}
               className={`rounded-full px-3 py-1.5 text-body-sm transition-colors ${
                 selectedTags.includes(tag.id)
-                  ? 'bg-primary text-on-primary'
-                  : 'bg-surface-container-high text-secondary hover:bg-surface-container'
+                  ? "bg-primary text-on-primary"
+                  : "bg-surface-container-high text-secondary hover:bg-surface-container"
               }`}
             >
               {tag.name}
@@ -199,5 +220,5 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
         <Button type="submit">{submitLabel}</Button>
       </div>
     </form>
-  )
+  );
 }

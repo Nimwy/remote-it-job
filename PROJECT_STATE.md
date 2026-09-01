@@ -2,19 +2,20 @@
 
 ## Giai đoạn hiện tại
 
-**Tài liệu / tiền triển khai**
+**Đã triển khai xong MVP — chờ review (branch `feat/nextjs-migration`)**
 
-Yêu cầu dự án và kiến trúc cốt lõi đã được quyết định. Chưa bắt đầu triển khai code.
+Toàn bộ backend, frontend, test và tài liệu đã hoàn thành theo yêu cầu review của người hướng dẫn.
 
 ## Quyết định đã chốt
 
 ### Sản phẩm
 - Website đăng tin tuyển dụng IT remote.
 - Đối tượng chính: người dùng Việt Nam.
-- Ngôn ngữ UI: tiếng Việt.
+- Ngôn ngữ UI: tiếng Việt + tiếng Anh (i18n next-intl).
 - Nội dung job có thể là tiếng Việt hoặc tiếng Anh.
 - Job seeker không cần tài khoản.
 - Không nộp/upload CV qua nền tảng.
+- URL dùng slug cho SEO (job `/jobs/{slug}-{id}`, category `/category/{slug}`, tag `/tag/{slug}`).
 
 ### Vai trò
 - Job seeker: truy cập công khai.
@@ -35,12 +36,12 @@ Yêu cầu dự án và kiến trúc cốt lõi đã được quyết định. C
 ### Database
 - PostgreSQL.
 - SQLAlchemy 2.x.
-- Alembic.
+- Alembic (mỗi bảng 1 file migration riêng).
 
 ### Triển khai / runtime
 - Backend chạy trong Docker.
 - PostgreSQL chạy qua Docker Compose.
-- Frontend chạy trực tiếp bằng Node.js/npm trong WSL2.
+- Frontend Next.js chạy trực tiếp bằng Node.js/npm trong WSL2.
 - Domain/hosting được xử lý riêng và nằm ngoài phạm vi triển khai hiện tại.
 
 ### Vòng đời job
@@ -90,33 +91,29 @@ HR bị blocked không bị hard-delete và job của họ không hiển thị c
 - Một server-side session chỉ được tính view cho cùng một job tối đa một lần trong 24 giờ.
 - Backend kiểm soát việc đếm, không phải frontend.
 
-## Chưa triển khai
+## Đã triển khai
 
-- Frontend source code.
-- Backend source code.
-- Database migrations.
-- Authentication implementation.
-- Google OAuth configuration.
-- API implementation.
-- Admin UI.
-- HR UI.
-- Public job UI.
-- Automated tests.
+- Backend FastAPI (auth, jobs, HR, admin) — chạy Docker.
+- 8 file migration (mỗi bảng 1 file).
+- Repository layer tách khỏi services.
+- Frontend Next.js (SSR) — public, HR, Admin.
+- i18n EN/VI (next-intl) + slug URL cho SEO.
+- Trang category + tag + thời gian tương đối.
+- Unit test (pytest 81, Vitest 17) + e2e (Playwright 10).
+- Tài liệu: API_REFERENCE.md, DIAGRAMS.md.
+
+## Chưa triển khai / tồn đọng
+
+- Google OAuth cần config credentials thật (hiện trả 501 khi chưa cấu hình).
+- Deploy production (domain/hosting).
+- Email verification / password reset (ngoài MVP).
 
 ## Bước tiếp theo
 
-1. Kiểm tra tính nhất quán của bộ tài liệu.
-2. Tạo cấu trúc source code.
-3. Thiết lập môi trường backend Docker.
-4. Thiết lập PostgreSQL.
-5. Thiết lập React/Vite frontend.
-6. Triển khai database models và Alembic migrations.
-7. Triển khai authentication/session.
-8. Triển khai public jobs.
-9. Triển khai tính năng HR.
-10. Triển khai Admin moderation.
-11. Thêm tests.
-12. Tích hợp UI từ Stitch.
+1. Review branch `feat/nextjs-migration`, tạo PR để người hướng dẫn kiểm tra.
+2. Merge PR vào `main` sau khi review OK.
+3. Config Google OAuth credentials thật.
+4. Cân nhắc deploy thử lên hosting.
 
 ## Ràng buộc quan trọng
 

@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
+from app.core.slug import slugify
 from app.models.category import Category
 from app.models.contact import ContactChannel, UserContact
 from app.models.job import Job, JobStatus, JobType
@@ -34,6 +35,7 @@ def create_job(db, hr, category, title="React Developer", status=JobStatus.appro
         hr_id=hr.id,
         category_id=category.id,
         title=title,
+        slug=kwargs.get("slug") or slugify(title),
         job_type=kwargs.get("job_type", JobType.fulltime),
         location=kwargs.get("location"),
         timezone=kwargs.get("timezone"),
@@ -80,7 +82,7 @@ def setup_seed(db):
         hr,
         category,
         title="Expired Job",
-        expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+        expires_at=datetime.now(UTC) - timedelta(days=1),
     )
 
     pending_job = create_job(db, hr, category, title="Pending Job", status=JobStatus.pending)

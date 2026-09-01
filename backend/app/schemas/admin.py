@@ -12,6 +12,7 @@ class RejectRequest(BaseModel):
 class AdminJobResponse(BaseModel):
     id: int
     title: str
+    slug: str
     company_name: str
     hr_id: int
     category: CategoryInfo

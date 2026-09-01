@@ -1,27 +1,20 @@
-import re
-
 from fastapi import HTTPException, status
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from app.core.slug import slugify
 from app.models.category import Category
 from app.models.job import Job, JobStatus
-from app.models.job_view import JobView
 from app.models.tag import Tag
-from app.models.user import User, UserRole, UserStatus
+from app.models.user import User, UserStatus
+from app.repositories import category_repository, job_repository, job_view_repository, tag_repository, user_repository
 from app.schemas.admin import CategoryCreate, CategoryUpdate, TagCreate, TagUpdate
-
-
-def slugify(name: str) -> str:
-    slug = name.strip().lower()
-    slug = re.sub(r"[^a-z0-9]+", "-", slug)
-    return slug.strip("-")
 
 
 def serialize_admin_job(job: Job) -> dict:
     return {
         "id": job.id,
         "title": job.title,
+        "slug": job.slug,
         "company_name": job.hr.company_name or job.hr.name,
         "hr_id": job.hr_id,
         "category": {"id": job.category.id, "name": job.category.name, "slug": job.category.slug},
@@ -52,33 +45,17 @@ def list_jobs(
     page: int,
     page_size: int,
 ):
-    query = db.query(Job)
-
-    if status_filter:
-        query = query.filter(Job.status == status_filter)
-    if q:
-        like = f"%{q}%"
-        query = query.filter(or_(Job.title.ilike(like), Job.description.ilike(like)))
-    if hr_id:
-        query = query.filter(Job.hr_id == hr_id)
-    if category_id:
-        query = query.filter(Job.category_id == category_id)
-
-    query = query.order_by(Job.created_at.desc())
-
-    total = query.count()
-    total_pages = (total + page_size - 1) // page_size if total > 0 else 0
-    jobs = query.offset((page - 1) * page_size).limit(page_size).all()
-
-    return jobs, total, total_pages
+    return job_repository.list_all(db, status_filter, q, hr_id, category_id, page, page_size)
 
 
 def list_pending_jobs(db: Session, page: int, page_size: int):
-    return list_jobs(db, status_filter=JobStatus.pending.value, q=None, hr_id=None, category_id=None, page=page, page_size=page_size)
+    return job_repository.list_all(
+        db, status=JobStatus.pending.value, q=None, hr_id=None, category_id=None, page=page, page_size=page_size
+    )
 
 
 def get_job(db: Session, job_id: int) -> Job:
-    job = db.query(Job).filter(Job.id == job_id).first()
+    job = job_repository.get_by_id(db, job_id)
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tin tuyển dụng")
     return job
@@ -128,8 +105,8 @@ def unhide_job(db: Session, job_id: int) -> Job:
 
 def delete_job(db: Session, job_id: int) -> None:
     job = get_job(db, job_id)
-    db.query(JobView).filter(JobView.job_id == job_id).delete()
-    db.delete(job)
+    job_view_repository.delete_for_job(db, job_id)
+    job_repository.delete(db, job)
     db.commit()
 
 
@@ -146,38 +123,24 @@ def serialize_admin_user(user: User, job_count: int) -> dict:
 
 
 def list_users(db: Session, search: str | None, status_filter: str | None, page: int, page_size: int):
-    query = db.query(User).filter(User.role == UserRole.hr)
-
-    if search:
-        like = f"%{search}%"
-        query = query.filter(or_(User.name.ilike(like), User.email.ilike(like)))
-    if status_filter:
-        query = query.filter(User.status == status_filter)
-
-    query = query.order_by(User.created_at.desc())
-
-    total = query.count()
+    users, total = user_repository.list_hr_users(db, search, status_filter, page, page_size)
     total_pages = (total + page_size - 1) // page_size if total > 0 else 0
-    users = query.offset((page - 1) * page_size).limit(page_size).all()
-
     items = [
-        serialize_admin_user(user, db.query(Job).filter(Job.hr_id == user.id).count())
+        serialize_admin_user(user, job_repository.count_by_hr(db, user.id))
         for user in users
     ]
-
     return items, total, total_pages
 
 
 def get_hr_user(db: Session, user_id: int) -> User:
-    user = db.query(User).filter(User.id == user_id, User.role == UserRole.hr).first()
+    user = user_repository.find_hr_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tài khoản HR")
     return user
 
 
 def serialize_hr_user(db: Session, user: User) -> dict:
-    job_count = db.query(Job).filter(Job.hr_id == user.id).count()
-    return serialize_admin_user(user, job_count)
+    return serialize_admin_user(user, job_repository.count_by_hr(db, user.id))
 
 
 def approve_user(db: Session, user_id: int) -> User:
@@ -219,29 +182,29 @@ def serialize_category(category: Category) -> dict:
 
 
 def list_categories(db: Session):
-    return [serialize_category(c) for c in db.query(Category).order_by(Category.sort_order).all()]
+    return [serialize_category(c) for c in category_repository.list_all(db)]
 
 
 def create_category(db: Session, data: CategoryCreate) -> Category:
     slug = data.slug or slugify(data.name)
-    if db.query(Category).filter(Category.slug == slug).first():
+    if category_repository.get_by_slug(db, slug):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug category đã tồn tại")
     category = Category(name=data.name, slug=slug, sort_order=data.sort_order)
-    db.add(category)
+    category_repository.create(db, category)
     db.commit()
     db.refresh(category)
     return category
 
 
 def update_category(db: Session, category_id: int, data: CategoryUpdate) -> Category:
-    category = db.query(Category).filter(Category.id == category_id).first()
+    category = category_repository.get_by_id(db, category_id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy category")
 
     if data.name is not None:
         category.name = data.name
     if data.slug is not None:
-        if db.query(Category).filter(Category.slug == data.slug, Category.id != category_id).first():
+        if category_repository.get_by_slug(db, data.slug) and category.slug != data.slug:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug category đã tồn tại")
         category.slug = data.slug
     if data.sort_order is not None:
@@ -253,7 +216,7 @@ def update_category(db: Session, category_id: int, data: CategoryUpdate) -> Cate
 
 
 def deactivate_category(db: Session, category_id: int) -> Category:
-    category = db.query(Category).filter(Category.id == category_id).first()
+    category = category_repository.get_by_id(db, category_id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy category")
     category.is_active = False
@@ -267,29 +230,29 @@ def serialize_tag(tag: Tag) -> dict:
 
 
 def list_tags(db: Session):
-    return [serialize_tag(t) for t in db.query(Tag).order_by(Tag.name).all()]
+    return [serialize_tag(t) for t in tag_repository.list_all(db)]
 
 
 def create_tag(db: Session, data: TagCreate) -> Tag:
     slug = data.slug or slugify(data.name)
-    if db.query(Tag).filter(Tag.slug == slug).first():
+    if tag_repository.get_by_slug(db, slug):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug tag đã tồn tại")
     tag = Tag(name=data.name, slug=slug)
-    db.add(tag)
+    tag_repository.create(db, tag)
     db.commit()
     db.refresh(tag)
     return tag
 
 
 def update_tag(db: Session, tag_id: int, data: TagUpdate) -> Tag:
-    tag = db.query(Tag).filter(Tag.id == tag_id).first()
+    tag = tag_repository.get_by_id(db, tag_id)
     if not tag:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tag")
 
     if data.name is not None:
         tag.name = data.name
     if data.slug is not None:
-        if db.query(Tag).filter(Tag.slug == data.slug, Tag.id != tag_id).first():
+        if tag_repository.get_by_slug(db, data.slug) and tag.slug != data.slug:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Slug tag đã tồn tại")
         tag.slug = data.slug
 
@@ -299,7 +262,7 @@ def update_tag(db: Session, tag_id: int, data: TagUpdate) -> Tag:
 
 
 def deactivate_tag(db: Session, tag_id: int) -> Tag:
-    tag = db.query(Tag).filter(Tag.id == tag_id).first()
+    tag = tag_repository.get_by_id(db, tag_id)
     if not tag:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy tag")
     tag.is_active = False

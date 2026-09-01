@@ -1,6 +1,6 @@
 import hashlib
-from datetime import datetime, timezone
-from typing import Generator
+from collections.abc import Generator
+from datetime import UTC, datetime
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models.user import User, UserRole, UserStatus
+from app.repositories import session_repository, user_repository
 
 settings = get_settings()
 
@@ -27,16 +28,14 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
 
     token_hash = hashlib.sha256(token.encode()).hexdigest()
 
-    from app.models.session import Session as SessionModel
-
-    session = db.query(SessionModel).filter(SessionModel.token_hash == token_hash).first()
+    session = session_repository.find_by_token_hash(db, token_hash)
     if not session:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không hợp lệ")
 
-    if session.expires_at < datetime.now(timezone.utc):
+    if session.expires_at < datetime.now(UTC):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập đã hết hạn")
 
-    user = db.query(User).filter(User.id == session.user_id).first()
+    user = user_repository.find_by_id(db, session.user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Người dùng không tồn tại")
 

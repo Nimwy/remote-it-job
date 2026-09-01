@@ -40,13 +40,14 @@ Admin:
 ## 3. Tech Stack đã chốt
 
 Frontend:
+- Next.js (App Router, SSR)
 - React
 - TypeScript
-- Vite
-- React Router
+- Tailwind CSS v4
 - TanStack Query
 - React Hook Form
 - Zod
+- next-intl (i18n EN/VI)
 - Node.js/npm chạy trực tiếp, không Docker hóa frontend trong MVP.
 
 Backend:
@@ -183,9 +184,9 @@ Các công nghệ trên chỉ được thêm khi có quyết định mới.
 
 Nếu code làm thay đổi:
 - database schema → cập nhật `DATABASE_SCHEMA.md`
-- API contract → cập nhật `API_SPEC.md`
+- API contract → cập nhật `API_SPEC.md` và `API_REFERENCE.md`
 - security behavior → cập nhật `SECURITY.md`
-- architecture → cập nhật `ARCHITECTURE.md`
+- architecture → cập nhật `ARCHITECTURE.md` và `DIAGRAMS.md` (nếu ảnh hưởng sơ đồ)
 - project state → cập nhật `PROJECT_STATE.md`
 
 Không tạo thêm file documentation chỉ để mô tả lại thông tin đã có nếu không thực sự cần.

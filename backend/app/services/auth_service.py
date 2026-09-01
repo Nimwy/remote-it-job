@@ -1,6 +1,5 @@
-from datetime import datetime, timedelta, timezone
-
 import hashlib
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -9,13 +8,14 @@ from app.core.config import get_settings
 from app.core.security import generate_session_token, hash_password, verify_password
 from app.models.session import Session as SessionModel
 from app.models.user import User, UserStatus
+from app.repositories import session_repository, user_repository
 from app.schemas.user import UserCreate
 
 settings = get_settings()
 
 
 def register_user(db: Session, data: UserCreate) -> User:
-    existing = db.query(User).filter(User.email == data.email).first()
+    existing = user_repository.find_by_email(db, data.email)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -29,14 +29,14 @@ def register_user(db: Session, data: UserCreate) -> User:
         company_name=data.company_name,
         status=UserStatus.pending,
     )
-    db.add(user)
+    user_repository.create(db, user)
     db.commit()
     db.refresh(user)
     return user
 
 
 def authenticate_user(db: Session, email: str, password: str) -> User:
-    user = db.query(User).filter(User.email == email).first()
+    user = user_repository.find_by_email(db, email)
     if not user or not user.password_hash:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -54,24 +54,24 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
 
 def create_session(db: Session, user: User) -> str:
     raw_token, token_hash = generate_session_token()
-    expires_at = datetime.now(timezone.utc) + timedelta(seconds=settings.session_max_age_seconds)
+    expires_at = datetime.now(UTC) + timedelta(seconds=settings.session_max_age_seconds)
 
     session = SessionModel(
         user_id=user.id,
         token_hash=token_hash,
         expires_at=expires_at,
     )
-    db.add(session)
+    session_repository.create(db, session)
     db.commit()
     return raw_token
 
 
 def resolve_google_user(db: Session, google_id: str, email: str, name: str) -> User:
-    user = db.query(User).filter(User.google_id == google_id).first()
+    user = user_repository.find_by_google_id(db, google_id)
     if user:
         return user
 
-    user = db.query(User).filter(User.email == email).first()
+    user = user_repository.find_by_email(db, email)
     if user:
         user.google_id = google_id
         db.commit()
@@ -84,7 +84,7 @@ def resolve_google_user(db: Session, google_id: str, email: str, name: str) -> U
         google_id=google_id,
         status=UserStatus.pending,
     )
-    db.add(user)
+    user_repository.create(db, user)
     db.commit()
     db.refresh(user)
     return user
@@ -92,9 +92,9 @@ def resolve_google_user(db: Session, google_id: str, email: str, name: str) -> U
 
 def delete_session(db: Session, token: str) -> None:
     token_hash = hashlib.sha256(token.encode()).hexdigest()
-    session = db.query(SessionModel).filter(SessionModel.token_hash == token_hash).first()
+    session = session_repository.find_by_token_hash(db, token_hash)
     if session:
-        db.delete(session)
+        session_repository.delete_by_token_hash(db, token_hash)
         db.commit()
 
 

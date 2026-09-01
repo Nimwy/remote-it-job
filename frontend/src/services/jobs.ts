@@ -1,36 +1,73 @@
-import { api } from '../lib/api'
-import type { Category, JobDetail, JobListItem, PaginatedResponse, Tag } from '../types'
+import { apiFetch } from "../lib/api";
+import { serverFetch } from "../lib/server";
+import type {
+  Category,
+  JobDetail,
+  JobListItem,
+  PaginatedResponse,
+  Tag,
+} from "../types";
 
 export interface JobFilters {
-  q?: string
-  category?: string
-  tags?: string
-  job_type?: string
-  salary_min?: number
-  salary_max?: number
-  location?: string
-  timezone?: string
-  page?: number
-  page_size?: number
-  sort?: string
+  q?: string;
+  category?: string;
+  tags?: string;
+  job_type?: string;
+  salary_min?: number;
+  salary_max?: number;
+  location?: string;
+  timezone?: string;
+  page?: number;
+  page_size?: number;
+  sort?: string;
 }
 
-export async function listJobs(filters: JobFilters = {}): Promise<PaginatedResponse<JobListItem>> {
-  const res = await api.get('/jobs', { params: filters })
-  return res.data
+export function listJobs(
+  filters: JobFilters = {},
+): Promise<PaginatedResponse<JobListItem>> {
+  return apiFetch(
+    `/jobs${buildQuery(filters)}`,
+  );
 }
 
-export async function getJob(id: number): Promise<JobDetail> {
-  const res = await api.get(`/jobs/${id}`)
-  return res.data
+export function getJob(id: number): Promise<JobDetail> {
+  return apiFetch(`/jobs/${id}`);
 }
 
-export async function listCategories(): Promise<Category[]> {
-  const res = await api.get('/categories')
-  return res.data
+export function listCategories(): Promise<Category[]> {
+  return apiFetch("/categories");
 }
 
-export async function listTags(): Promise<Tag[]> {
-  const res = await api.get('/tags')
-  return res.data
+export function listTags(): Promise<Tag[]> {
+  return apiFetch("/tags");
+}
+
+// Server-side fetchers (SSR)
+export function serverListJobs(
+  filters: JobFilters = {},
+): Promise<PaginatedResponse<JobListItem>> {
+  return serverFetch(`/jobs${buildQuery(filters)}`);
+}
+
+export function serverGetJob(id: number): Promise<JobDetail> {
+  return serverFetch(`/jobs/${id}`);
+}
+
+export function serverListCategories(): Promise<Category[]> {
+  return serverFetch("/categories");
+}
+
+export function serverListTags(): Promise<Tag[]> {
+  return serverFetch("/tags");
+}
+
+function buildQuery(filters: JobFilters): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, String(value));
+    }
+  }
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
 }

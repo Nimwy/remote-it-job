@@ -1,111 +1,127 @@
-import { api } from '../lib/api'
-import type { AdminJob, AdminUser, Category, PaginatedResponse, Tag } from '../types'
+import { apiFetch } from "../lib/api";
+import type { AdminJob, AdminUser, Category, PaginatedResponse, Tag } from "../types";
 
-export async function listAllJobs(params: {
-  status?: string
-  q?: string
-  hr_id?: number
-  category_id?: number
-  page?: number
-  page_size?: number
+export function listAllJobs(params: {
+  status?: string;
+  q?: string;
+  hr_id?: number;
+  category_id?: number;
+  page?: number;
+  page_size?: number;
 } = {}): Promise<PaginatedResponse<AdminJob>> {
-  const res = await api.get('/admin/jobs', { params })
-  return res.data
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== "") {
+      qs.set(key, String(value));
+    }
+  }
+  return apiFetch(`/admin/jobs${qs.toString() ? `?${qs}` : ""}`);
 }
 
-export async function listPendingJobs(): Promise<PaginatedResponse<AdminJob>> {
-  const res = await api.get('/admin/jobs/pending')
-  return res.data
+export function listPendingJobs(): Promise<PaginatedResponse<AdminJob>> {
+  return apiFetch("/admin/jobs/pending");
 }
 
-export async function approveJob(id: number): Promise<AdminJob> {
-  const res = await api.post(`/admin/jobs/${id}/approve`)
-  return res.data
+export function approveJob(id: number): Promise<AdminJob> {
+  return apiFetch(`/admin/jobs/${id}/approve`, { method: "POST" });
 }
 
-export async function rejectJob(id: number, reason: string): Promise<AdminJob> {
-  const res = await api.post(`/admin/jobs/${id}/reject`, { reason })
-  return res.data
+export function rejectJob(id: number, reason: string): Promise<AdminJob> {
+  return apiFetch(`/admin/jobs/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
 }
 
-export async function hideJob(id: number): Promise<AdminJob> {
-  const res = await api.post(`/admin/jobs/${id}/hide`)
-  return res.data
+export function hideJob(id: number): Promise<AdminJob> {
+  return apiFetch(`/admin/jobs/${id}/hide`, { method: "POST" });
 }
 
-export async function unhideJob(id: number): Promise<AdminJob> {
-  const res = await api.post(`/admin/jobs/${id}/unhide`)
-  return res.data
+export function unhideJob(id: number): Promise<AdminJob> {
+  return apiFetch(`/admin/jobs/${id}/unhide`, { method: "POST" });
 }
 
-export async function deleteJob(id: number): Promise<void> {
-  await api.delete(`/admin/jobs/${id}`)
+export function deleteJob(id: number): Promise<void> {
+  return apiFetch(`/admin/jobs/${id}`, { method: "DELETE" });
 }
 
-export async function listHrs(params: {
-  search?: string
-  status?: string
-  page?: number
-  page_size?: number
+export function listHrs(params: {
+  search?: string;
+  status?: string;
+  page?: number;
+  page_size?: number;
 } = {}): Promise<PaginatedResponse<AdminUser>> {
-  const res = await api.get('/admin/users', { params })
-  return res.data
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== "") {
+      qs.set(key, String(value));
+    }
+  }
+  return apiFetch(`/admin/users${qs.toString() ? `?${qs}` : ""}`);
 }
 
-export async function approveHr(id: number): Promise<AdminUser> {
-  const res = await api.post(`/admin/users/${id}/approve`)
-  return res.data
+export function approveHr(id: number): Promise<AdminUser> {
+  return apiFetch(`/admin/users/${id}/approve`, { method: "POST" });
 }
 
-export async function blockHr(id: number): Promise<AdminUser> {
-  const res = await api.post(`/admin/users/${id}/block`)
-  return res.data
+export function blockHr(id: number): Promise<AdminUser> {
+  return apiFetch(`/admin/users/${id}/block`, { method: "POST" });
 }
 
-export async function unblockHr(id: number): Promise<AdminUser> {
-  const res = await api.post(`/admin/users/${id}/unblock`)
-  return res.data
+export function unblockHr(id: number): Promise<AdminUser> {
+  return apiFetch(`/admin/users/${id}/unblock`, { method: "POST" });
 }
 
-export async function listAllCategories(): Promise<Category[]> {
-  const res = await api.get('/admin/categories')
-  return res.data
+export function listAllCategories(): Promise<Category[]> {
+  return apiFetch("/admin/categories");
 }
 
-export async function createCategory(data: { name: string; slug?: string; sort_order?: number }): Promise<Category> {
-  const res = await api.post('/admin/categories', data)
-  return res.data
+export function createCategory(data: {
+  name: string;
+  slug?: string;
+  sort_order?: number;
+}): Promise<Category> {
+  return apiFetch("/admin/categories", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function updateCategory(
+export function updateCategory(
   id: number,
   data: { name?: string; slug?: string; sort_order?: number },
 ): Promise<Category> {
-  const res = await api.patch(`/admin/categories/${id}`, data)
-  return res.data
+  return apiFetch(`/admin/categories/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function deactivateCategory(id: number): Promise<Category> {
-  const res = await api.post(`/admin/categories/${id}/deactivate`)
-  return res.data
+export function deactivateCategory(id: number): Promise<Category> {
+  return apiFetch(`/admin/categories/${id}/deactivate`, { method: "POST" });
 }
 
-export async function listAllTags(): Promise<Tag[]> {
-  const res = await api.get('/admin/tags')
-  return res.data
+export function listAllTags(): Promise<Tag[]> {
+  return apiFetch("/admin/tags");
 }
 
-export async function createTag(data: { name: string; slug?: string }): Promise<Tag> {
-  const res = await api.post('/admin/tags', data)
-  return res.data
+export function createTag(data: { name: string; slug?: string }): Promise<Tag> {
+  return apiFetch("/admin/tags", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function updateTag(id: number, data: { name?: string; slug?: string }): Promise<Tag> {
-  const res = await api.patch(`/admin/tags/${id}`, data)
-  return res.data
+export function updateTag(
+  id: number,
+  data: { name?: string; slug?: string },
+): Promise<Tag> {
+  return apiFetch(`/admin/tags/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
-export async function deactivateTag(id: number): Promise<Tag> {
-  const res = await api.post(`/admin/tags/${id}/deactivate`)
-  return res.data
+export function deactivateTag(id: number): Promise<Tag> {
+  return apiFetch(`/admin/tags/${id}/deactivate`, { method: "POST" });
 }
