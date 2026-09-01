@@ -14,7 +14,15 @@ router = APIRouter(tags=["jobs"])
 settings = get_settings()
 
 
-@router.get("/jobs", response_model=PaginatedResponse[JobListItem])
+@router.get(
+    "/jobs",
+    response_model=PaginatedResponse[JobListItem],
+    summary="Tìm kiếm việc làm công khai",
+    description=(
+        "Liệt kê job đã duyệt, chưa hết hạn và HR không bị khóa. Hỗ trợ tìm kiếm theo từ khoá, "
+        "category, tags, loại job, lương, địa điểm, múi giờ và phân trang."
+    ),
+)
 def list_jobs(
     q: str | None = None,
     category: str | None = None,
@@ -52,7 +60,15 @@ def list_jobs(
     }
 
 
-@router.get("/jobs/{job_id}", response_model=JobDetailResponse)
+@router.get(
+    "/jobs/{job_id}",
+    response_model=JobDetailResponse,
+    summary="Chi tiết việc làm",
+    description=(
+        "Trả về chi tiết job công khai kèm kênh liên hệ HR. Ghi nhận lượt xem "
+        "(tối đa một lần cho mỗi khách/phiên trong 24 giờ). Trả về `404` nếu job không công khai."
+    ),
+)
 def get_job(
     job_id: int,
     request: Request,
