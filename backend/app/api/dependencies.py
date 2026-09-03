@@ -1,6 +1,7 @@
 from collections.abc import Generator
 
 from fastapi import Depends, Request, status
+from fastapi.security import APIKeyCookie
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -11,6 +12,14 @@ from app.models.user import User, UserRole, UserStatus
 from app.repositories import user_repository
 
 settings = get_settings()
+
+# Khai báo security thật (cookie access_token) để FastAPI tự sinh `security`
+# theo dependency graph trong OpenAPI (S-01) — không còn monkeypatch custom_openapi.
+cookie_scheme = APIKeyCookie(
+    name=settings.access_cookie_name,
+    auto_error=False,
+    description="Access token (JWT) dạng cookie HTTP-only. Đăng nhập qua /api/auth/login hoặc /api/auth/refresh.",
+)
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -24,8 +33,12 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    token = request.cookies.get(settings.access_cookie_name)
+def get_current_user(
+    request: Request,
+    api_key: str | None = Depends(cookie_scheme),
+    db: Session = Depends(get_db),
+) -> User:
+    token = api_key or request.cookies.get(settings.access_cookie_name)
     if not token:
         raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.unauthorized", "Chưa đăng nhập")
 
