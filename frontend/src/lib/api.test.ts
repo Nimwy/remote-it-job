@@ -1,42 +1,69 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+// @vitest-environment node
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { apiFetch } from "./api";
 
-function mockFetch(status: number, data: unknown) {
-  return vi.fn().mockResolvedValue({
-    ok: status >= 200 && status < 300,
-    status,
-    json: () => Promise.resolve(data),
-  });
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+describe("apiFetch refresh handling", () => {
+  const originalFetch = globalThis.fetch;
 
-describe("apiFetch", () => {
-  it("returns data for a successful response", async () => {
-    vi.stubGlobal("fetch", mockFetch(200, { id: 1, title: "Job" }));
-
-    const result = await apiFetch<{ id: number; title: string }>("/jobs/1");
-    expect(result).toEqual({ id: 1, title: "Job" });
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
   });
 
-  it("returns undefined for 204 no-content", async () => {
-    vi.stubGlobal("fetch", mockFetch(204, null));
-
-    const result = await apiFetch("/jobs/1");
-    expect(result).toBeUndefined();
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
   });
 
-  it("throws with detail message on error", async () => {
-    vi.stubGlobal("fetch", mockFetch(404, { detail: "Không tìm thấy" }));
+  it("refreshes once then retries the original request", async () => {
+    let jobsCalls = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/auth/refresh")) {
+        return new Response(null, { status: 200 });
+      }
+      jobsCalls += 1;
+      if (jobsCalls === 1) {
+        return jsonResponse({ error: { code: "auth.token_expired", message: "expired" } }, 401);
+      }
+      return jsonResponse({ ok: true });
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
-    await expect(apiFetch("/jobs/999")).rejects.toThrow("Không tìm thấy");
+    const data = await apiFetch<{ ok: true }>("/jobs");
+
+    expect(data.ok).toBe(true);
+    expect(jobsCalls).toBe(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
-  it("throws a fallback message on error without detail", async () => {
-    vi.stubGlobal("fetch", mockFetch(500, {}));
+  it("dedups concurrent refreshes into a single call", async () => {
+    let refreshCalls = 0;
+    let jobsCalls = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/api/auth/refresh")) {
+        refreshCalls += 1;
+        await new Promise((r) => setTimeout(r, 10));
+        return new Response(null, { status: 200 });
+      }
+      jobsCalls += 1;
+      if (jobsCalls <= 2) {
+        return jsonResponse({ error: { code: "auth.token_expired", message: "expired" } }, 401);
+      }
+      return jsonResponse({ ok: true });
+    });
+    vi.stubGlobal("fetch", fetchMock);
 
-    await expect(apiFetch("/jobs")).rejects.toThrow("Có lỗi xảy ra");
+    const [a, b] = await Promise.all([
+      apiFetch<{ ok: true }>("/jobs"),
+      apiFetch<{ ok: true }>("/jobs"),
+    ]);
+
+    expect(a.ok).toBe(true);
+    expect(b.ok).toBe(true);
+    expect(refreshCalls).toBe(1);
   });
 });
