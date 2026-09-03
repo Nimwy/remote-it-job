@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLogin, useRegister } from "../hooks/useAuth";
 import { Icon } from "./ui/Icon";
+import { Input } from "./ui/Input";
 import { getApiErrorMessage } from "../lib/errors";
 
 type LoginFormData = {
@@ -22,9 +23,6 @@ type RegisterFormData = {
   password: string;
   confirm_password: string;
 };
-
-const inputClass =
-  "form-input block w-full h-[44px] rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-sm placeholder:text-on-surface-variant focus:border-primary focus:outline-none";
 
 export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
   const t = useTranslations("auth");
@@ -179,14 +177,14 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
                 <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                   <div>
                     <label className="mb-1 block text-label-sm text-on-surface">{t("email")}</label>
-                    <input type="email" {...loginForm.register("email")} className={inputClass} placeholder={t("emailPlaceholder")} />
+                    <Input type="email" {...loginForm.register("email")} placeholder={t("emailPlaceholder")} />
                     {loginForm.formState.errors.email && (
                       <p className="mt-1 text-body-sm text-error">{loginForm.formState.errors.email.message}</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1 block text-label-sm text-on-surface">{t("password")}</label>
-                    <input type="password" {...loginForm.register("password")} className={inputClass} placeholder="••••••••" />
+                    <Input type="password" {...loginForm.register("password")} placeholder="••••••••" />
                     {loginForm.formState.errors.password && (
                       <p className="mt-1 text-body-sm text-error">{loginForm.formState.errors.password.message}</p>
                     )}
@@ -220,35 +218,35 @@ export function AuthPage({ initialTab }: { initialTab: "login" | "register" }) {
                 <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
                   <div>
                     <label className="mb-1 block text-label-sm text-on-surface">{t("name")}</label>
-                    <input {...registerForm.register("name")} className={inputClass} placeholder={t("namePlaceholder")} />
+                    <Input {...registerForm.register("name")} placeholder={t("namePlaceholder")} />
                     {registerForm.formState.errors.name && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.name.message}</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1 block text-label-sm text-on-surface">{t("companyName")}</label>
-                    <input {...registerForm.register("company_name")} className={inputClass} placeholder={t("companyPlaceholder")} />
+                    <Input {...registerForm.register("company_name")} placeholder={t("companyPlaceholder")} />
                     {registerForm.formState.errors.company_name && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.company_name.message}</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1 block text-label-sm text-on-surface">{t("email")}</label>
-                    <input type="email" {...registerForm.register("email")} className={inputClass} placeholder={t("emailPlaceholder")} />
+                    <Input type="email" {...registerForm.register("email")} placeholder={t("emailPlaceholder")} />
                     {registerForm.formState.errors.email && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.email.message}</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1 block text-label-sm text-on-surface">{t("password")}</label>
-                    <input type="password" {...registerForm.register("password")} className={inputClass} placeholder={t("passwordPlaceholder")} />
+                    <Input type="password" {...registerForm.register("password")} placeholder={t("passwordPlaceholder")} />
                     {registerForm.formState.errors.password && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.password.message}</p>
                     )}
                   </div>
                   <div>
                     <label className="mb-1 block text-label-sm text-on-surface">{t("confirmPassword")}</label>
-                    <input type="password" {...registerForm.register("confirm_password")} className={inputClass} placeholder={t("confirmPlaceholder")} />
+                    <Input type="password" {...registerForm.register("confirm_password")} placeholder={t("confirmPlaceholder")} />
                     {registerForm.formState.errors.confirm_password && (
                       <p className="mt-1 text-body-sm text-error">{registerForm.formState.errors.confirm_password.message}</p>
                     )}

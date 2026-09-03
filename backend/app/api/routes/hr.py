@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_db, require_active_hr
 from app.core.config import get_settings
 from app.models.user import User
-from app.schemas.common import PaginatedResponse
+from app.schemas.common import PaginatedResponse, paginated
 from app.schemas.hr import HrProfileResponse, HrProfileUpdate, HrStatsResponse
 from app.schemas.job import HrJobResponse, JobCreate, JobUpdate
 from app.services import hr_service
@@ -53,13 +53,7 @@ def list_jobs(
     db: Session = Depends(get_db),
 ):
     jobs, total, total_pages = hr_service.list_hr_jobs(db, current_user, status_filter, page, page_size)
-    return {
-        "items": [hr_service.serialize_hr_job(job) for job in jobs],
-        "page": page,
-        "page_size": page_size,
-        "total": total,
-        "total_pages": total_pages,
-    }
+    return paginated([hr_service.serialize_hr_job(job) for job in jobs], page, page_size, total, total_pages)
 
 
 @router.get(

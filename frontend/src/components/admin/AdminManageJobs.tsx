@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useAdminJobs, useAdminJobAction, useAdminDeleteJob } from "@/hooks/useAdmin";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Pagination } from "@/components/ui/Pagination";
 import { Icon } from "@/components/ui/Icon";
 
 const PAGE_SIZE = 20;
@@ -137,19 +138,7 @@ export function AdminManageJobs() {
         </div>
       )}
 
-      {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-center gap-2">
-          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-            {t("prev")}
-          </Button>
-          <span className="text-body-sm text-secondary">
-            {t("page", { page, total: totalPages })}
-          </span>
-          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-            {t("next")}
-          </Button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }

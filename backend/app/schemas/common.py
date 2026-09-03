@@ -22,3 +22,14 @@ class ErrorResponse(BaseModel):
 
 class MessageResponse(BaseModel):
     detail: str
+
+
+def paginated(items: list, page: int, page_size: int, total: int, total_pages: int) -> PaginatedResponse:
+    """Dựng response phân trang chuẩn (A-05)."""
+    return PaginatedResponse(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )

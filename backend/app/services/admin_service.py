@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import APIError
 from app.core.logging import logger
-from app.core.slug import slugify
+from app.core.slug import slugify, unique_slug
 from app.models.category import Category
 from app.models.job import Job, JobStatus
 from app.models.tag import Tag
@@ -205,9 +205,9 @@ def list_categories(db: Session):
 
 
 def create_category(db: Session, data: CategoryCreate) -> Category:
-    slug = data.slug or slugify(data.name)
-    if category_repository.get_by_slug(db, slug):
-        raise APIError(status.HTTP_409_CONFLICT, "catalog.category_slug_exists", "Slug category đã tồn tại")
+    # A-06: thống nhất với HR — slug rỗng có fallback + unique_slug tự thêm hậu tố
+    base = data.slug or slugify(data.name) or "muc"
+    slug = unique_slug(base, {c.slug for c in category_repository.list_all(db)})
     category = Category(name=data.name, slug=slug, sort_order=data.sort_order)
     category_repository.create(db, category)
     db.commit()
@@ -253,9 +253,9 @@ def list_tags(db: Session):
 
 
 def create_tag(db: Session, data: TagCreate) -> Tag:
-    slug = data.slug or slugify(data.name)
-    if tag_repository.get_by_slug(db, slug):
-        raise APIError(status.HTTP_409_CONFLICT, "catalog.tag_slug_exists", "Slug tag đã tồn tại")
+    # A-06: thống nhất — slug rỗng có fallback + unique_slug tự thêm hậu tố
+    base = data.slug or slugify(data.name) or "the"
+    slug = unique_slug(base, {t.slug for t in tag_repository.list_all(db)})
     tag = Tag(name=data.name, slug=slug)
     tag_repository.create(db, tag)
     db.commit()

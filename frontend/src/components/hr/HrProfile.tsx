@@ -6,12 +6,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as hrService from "@/services/hr";
 import type { Contact } from "@/types";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { getApiErrorMessage } from "@/lib/errors";
 
 const CHANNELS = ["zalo", "telegram", "linkedin", "phone", "email"] as const;
-
-const inputClass =
-  "w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-md focus:border-primary focus:outline-none";
 
 export function HrProfile() {
   const t = useTranslations("profile");
@@ -81,15 +79,15 @@ export function HrProfile() {
           <div className="space-y-4">
             <div>
               <label className="mb-1 block text-label-sm text-secondary">{t("name")}</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div>
               <label className="mb-1 block text-label-sm text-secondary">{t("companyName")}</label>
-              <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className={inputClass} />
+              <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
             </div>
             <div>
               <label className="mb-1 block text-label-sm text-secondary">{t("email")}</label>
-              <input value={profile?.email ?? ""} disabled className={`${inputClass} opacity-60`} />
+              <Input value={profile?.email ?? ""} disabled className="opacity-60" />
             </div>
           </div>
         </section>
@@ -101,7 +99,7 @@ export function HrProfile() {
             {CHANNELS.map((channel) => (
               <div key={channel}>
                 <label className="mb-1 block text-label-sm text-secondary">{ct(channel)}</label>
-                <input
+                <Input
                   value={getContactValue(channel)}
                   onChange={(e) => setContact(channel, e.target.value)}
                   placeholder={
@@ -113,7 +111,6 @@ export function HrProfile() {
                           ? "email@example.com"
                           : ""
                   }
-                  className={inputClass}
                 />
               </div>
             ))}
