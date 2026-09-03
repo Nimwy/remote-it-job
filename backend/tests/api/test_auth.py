@@ -28,7 +28,8 @@ def test_login_success(client):
     res = client.post("/api/auth/login", json={"email": "hr@example.com", "password": "secret123"})
     assert res.status_code == 200
     assert res.json()["email"] == "hr@example.com"
-    assert res.cookies.get("session") is not None
+    assert res.cookies.get("access_token") is not None
+    assert res.cookies.get("refresh_token") is not None
 
 
 def test_login_wrong_password(client):
@@ -50,12 +51,32 @@ def test_me_without_cookie(client):
     assert res.status_code == 401
 
 
-def test_logout_invalidates_session(client):
+def test_refresh_rotates_tokens(client):
+    client.post("/api/auth/register", json=register_payload())
+    login = client.post("/api/auth/login", json={"email": "hr@example.com", "password": "secret123"})
+    old_refresh = login.cookies.get("refresh_token")
+
+    refresh = client.post("/api/auth/refresh", cookies=login.cookies)
+    assert refresh.status_code == 200
+    new_access = refresh.cookies.get("access_token")
+    new_refresh = refresh.cookies.get("refresh_token")
+    assert new_access is not None
+    assert new_refresh is not None and new_refresh != old_refresh
+
+    # access token mới dùng được
+    res = client.get("/api/auth/me", cookies={"access_token": new_access})
+    assert res.status_code == 200
+    assert res.json()["email"] == "hr@example.com"
+
+
+def test_logout_invalidates_refresh(client):
     client.post("/api/auth/register", json=register_payload())
     login = client.post("/api/auth/login", json={"email": "hr@example.com", "password": "secret123"})
     logout = client.post("/api/auth/logout", cookies=login.cookies)
     assert logout.status_code == 200
-    res = client.get("/api/auth/me", cookies=login.cookies)
+
+    # refresh token cũ không dùng lại được
+    res = client.post("/api/auth/refresh", cookies=login.cookies)
     assert res.status_code == 401
 
 

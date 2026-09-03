@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, get_db
 from app.core.config import get_settings
-from app.core.cookies import clear_session_cookie, set_session_cookie
+from app.core.cookies import clear_auth_cookies, set_auth_cookies
 from app.core.exceptions import APIError
 from app.core.logging import logger
 from app.core.oauth import oauth
@@ -16,6 +16,7 @@ from app.services.auth_service import (
     change_password,
     create_session,
     delete_session,
+    refresh_session,
     register_user,
     resolve_google_user,
 )
@@ -55,9 +56,9 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
 )
 def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     user = authenticate_user(db, data.email, data.password)
-    raw_token = create_session(db, user)
+    access_token, refresh_token = create_session(db, user)
 
-    set_session_cookie(response, raw_token)
+    set_auth_cookies(response, access_token, refresh_token)
     return user
 
 
@@ -97,19 +98,37 @@ async def google_callback(request: Request, response: Response, db: Session = De
         raise APIError(status.HTTP_400_BAD_REQUEST, "auth.google_missing_identity", "Thiếu thông tin Google identity")
 
     user = resolve_google_user(db, google_id, email, name)
-    raw_token = create_session(db, user)
+    access_token, refresh_token = create_session(db, user)
 
-    set_session_cookie(response, raw_token)
+    set_auth_cookies(response, access_token, refresh_token)
     return RedirectResponse(url=settings.frontend_url)
 
 
-@router.post("/logout", summary="Đăng xuất", description="Thu hồi phiên hiện tại và xoá cookie `session`.")
+@router.post(
+    "/refresh",
+    summary="Làm mới phiên",
+    description=(
+        "Đọc refresh token từ cookie, cấp access token mới và xoay refresh token. "
+        "Trả về `401` (`auth.invalid_session`/`auth.session_expired`) nếu phiên không hợp lệ/hết hạn."
+    ),
+)
+def refresh(response: Response, request: Request, db: Session = Depends(get_db)):
+    refresh_token = request.cookies.get(settings.refresh_cookie_name)
+    if not refresh_token:
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.invalid_session", "Phiên đăng nhập không hợp lệ")
+
+    access_token, new_refresh, _ = refresh_session(db, refresh_token)
+    set_auth_cookies(response, access_token, new_refresh)
+    return {"detail": "Đã làm mới phiên"}
+
+
+@router.post("/logout", summary="Đăng xuất", description="Thu hồi phiên hiện tại và xoá cả hai cookie token.")
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
-    token = request.cookies.get(settings.session_cookie_name)
+    token = request.cookies.get(settings.refresh_cookie_name)
     if token:
         delete_session(db, token)
 
-    clear_session_cookie(response)
+    clear_auth_cookies(response)
     return {"detail": "Đã đăng xuất"}
 
 

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import APIError
+from app.core.jwt import create_access_token
 from app.core.logging import logger
 from app.core.security import generate_session_token, hash_password, verify_password
 from app.models.session import Session as SessionModel
@@ -49,24 +50,57 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
     return user
 
 
-def create_session(db: Session, user: User) -> str:
-    raw_token, token_hash = generate_session_token()
+def create_session(db: Session, user: User) -> tuple[str, str]:
+    """Tạo access token (JWT) + refresh token (opaque), lưu hash refresh vào `sessions`.
+
+    QD1: chính sách nhiều phiên — KHÔNG xoá session cũ khi đăng nhập lại, chỉ dọn
+    token đã hết hạn. Thiết bị cũ giữ nguyên phiên của mình.
+    """
+    access_token = create_access_token(user.id, user.role)
+
+    raw_refresh, refresh_hash = generate_session_token()
     expires_at = datetime.now(UTC) + timedelta(seconds=settings.session_max_age_seconds)
 
-    # B-07: xoá session cũ của user khi đăng nhập lại — chỉ giữ 1 session hiện hành
-    session_repository.delete_for_user(db, user.id)
-    # Dọn các session hết hạn (vệ sinh dữ liệu, chạy nhẹ nhàng khi login)
     session_repository.delete_expired(db)
 
     session = SessionModel(
         user_id=user.id,
-        token_hash=token_hash,
+        token_hash=refresh_hash,
         expires_at=expires_at,
     )
     session_repository.create(db, session)
     db.commit()
     db.flush()
-    return raw_token
+    return access_token, raw_refresh
+
+
+def refresh_session(db: Session, refresh_token: str) -> tuple[str, str, int]:
+    """Xoay refresh token và cấp access token mới.
+
+    Đọc refresh token (lưu hash) trong `sessions`; nếu không tồn tại/hết hạn -> 401.
+    Xoay token: xoá bản ghi cũ, tạo bản ghi mới (cho phép nhiều phiên trên nhiều thiết bị).
+    Trả về (access_token, refresh_token, user_id).
+    """
+    from hashlib import sha256
+
+    token_hash = sha256(refresh_token.encode()).hexdigest()
+    session = session_repository.find_by_token_hash(db, token_hash)
+    if not session:
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.invalid_session", "Phiên đăng nhập không hợp lệ")
+
+    if session.expires_at < datetime.now(UTC):
+        session_repository.delete_by_token_hash(db, token_hash)
+        db.commit()
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.session_expired", "Phiên đăng nhập đã hết hạn")
+
+    user = user_repository.find_by_id(db, session.user_id)
+    if not user:
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.user_not_found", "Người dùng không tồn tại")
+
+    # Xoay refresh token
+    session_repository.delete_by_token_hash(db, token_hash)
+    access_token, raw_refresh = create_session(db, user)
+    return access_token, raw_refresh, user.id
 
 
 def resolve_google_user(db: Session, google_id: str, email: str, name: str) -> User:

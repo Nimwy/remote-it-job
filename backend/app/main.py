@@ -73,10 +73,10 @@ def custom_openapi():
     schema["components"]["securitySchemes"]["SessionAuth"] = {
         "type": "apiKey",
         "in": "cookie",
-        "name": settings.session_cookie_name,
+        "name": settings.access_cookie_name,
         "description": (
-            "Cookie phiên đăng nhập phía server. Đăng nhập qua /api/auth/login trong "
-            "cùng phiên để mở quyền."
+            "Access token (JWT) dạng cookie HTTP-only. Đăng nhập qua /api/auth/login hoặc "
+            "/api/auth/refresh trong cùng phiên để mở quyền."
         ),
     }
 

@@ -1,15 +1,14 @@
-import hashlib
 from collections.abc import Generator
-from datetime import UTC, datetime
 
 from fastapi import Depends, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import APIError
+from app.core.jwt import decode_access_token
 from app.db.session import SessionLocal
 from app.models.user import User, UserRole, UserStatus
-from app.repositories import session_repository, user_repository
+from app.repositories import user_repository
 
 settings = get_settings()
 
@@ -26,20 +25,16 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    token = request.cookies.get(settings.session_cookie_name)
+    token = request.cookies.get(settings.access_cookie_name)
     if not token:
         raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.unauthorized", "Chưa đăng nhập")
 
-    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    # JWT access token: hết hạn -> auth.token_expired (frontend nên refresh),
+    # chữ ký/định dạng sai -> auth.invalid_token
+    payload = decode_access_token(token)
+    user_id = int(payload.get("sub", 0)) if str(payload.get("sub", "")).isdigit() else 0
 
-    session = session_repository.find_by_token_hash(db, token_hash)
-    if not session:
-        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.invalid_session", "Phiên đăng nhập không hợp lệ")
-
-    if session.expires_at < datetime.now(UTC):
-        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.session_expired", "Phiên đăng nhập đã hết hạn")
-
-    user = user_repository.find_by_id(db, session.user_id)
+    user = user_repository.find_by_id(db, user_id)
     if not user:
         raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.user_not_found", "Người dùng không tồn tại")
 
