@@ -51,11 +51,12 @@ openapi_tags = [
 app = FastAPI(
     title="Remote IT Job",
     description=(
-        "Website tuyển dụng việc làm IT remote cho thị trường Việt Nam. "
+        "Website tuyển dụng việc làm IT remote cho thị trường Việt Nam.\n\n"
         "Xác thực bằng access token (JWT) + refresh token dạng cookie HTTP-only. "
-        "Xem docs tại `/docs`, đặc tả OpenAPI tại `/openapi.json`.\n"
-        "Để thử các endpoint cần đăng nhập (HR/Admin), đăng nhập trước qua `/api/auth/login` "
-        "trong cùng phiên (browser/cookie) — thao tác `Try it out` sẽ gửi kèm cookie."
+        "Xem docs tại `/docs`, đặc tả OpenAPI tại `/openapi.json`.\n\n"
+        "Để thử các endpoint cần đăng nhập (HR/Admin), đăng nhập trước qua "
+        "`/api/auth/login` trong cùng phiên (browser/cookie) — thao tác "
+        "`Try it out` sẽ gửi kèm cookie."
     ),
     version="0.1.0",
     openapi_tags=openapi_tags,

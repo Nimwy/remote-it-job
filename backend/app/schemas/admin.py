@@ -67,6 +67,10 @@ class CategoryCreate(BaseModel):
     slug: str | None = Field(default=None, max_length=120)
     sort_order: int = 0
 
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"name": "Frontend", "sort_order": 1}]}
+    )
+
 
 class CategoryUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
@@ -77,6 +81,8 @@ class CategoryUpdate(BaseModel):
 class TagCreate(BaseModel):
     name: str = Field(min_length=1, max_length=50)
     slug: str | None = Field(default=None, max_length=60)
+
+    model_config = ConfigDict(json_schema_extra={"examples": [{"name": "React"}]})
 
 
 class TagUpdate(BaseModel):

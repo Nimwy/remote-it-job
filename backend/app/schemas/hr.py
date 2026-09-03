@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.job import ContactInfo
 
@@ -17,6 +17,21 @@ class HrProfileUpdate(BaseModel):
     company_name: str | None = None
     avatar: str | None = None
     contacts: list[ContactInput] | None = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "name": "Nguyễn Văn A",
+                    "company_name": "Công ty ABC",
+                    "contacts": [
+                        {"channel": "email", "value": "hr@example.com"},
+                        {"channel": "telegram", "value": "@abc_hr"},
+                    ],
+                }
+            ]
+        }
+    )
 
 
 class HrProfileResponse(BaseModel):

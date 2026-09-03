@@ -103,7 +103,7 @@ def hide_job(job_id: int, db: Session = Depends(get_db), _: User = Depends(requi
     "/jobs/{job_id}/unhide",
     response_model=AdminJobResponse,
     summary="Bỏ ẩn job",
-    description="Đưa job từ `hidden` về `approved` để hiển thị lại. Yêu cầu Admin.",
+    description="Đưa job từ `hidden` về `approved` để hiển thị lại. Chỉ áp dụng cho job đang `hidden`. Yêu cầu Admin.",
 )
 def unhide_job(job_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     job = admin_service.unhide_job(db, job_id)

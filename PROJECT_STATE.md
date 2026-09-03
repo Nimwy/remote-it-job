@@ -122,6 +122,8 @@ Không coi file này là changelog.
 
 Chỉ cập nhật khi trạng thái triển khai hiện tại hoặc quyết định kiến trúc đã chốt thay đổi đáng kể.
 
+**Ghi chú (S-09):** `version="0.1.0"` của FastAPI (`backend/app/main.py`) là hardcode — khi bump version API, cập nhật phối hợp tại đây và các tài liệu liên quan.
+
 ## Thời điểm triển khai Stitch UI
 
 Output `stitch_remote_it_job_board/` là tham chiếu UI dùng trong quá trình triển khai frontend. Đây không phải là giai đoạn cuối riêng biệt phải chờ đến cuối cùng; các React page/component nên chuyển đổi thiết kế Stitch ngay khi triển khai các tính năng frontend tương ứng.

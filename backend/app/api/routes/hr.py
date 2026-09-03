@@ -137,7 +137,10 @@ def delete_job(
     "/jobs/{job_id}/submit",
     response_model=HrJobResponse,
     summary="Gửi duyệt job",
-    description="Chuyển job sang trạng thái `pending` để Admin duyệt.",
+    description=(
+        "Chuyển job sang trạng thái `pending` để Admin duyệt. Chỉ áp dụng cho job "
+        "ở trạng thái `draft` hoặc `rejected`."
+    ),
 )
 def submit_job(
     job_id: int,
