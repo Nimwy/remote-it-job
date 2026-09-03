@@ -61,8 +61,12 @@ sequenceDiagram
     B->>D: find user by email
     D-->>B: user
     B->>B: verify password (Argon2id)
-    B->>D: create session (token_hash)
-    B-->>C: 200 UserResponse + set-cookie session
+    B->>D: create access (JWT) + refresh (hash in sessions)
+    B-->>C: 200 UserResponse + set-cookie access_token, refresh_token
+    C->>B: later request with expired access -> 401 token_expired
+    C->>B: POST /auth/refresh (refresh cookie)
+    B->>D: look up refresh hash, rotate token
+    B-->>C: new access_token + new refresh_token
 ```
 
 ## 6. Sequence — Google OAuth
@@ -82,8 +86,8 @@ sequenceDiagram
     B->>G: exchange code, validate state/issuer
     G-->>B: userinfo (sub, email, name)
     B->>D: find user by google_id, hoặc email, hoặc tạo mới (pending)
-    B->>D: create session
-    B-->>C: redirect frontend + set-cookie session
+    B->>D: create access (JWT) + refresh (hash in sessions)
+    B-->>C: redirect frontend + set-cookie access_token, refresh_token
 ```
 
 ## 7. Sequence — Đăng tin và kiểm duyệt

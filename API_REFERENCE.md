@@ -3,7 +3,7 @@
 Tài liệu kỹ thuật chi tiết cho REST API. Base URL: `/api`.
 
 - Định dạng: JSON (UTF-8)
-- Xác thực: server-side session qua HTTP-only cookie (`session`)
+- Xác thực: access token (JWT) + refresh token qua HTTP-only cookie (`access_token`, `refresh_token`)
 - Backend docs tự sinh: `GET /docs` (Swagger UI) và `GET /openapi.json`
 - **Nguồn sự thật khi nghi ngờ:** `GET /openapi.json` (FastAPI tự sinh theo code) — tài liệu này nên được đối chiếu với nó để không lệch.
 
@@ -216,7 +216,7 @@ Tạo tài khoản HR (trạng thái `pending`).
 
 ### POST /api/auth/login
 
-Đăng nhập email/password, tạo session cookie.
+Đăng nhập email/password, tạo access (JWT) + refresh token, đặt cả hai cookie.
 
 **Body:**
 ```json
@@ -226,21 +226,29 @@ Tạo tài khoản HR (trạng thái `pending`).
 }
 ```
 
-**Response 200:** `UserResponse` + set cookie `session` (HttpOnly, 7 ngày)
+**Response 200:** `UserResponse` + set cookie `access_token` (15 phút) + `refresh_token` (7 ngày, HttpOnly)
 
 **Lỗi:** `401` sai email/password.
 
+### POST /api/auth/refresh
+
+Đọc refresh token từ cookie, cấp access token mới và xoay refresh token.
+
+**Response 200:** `{"detail": "Đã làm mới phiên"}` + set cookie `access_token` + `refresh_token` mới.
+
+**Lỗi:** `401` phiên không hợp lệ / hết hạn (`auth.invalid_session` / `auth.session_expired`).
+
 ### GET /api/auth/google/login
 
-Bắt đầu Google OAuth flow (redirect sang Google).
+Bắt đầu Google OAuth flow (redirect sang Google, `302`; trả `501` nếu chưa cấu hình).
 
 ### GET /api/auth/google/callback
 
-Xử lý Google OAuth callback, tạo/link account, set session cookie, redirect về frontend.
+Xử lý Google OAuth callback, tạo/link account, set access + refresh cookie, redirect về frontend.
 
 ### POST /api/auth/logout
 
-Hủy session hiện tại, xóa cookie.
+Thu hồi refresh token và xóa cả hai cookie.
 
 **Response 200:**
 ```json
