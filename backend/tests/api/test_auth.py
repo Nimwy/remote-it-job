@@ -17,6 +17,22 @@ def test_register_success(client):
     assert "password_hash" not in data
 
 
+def test_validation_error_format(client):
+    # S-02: lỗi validation phải về dạng {error:{code,message}}
+    res = client.post("/api/auth/login", json={"email": "bad", "password": ""})
+    assert res.status_code == 422
+    body = res.json()
+    assert body["error"]["code"] == "validation_error"
+    assert body["error"]["message"]
+
+
+def test_router_error_format(client):
+    # S-02: 404/405 cũng về dạng {error:{code,message}}
+    res = client.get("/api/nope")
+    assert res.status_code == 404
+    assert res.json()["error"]["code"] == "http_404"
+
+
 def test_register_duplicate_email(client):
     client.post("/api/auth/register", json=register_payload())
     res = client.post("/api/auth/register", json=register_payload())

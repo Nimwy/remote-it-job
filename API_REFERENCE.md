@@ -31,7 +31,8 @@ Mọi lỗi (APIError, validation, 404...) trả về cùng dạng `{ "error": {
 | 200 | Thành công | — |
 | 201 | Tạo mới thành công | — |
 | 204 | Thành công, không có body | — |
-| 400 | Dữ liệu không hợp lệ / validation | `http_422` / `invalid_input` |
+| 422 | Dữ liệu không hợp lệ / validation | `validation_error` |
+| 400 | Dữ liệu không hợp lệ | `invalid_input` |
 | 401 | Chưa đăng nhập / phiên hết hạn | `not_authenticated` |
 | 403 | Không có quyền | `forbidden` / `require_admin` |
 | 404 | Không tìm thấy | `not_found` |

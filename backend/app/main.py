@@ -2,17 +2,30 @@ import time
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.routes import admin, auth, catalog, hr, jobs
 from app.core.config import get_settings
 from app.core.exceptions import APIError
 from app.core.logging import logger
+from app.schemas.common import ErrorResponse
 
 settings = get_settings()
+
+# Mã lỗi dùng chung khai báo cho mọi endpoint (S-03) — máy đọc được từ spec.
+ERROR_RESPONSES = {
+    status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse, "description": "Chưa đăng nhập / token không hợp lệ"},
+    status.HTTP_403_FORBIDDEN: {"model": ErrorResponse, "description": "Không có quyền truy cập"},
+    status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Không tìm thấy tài nguyên"},
+    status.HTTP_409_CONFLICT: {"model": ErrorResponse, "description": "Xung đột dữ liệu"},
+    status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse, "description": "Dữ liệu không hợp lệ"},
+    status.HTTP_429_TOO_MANY_REQUESTS: {"model": ErrorResponse, "description": "Vượt giới hạn tốc độ"},
+}
 
 
 @asynccontextmanager
@@ -102,18 +115,32 @@ async def api_error_handler(request: Request, exc: APIError):
     )
 
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     detail = exc.detail
     if isinstance(detail, dict) and "code" in detail:
         code, message = detail["code"], detail.get("message", "")
     else:
-        # FastAPI mặc định (validation, 404, ...) — dùng message gốc, code theo status
+        # 404/405 (Starlette), ... — dùng message gốc, code theo status
         code, message = f"http_{exc.status_code}", str(detail)
     logger.warning("HTTP error %s %s -> %s", request.method, request.url.path, code)
     return JSONResponse(
         status_code=exc.status_code,
         content={"error": {"code": code, "message": message}},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_handler(request: Request, exc: RequestValidationError):
+    """Đồng bộ lỗi 422 về dạng {error:{code,message}} (S-02)."""
+    errors = exc.errors()
+    first = errors[0] if errors else {}
+    field = ".".join(str(x) for x in first.get("loc", []) if x not in ("body", "query", "path"))
+    message = f"Dữ liệu không hợp lệ{f' cho trường {field}' if field else ''}"
+    logger.warning("Validation error %s %s -> %s", request.method, request.url.path, message)
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"error": {"code": "validation_error", "message": message}},
     )
 
 
@@ -168,8 +195,8 @@ async def request_logging_middleware(request: Request, call_next):
     return response
 
 
-app.include_router(auth.router, prefix="/api")
-app.include_router(jobs.router, prefix="/api")
-app.include_router(catalog.router, prefix="/api")
-app.include_router(hr.router, prefix="/api")
-app.include_router(admin.router, prefix="/api")
+app.include_router(auth.router, prefix="/api", responses=ERROR_RESPONSES)
+app.include_router(jobs.router, prefix="/api", responses=ERROR_RESPONSES)
+app.include_router(catalog.router, prefix="/api", responses=ERROR_RESPONSES)
+app.include_router(hr.router, prefix="/api", responses=ERROR_RESPONSES)
+app.include_router(admin.router, prefix="/api", responses=ERROR_RESPONSES)

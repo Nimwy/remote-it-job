@@ -12,3 +12,9 @@ class PaginatedResponse[T](BaseModel):
     page_size: int
     total: int
     total_pages: int
+
+
+class ErrorResponse(BaseModel):
+    code: str
+    message: str
+    request_id: str | None = None
