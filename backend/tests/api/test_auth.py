@@ -96,6 +96,22 @@ def test_logout_invalidates_refresh(client):
     assert res.status_code == 401
 
 
+def test_multi_session_devices(client):
+    # L-01: đăng nhập trên thiết bị 2 không đá văng phiên thiết bị 1
+    client.post("/api/auth/register", json=register_payload())
+
+    device1 = client.post("/api/auth/login", json={"email": "hr@example.com", "password": "secret123"})
+    device2 = client.post("/api/auth/login", json={"email": "hr@example.com", "password": "secret123"})
+    assert device1.cookies.get("refresh_token") is not None
+    assert device2.cookies.get("refresh_token") is not None
+
+    # Cả hai refresh token vẫn dùng được (nhiều phiên cùng lúc)
+    r1 = client.post("/api/auth/refresh", cookies=device1.cookies)
+    r2 = client.post("/api/auth/refresh", cookies=device2.cookies)
+    assert r1.status_code == 200
+    assert r2.status_code == 200
+
+
 def test_change_password_wrong_current(client):
     client.post("/api/auth/register", json=register_payload())
     login = client.post("/api/auth/login", json={"email": "hr@example.com", "password": "secret123"})

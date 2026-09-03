@@ -35,7 +35,9 @@ Khi logout:
 - hủy bản ghi refresh token phía server
 - xóa cookie trình duyệt
 
-Phiên phải có thời hạn; refresh token xoay vòng khi dùng và có thể thu hồi (điều này cho phép nhiều phiên/thiết bị cùng lúc).
+Phiên phải có thời hạn; refresh token xoay vòng khi dùng và có thể thu hồi.
+
+**Chính sách nhiều phiên (L-01):** mỗi tài khoản có thể có **nhiều phiên/refresh token cùng lúc** (ví dụ HR trên 2 máy). Đăng nhập mới **không** thu hồi phiên trên thiết bị khác — chỉ dọn các refresh token đã hết hạn (`delete_expired`). Thu hồi riêng lẻ xảy ra khi: logout (xoá refresh token tương ứng) hoặc Admin khoá HR.
 
 **Ghi chú (S-04):** tài liệu API tự sinh (Swagger `/docs`, OpenAPI `/openapi.json`, ReDoc `/redoc`) **bị tắt ở production** (`ENV=production`) để không lộ đặc tả API/credential public.
 
