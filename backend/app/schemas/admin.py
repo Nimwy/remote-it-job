@@ -1,12 +1,16 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.job import CategoryInfo
 
 
 class RejectRequest(BaseModel):
     reason: str = Field(min_length=1)
+
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"reason": "Thiếu mô tả công việc và yêu cầu chi tiết."}]}
+    )
 
 
 class AdminJobResponse(BaseModel):

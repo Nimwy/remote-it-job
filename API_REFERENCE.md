@@ -5,6 +5,7 @@ Tài liệu kỹ thuật chi tiết cho REST API. Base URL: `/api`.
 - Định dạng: JSON (UTF-8)
 - Xác thực: server-side session qua HTTP-only cookie (`session`)
 - Backend docs tự sinh: `GET /docs` (Swagger UI) và `GET /openapi.json`
+- **Nguồn sự thật khi nghi ngờ:** `GET /openapi.json` (FastAPI tự sinh theo code) — tài liệu này nên được đối chiếu với nó để không lệch.
 
 ## 1. Quy ước chung
 

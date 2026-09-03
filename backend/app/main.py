@@ -20,7 +20,28 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Remote IT Job", lifespan=lifespan)
+openapi_tags = [
+    {"name": "auth", "description": "Đăng ký, đăng nhập, phiên và tài khoản."},
+    {"name": "jobs", "description": "Tìm kiếm và xem công khai việc làm cùng lượt xem."},
+    {"name": "catalog", "description": "Danh mục (category) và thẻ (tag) công khai."},
+    {"name": "hr", "description": "Các thao tác dành cho HR: quản lý job, hồ sơ và kênh liên hệ."},
+    {"name": "admin", "description": "Quản trị: duyệt tin/HR, quản lý job, danh mục và tag."},
+]
+
+
+app = FastAPI(
+    title="Remote IT Job",
+    description=(
+        "Website tuyển dụng việc làm IT remote cho thị trường Việt Nam. "
+        "Tài nguyên xác thực bằng cookie phiên phía server (HTTP-only cookie `session`). "
+        "- Xem docs tại `/docs`, đặc tả OpenAPI tại `/openapi.json`.\n"
+        "Để thử các endpoint cần đăng nhập (HR/Admin), đăng nhập trước qua `/api/auth/login` "
+        "trong cùng phiên (browser/cookie) — thao tác `Try it out` sẽ gửi kèm cookie."
+    ),
+    version="0.1.0",
+    openapi_tags=openapi_tags,
+    lifespan=lifespan,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +53,44 @@ app.add_middleware(
 
 # Cần cho Google OAuth state; dùng SECRET_KEY (B-12)
 app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
+
+_default_openapi = app.openapi
+
+
+def custom_openapi():
+    """Mở rộng Schema OpenAPI: khai báo cách xác thực bằng cookie phiên.
+
+    Auth thực tế dùng HTTP-only cookie `session` (xem app/api/dependencies.py),
+    nên ta mô tả một security scheme kiểu apiKey (in cookie) và đánh dấu các
+    nhóm cần đăng nhập (hr, admin) để Swagger thể hiện rõ quyền truy cập.
+    """
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    schema = _default_openapi()
+    schema.setdefault("components", {})
+    schema["components"].setdefault("securitySchemes", {})
+    schema["components"]["securitySchemes"]["SessionAuth"] = {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": settings.session_cookie_name,
+        "description": (
+            "Cookie phiên đăng nhập phía server. Đăng nhập qua /api/auth/login trong "
+            "cùng phiên để mở quyền."
+        ),
+    }
+
+    for path_item in schema.get("paths", {}).values():
+        for operation in path_item.values():
+            tags = operation.get("tags", [])
+            if any(tag in {"hr", "admin"} for tag in tags):
+                operation["security"] = [{"SessionAuth": []}]
+
+    app.openapi_schema = schema
+    return schema
+
+
+app.openapi = custom_openapi
 
 
 @app.exception_handler(APIError)

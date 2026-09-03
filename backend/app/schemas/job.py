@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 JobTypeStr = Literal["fulltime", "parttime", "freelance", "contract"]
 
@@ -50,15 +50,35 @@ class JobCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     category_id: int
     job_type: JobTypeStr
+    description: str = Field(min_length=1)
+    requirements: str = Field(min_length=1)
     location: str | None = None
     timezone: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None
     currency: str | None = None
-    description: str = Field(min_length=1)
-    requirements: str = Field(min_length=1)
     expires_at: datetime | None = None
     tag_ids: list[int] = []
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "title": "React Developer",
+                    "category_id": 2,
+                    "job_type": "fulltime",
+                    "description": "Phát triển giao diện người dùng...",
+                    "requirements": "2+ năm React, TypeScript",
+                    "location": "Việt Nam",
+                    "timezone": "UTC+7",
+                    "salary_min": 1800,
+                    "salary_max": 3000,
+                    "currency": "USD",
+                    "tag_ids": [1, 2],
+                }
+            ]
+        }
+    )
 
 
 class JobUpdate(BaseModel):

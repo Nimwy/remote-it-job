@@ -34,6 +34,11 @@ google_limiter = RateLimiter(10, 300)
     "/register",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
+    summary="Đăng ký tài khoản HR",
+    description=(
+        "Tạo tài khoản HR với trạng thái `pending` — cần Admin duyệt trước khi dùng. "
+        "Trả về `409` nếu email đã tồn tại."
+    ),
     dependencies=[Depends(rate_limit_dependency(register_limiter))],
 )
 def register(data: UserCreate, db: Session = Depends(get_db)):
@@ -41,7 +46,13 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
     return user
 
 
-@router.post("/login", response_model=UserResponse, dependencies=[Depends(rate_limit_dependency(login_limiter))])
+@router.post(
+    "/login",
+    response_model=UserResponse,
+    summary="Đăng nhập bằng email/password",
+    description="Xác thực bằng email + password, tạo phiên phía server và đặt cookie HTTP-only `session`.",
+    dependencies=[Depends(rate_limit_dependency(login_limiter))],
+)
 def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     user = authenticate_user(db, data.email, data.password)
     raw_token = create_session(db, user)
@@ -50,14 +61,23 @@ def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     return user
 
 
-@router.get("/google/login", dependencies=[Depends(rate_limit_dependency(google_limiter))])
+@router.get(
+    "/google/login",
+    summary="Bắt đầu đăng nhập Google",
+    description="Chuyển hướng tới Google OAuth. Trả về `501` nếu `GOOGLE_CLIENT_ID` chưa được cấu hình.",
+    dependencies=[Depends(rate_limit_dependency(google_limiter))],
+)
 async def google_login(request: Request):
     if not settings.google_client_id:
         raise APIError(status.HTTP_501_NOT_IMPLEMENTED, "auth.google_not_configured", "Google OAuth chưa được cấu hình")
     return await oauth.google.authorize_redirect(request, settings.google_redirect_uri)
 
 
-@router.get("/google/callback")
+@router.get(
+    "/google/callback",
+    summary="Callback đăng nhập Google",
+    description="Nhận code từ Google, trao đổi lấy access token, tạo phiên và redirect về `FRONTEND_URL`.",
+)
 async def google_callback(request: Request, response: Response, db: Session = Depends(get_db)):
     try:
         token = await oauth.google.authorize_access_token(request)
@@ -83,7 +103,7 @@ async def google_callback(request: Request, response: Response, db: Session = De
     return RedirectResponse(url=settings.frontend_url)
 
 
-@router.post("/logout")
+@router.post("/logout", summary="Đăng xuất", description="Thu hồi phiên hiện tại và xoá cookie `session`.")
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     token = request.cookies.get(settings.session_cookie_name)
     if token:
@@ -93,12 +113,22 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     return {"detail": "Đã đăng xuất"}
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Thông tin người dùng hiện tại",
+    description="Trả về người dùng của phiên cookie `session`. Yêu cầu đăng nhập.",
+)
 def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/change-password", dependencies=[Depends(rate_limit_dependency(password_limiter))])
+@router.post(
+    "/change-password",
+    summary="Đổi mật khẩu",
+    description="Đổi mật khẩu bằng mật khẩu hiện tại. Yêu cầu đăng nhập; bị giới hạn tốc độ.",
+    dependencies=[Depends(rate_limit_dependency(password_limiter))],
+)
 def change_password_endpoint(
     data: ChangePasswordRequest,
     current_user: User = Depends(get_current_user),
