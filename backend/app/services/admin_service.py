@@ -9,33 +9,43 @@ from app.models.job import Job, JobStatus
 from app.models.tag import Tag
 from app.models.user import User, UserStatus
 from app.repositories import category_repository, job_repository, job_view_repository, tag_repository, user_repository
-from app.schemas.admin import CategoryCreate, CategoryUpdate, TagCreate, TagUpdate
+from app.schemas.admin import (
+    AdminJobResponse,
+    AdminUserResponse,
+    CategoryCreate,
+    CategoryResponse,
+    CategoryUpdate,
+    TagCreate,
+    TagResponse,
+    TagUpdate,
+)
+from app.schemas.job import CategoryInfo
 
 
-def serialize_admin_job(job: Job) -> dict:
-    return {
-        "id": job.id,
-        "title": job.title,
-        "slug": job.slug,
-        "company_name": job.hr.company_name or job.hr.name,
-        "hr_id": job.hr_id,
-        "category": {"id": job.category.id, "name": job.category.name, "slug": job.category.slug},
-        "job_type": job.job_type.value,
-        "location": job.location,
-        "timezone": job.timezone,
-        "salary_min": float(job.salary_min) if job.salary_min is not None else None,
-        "salary_max": float(job.salary_max) if job.salary_max is not None else None,
-        "currency": job.currency,
-        "description": job.description,
-        "requirements": job.requirements,
-        "status": job.status.value,
-        "rejection_reason": job.rejection_reason,
-        "views": job.views,
-        "expires_at": job.expires_at,
-        "tags": [jt.tag.name for jt in job.job_tags],
-        "created_at": job.created_at,
-        "updated_at": job.updated_at,
-    }
+def serialize_admin_job(job: Job) -> AdminJobResponse:
+    return AdminJobResponse(
+        id=job.id,
+        title=job.title,
+        slug=job.slug,
+        company_name=job.hr.company_name or job.hr.name,
+        hr_id=job.hr_id,
+        category=CategoryInfo(id=job.category.id, name=job.category.name, slug=job.category.slug),
+        job_type=job.job_type.value,
+        location=job.location,
+        timezone=job.timezone,
+        salary_min=float(job.salary_min) if job.salary_min is not None else None,
+        salary_max=float(job.salary_max) if job.salary_max is not None else None,
+        currency=job.currency,
+        description=job.description,
+        requirements=job.requirements,
+        status=job.status.value,
+        rejection_reason=job.rejection_reason,
+        views=job.views,
+        expires_at=job.expires_at,
+        tags=[jt.tag.name for jt in job.job_tags],
+        created_at=job.created_at,
+        updated_at=job.updated_at,
+    )
 
 
 def list_jobs(
@@ -114,16 +124,16 @@ def delete_job(db: Session, job_id: int) -> None:
     db.commit()
 
 
-def serialize_admin_user(user: User, job_count: int) -> dict:
-    return {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "company_name": user.company_name,
-        "status": user.status.value,
-        "created_at": user.created_at,
-        "job_count": job_count,
-    }
+def serialize_admin_user(user: User, job_count: int) -> AdminUserResponse:
+    return AdminUserResponse(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        company_name=user.company_name,
+        status=user.status.value,
+        created_at=user.created_at,
+        job_count=job_count,
+    )
 
 
 def list_users(db: Session, search: str | None, status_filter: str | None, page: int, page_size: int):
@@ -143,7 +153,7 @@ def get_hr_user(db: Session, user_id: int) -> User:
     return user
 
 
-def serialize_hr_user(db: Session, user: User) -> dict:
+def serialize_hr_user(db: Session, user: User) -> AdminUserResponse:
     return serialize_admin_user(user, job_repository.count_by_hr(db, user.id))
 
 
@@ -180,14 +190,14 @@ def unblock_user(db: Session, user_id: int) -> User:
     return user
 
 
-def serialize_category(category: Category) -> dict:
-    return {
-        "id": category.id,
-        "name": category.name,
-        "slug": category.slug,
-        "sort_order": category.sort_order,
-        "is_active": category.is_active,
-    }
+def serialize_category(category: Category) -> CategoryResponse:
+    return CategoryResponse(
+        id=category.id,
+        name=category.name,
+        slug=category.slug,
+        sort_order=category.sort_order,
+        is_active=category.is_active,
+    )
 
 
 def list_categories(db: Session):
@@ -234,8 +244,8 @@ def deactivate_category(db: Session, category_id: int) -> Category:
     return category
 
 
-def serialize_tag(tag: Tag) -> dict:
-    return {"id": tag.id, "name": tag.name, "slug": tag.slug, "is_active": tag.is_active}
+def serialize_tag(tag: Tag) -> TagResponse:
+    return TagResponse(id=tag.id, name=tag.name, slug=tag.slug, is_active=tag.is_active)
 
 
 def list_tags(db: Session):

@@ -9,8 +9,8 @@ from app.models.job import Job, JobStatus, JobType
 from app.models.job_tag import JobTag
 from app.models.user import User
 from app.repositories import category_repository, contact_repository, job_repository, tag_repository
-from app.schemas.hr import HrProfileUpdate
-from app.schemas.job import JobCreate, JobUpdate
+from app.schemas.hr import HrProfileResponse, HrProfileUpdate, HrStatsResponse
+from app.schemas.job import CategoryInfo, ContactInfo, HrJobResponse, JobCreate, JobUpdate
 
 SUBSTANTIVE_FIELDS = {
     "title",
@@ -25,16 +25,16 @@ SUBSTANTIVE_FIELDS = {
 }
 
 
-def serialize_hr_profile(user: User) -> dict:
-    return {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "company_name": user.company_name,
-        "avatar": user.avatar,
-        "status": user.status.value,
-        "contacts": [{"channel": c.channel.value, "value": c.value} for c in user.contacts],
-    }
+def serialize_hr_profile(user: User) -> HrProfileResponse:
+    return HrProfileResponse(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        company_name=user.company_name,
+        avatar=user.avatar,
+        status=user.status.value,
+        contacts=[ContactInfo(channel=c.channel.value, value=c.value) for c in user.contacts],
+    )
 
 
 def update_profile(db: Session, user: User, data: HrProfileUpdate) -> User:
@@ -58,35 +58,35 @@ def update_profile(db: Session, user: User, data: HrProfileUpdate) -> User:
     return user
 
 
-def serialize_hr_job(job: Job) -> dict:
-    return {
-        "id": job.id,
-        "title": job.title,
-        "slug": job.slug,
-        "category": {"id": job.category.id, "name": job.category.name, "slug": job.category.slug},
-        "job_type": job.job_type.value,
-        "location": job.location,
-        "timezone": job.timezone,
-        "salary_min": float(job.salary_min) if job.salary_min is not None else None,
-        "salary_max": float(job.salary_max) if job.salary_max is not None else None,
-        "currency": job.currency,
-        "description": job.description,
-        "requirements": job.requirements,
-        "status": job.status.value,
-        "rejection_reason": job.rejection_reason,
-        "views": job.views,
-        "expires_at": job.expires_at,
-        "tags": [jt.tag.name for jt in job.job_tags],
-        "created_at": job.created_at,
-        "updated_at": job.updated_at,
-    }
+def serialize_hr_job(job: Job) -> HrJobResponse:
+    return HrJobResponse(
+        id=job.id,
+        title=job.title,
+        slug=job.slug,
+        category=CategoryInfo(id=job.category.id, name=job.category.name, slug=job.category.slug),
+        job_type=job.job_type.value,
+        location=job.location,
+        timezone=job.timezone,
+        salary_min=float(job.salary_min) if job.salary_min is not None else None,
+        salary_max=float(job.salary_max) if job.salary_max is not None else None,
+        currency=job.currency,
+        description=job.description,
+        requirements=job.requirements,
+        status=job.status.value,
+        rejection_reason=job.rejection_reason,
+        views=job.views,
+        expires_at=job.expires_at,
+        tags=[jt.tag.name for jt in job.job_tags],
+        created_at=job.created_at,
+        updated_at=job.updated_at,
+    )
 
 
 def list_hr_jobs(db: Session, user: User, status_filter: str | None, page: int, page_size: int):
     return job_repository.list_by_hr(db, user.id, status_filter, page, page_size)
 
 
-def job_stats(db: Session, user: User) -> dict:
+def job_stats(db: Session, user: User) -> HrStatsResponse:
     jobs = db.query(Job).filter(Job.hr_id == user.id).all()
     counts = {
         "total": len(jobs),
@@ -102,7 +102,7 @@ def job_stats(db: Session, user: User) -> dict:
         status = job.status.value
         if status in counts:
             counts[status] += 1
-    return counts
+    return HrStatsResponse(**counts)
 
 
 def _validate_category(db: Session, category_id: int) -> None:
