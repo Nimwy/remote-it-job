@@ -77,6 +77,26 @@ app.add_middleware(
 app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
 
+@app.middleware("http")
+async def origin_verification_middleware(request: Request, call_next):
+    """L-02: xác minh Origin/Referer cho request thay đổi trạng thái ở production.
+
+    Không coi CORS là CSRF protection. Chỉ kiểm tra khi môi trường production;
+    nếu có Origin và không thuộc allowlist -> 403. Bỏ qua khi không có Origin
+    (cli/tool nội bộ) để không chặn nhầm.
+    """
+    if _is_production and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+        origin = request.headers.get("origin") or request.headers.get("referer")
+        if origin:
+            allowed = set(settings.cors_origins) | {settings.frontend_url}
+            if not origin.rstrip("/").startswith(tuple(allowed)):
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={"error": {"code": "csrf_origin_blocked", "message": "Nguồn gốc request không hợp lệ"}},
+                )
+    return await call_next(request)
+
+
 @app.exception_handler(APIError)
 async def api_error_handler(request: Request, exc: APIError):
     logger.warning("API error %s %s -> %s", request.method, request.url.path, exc.code)

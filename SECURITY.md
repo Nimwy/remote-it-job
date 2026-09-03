@@ -75,12 +75,10 @@ Google authentication không bypass HR approval.
 
 Vì authentication sử dụng cookie, các request thay đổi trạng thái cần CSRF protection phù hợp với kiến trúc đã chọn.
 
-Tối thiểu:
-- sử dụng SameSite policy phù hợp
-- triển khai CSRF token protection cho unsafe cross-site requests khi cần
-- xác minh Origin/Referer khi thích hợp trong production
-
-Không coi CORS là CSRF protection.
+Đã triển khai (L-02):
+- sử dụng SameSite policy phù hợp (`SameSite=lax`)
+- **xác minh Origin/Referer** cho request unsafe (POST/PUT/PATCH/DELETE) ở **production** — nếu có Origin/Referer không thuộc allowlist (`CORS_ORIGINS`/`FRONTEND_URL`) thì trả `403`. (Bỏ qua khi không có Origin để không chặn CLI/tool nội bộ.)
+- không coi CORS là CSRF protection.
 
 ## 7. CORS
 
