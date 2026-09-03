@@ -10,6 +10,7 @@ from app.core.logging import logger
 from app.core.oauth import oauth
 from app.core.rate_limit import RateLimiter, rate_limit_dependency
 from app.models.user import User
+from app.schemas.common import ErrorResponse, MessageResponse
 from app.schemas.user import ChangePasswordRequest, UserCreate, UserLogin, UserResponse
 from app.services.auth_service import (
     authenticate_user,
@@ -64,6 +65,11 @@ def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
 
 @router.get(
     "/google/login",
+    status_code=status.HTTP_302_FOUND,
+    response_class=RedirectResponse,
+    responses={
+        status.HTTP_501_NOT_IMPLEMENTED: {"model": ErrorResponse, "description": "Google OAuth chưa được cấu hình"}
+    },
     summary="Bắt đầu đăng nhập Google",
     description="Chuyển hướng tới Google OAuth. Trả về `501` nếu `GOOGLE_CLIENT_ID` chưa được cấu hình.",
     dependencies=[Depends(rate_limit_dependency(google_limiter))],
@@ -76,6 +82,8 @@ async def google_login(request: Request):
 
 @router.get(
     "/google/callback",
+    status_code=status.HTTP_302_FOUND,
+    response_class=RedirectResponse,
     summary="Callback đăng nhập Google",
     description="Nhận code từ Google, trao đổi lấy access token, tạo phiên và redirect về `FRONTEND_URL`.",
 )
@@ -106,6 +114,7 @@ async def google_callback(request: Request, response: Response, db: Session = De
 
 @router.post(
     "/refresh",
+    response_model=MessageResponse,
     summary="Làm mới phiên",
     description=(
         "Đọc refresh token từ cookie, cấp access token mới và xoay refresh token. "
@@ -122,7 +131,12 @@ def refresh(response: Response, request: Request, db: Session = Depends(get_db))
     return {"detail": "Đã làm mới phiên"}
 
 
-@router.post("/logout", summary="Đăng xuất", description="Thu hồi phiên hiện tại và xoá cả hai cookie token.")
+@router.post(
+    "/logout",
+    response_model=MessageResponse,
+    summary="Đăng xuất",
+    description="Thu hồi phiên hiện tại và xoá cả hai cookie token.",
+)
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     token = request.cookies.get(settings.refresh_cookie_name)
     if token:
@@ -136,7 +150,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     "/me",
     response_model=UserResponse,
     summary="Thông tin người dùng hiện tại",
-    description="Trả về người dùng của phiên cookie `session`. Yêu cầu đăng nhập.",
+    description="Trả về người dùng của access token (cookie `access_token`). Yêu cầu đăng nhập.",
 )
 def me(current_user: User = Depends(get_current_user)):
     return current_user
@@ -144,6 +158,7 @@ def me(current_user: User = Depends(get_current_user)):
 
 @router.post(
     "/change-password",
+    response_model=MessageResponse,
     summary="Đổi mật khẩu",
     description="Đổi mật khẩu bằng mật khẩu hiện tại. Yêu cầu đăng nhập; bị giới hạn tốc độ.",
     dependencies=[Depends(rate_limit_dependency(password_limiter))],

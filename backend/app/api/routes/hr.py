@@ -5,7 +5,7 @@ from app.api.dependencies import get_db, require_active_hr
 from app.core.config import get_settings
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.schemas.hr import HrProfileResponse, HrProfileUpdate
+from app.schemas.hr import HrProfileResponse, HrProfileUpdate, HrStatsResponse
 from app.schemas.job import HrJobResponse, JobCreate, JobUpdate
 from app.services import hr_service
 
@@ -64,6 +64,7 @@ def list_jobs(
 
 @router.get(
     "/jobs/stats",
+    response_model=HrStatsResponse,
     summary="Thống kê job của HR",
     description="Số lượng job theo trạng thái (tổng, đang mở, chờ duyệt, đã đóng) của HR hiện tại.",
 )

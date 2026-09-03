@@ -27,3 +27,14 @@ class HrProfileResponse(BaseModel):
     avatar: str | None
     status: str
     contacts: list[ContactInfo]
+
+
+class HrStatsResponse(BaseModel):
+    total: int
+    open: int
+    pending: int
+    closed: int
+    rejected: int
+    draft: int
+    expired: int
+    hidden: int
