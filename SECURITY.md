@@ -23,7 +23,7 @@ Yêu cầu password phải hợp lý và được ghi nhận trong validation sc
 
 ## 3. Session
 
-Sử dụng server-side session lưu trong PostgreSQL.
+Xác thực bằng **access token (JWT, 15 phút)** + **refresh token (opaque, lưu hash SHA-256 trong `sessions`)** qua cookie HTTP-only.
 
 Cookie phải:
 - HttpOnly
@@ -32,10 +32,12 @@ Cookie phải:
 - giới hạn trong domain/path ứng dụng
 
 Khi logout:
-- hủy session phía server
+- hủy bản ghi refresh token phía server
 - xóa cookie trình duyệt
 
-Session phải có thời hạn.
+Phiên phải có thời hạn; refresh token xoay vòng khi dùng và có thể thu hồi (điều này cho phép nhiều phiên/thiết bị cùng lúc).
+
+**Ghi chú (S-04):** tài liệu API tự sinh (Swagger `/docs`, OpenAPI `/openapi.json`, ReDoc `/redoc`) **bị tắt ở production** (`ENV=production`) để không lộ đặc tả API/credential public.
 
 ## 4. Authorization
 

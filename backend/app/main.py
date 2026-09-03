@@ -17,6 +17,12 @@ from app.schemas.common import ErrorResponse
 
 settings = get_settings()
 
+# S-04: ẩn tài liệu API (Swagger/openapi/redoc) ở production để không phơi spec + credential.
+_is_production = settings.env.strip().lower() == "production"
+_docs_url = None if _is_production else "/docs"
+_openapi_url = None if _is_production else "/openapi.json"
+_redoc_url = None if _is_production else "/redoc"
+
 # Mã lỗi dùng chung khai báo cho mọi endpoint (S-03) — máy đọc được từ spec.
 ERROR_RESPONSES = {
     status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse, "description": "Chưa đăng nhập / token không hợp lệ"},
@@ -46,14 +52,17 @@ app = FastAPI(
     title="Remote IT Job",
     description=(
         "Website tuyển dụng việc làm IT remote cho thị trường Việt Nam. "
-        "Tài nguyên xác thực bằng cookie phiên phía server (HTTP-only cookie `session`). "
-        "- Xem docs tại `/docs`, đặc tả OpenAPI tại `/openapi.json`.\n"
+        "Xác thực bằng access token (JWT) + refresh token dạng cookie HTTP-only. "
+        "Xem docs tại `/docs`, đặc tả OpenAPI tại `/openapi.json`.\n"
         "Để thử các endpoint cần đăng nhập (HR/Admin), đăng nhập trước qua `/api/auth/login` "
         "trong cùng phiên (browser/cookie) — thao tác `Try it out` sẽ gửi kèm cookie."
     ),
     version="0.1.0",
     openapi_tags=openapi_tags,
     lifespan=lifespan,
+    docs_url=_docs_url,
+    openapi_url=_openapi_url,
+    redoc_url=_redoc_url,
 )
 
 app.add_middleware(

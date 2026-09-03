@@ -15,6 +15,7 @@
 | `COOKIE_SECURE` | `true` | Yêu cầu bật (HTTPS) ở production; tắt khi dev qua HTTP. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Bắt buộc để bật Google OAuth; thiếu thì endpoint trả 501. |
 | `RATE_LIMIT_ENABLED` | `true` | Có thể tắt (vd khi test). |
+| `ENV` | `development` | `production` sẽ ẩn Swagger (`/docs`), OpenAPI (`/openapi.json`) và ReDoc (`/redoc`) — tránh phơi spec/credential công khai. |
 
 ### Frontend (`frontend/`)
 - `BACKEND_URL` — mặc định `http://localhost:8000`. Khi deploy đặt về URL backend production (dùng chung cho SSR và rewrite `/api`).
