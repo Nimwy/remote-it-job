@@ -23,7 +23,7 @@ Yêu cầu password phải hợp lý và được ghi nhận trong validation sc
 
 ## 3. Session
 
-Sử dụng server-side session lưu trong PostgreSQL.
+Xác thực bằng **access token (JWT, 15 phút)** + **refresh token (opaque, lưu hash SHA-256 trong `sessions`)** qua cookie HTTP-only.
 
 Cookie phải:
 - HttpOnly
@@ -32,10 +32,14 @@ Cookie phải:
 - giới hạn trong domain/path ứng dụng
 
 Khi logout:
-- hủy session phía server
+- hủy bản ghi refresh token phía server
 - xóa cookie trình duyệt
 
-Session phải có thời hạn.
+Phiên phải có thời hạn; refresh token xoay vòng khi dùng và có thể thu hồi.
+
+**Chính sách nhiều phiên (L-01):** mỗi tài khoản có thể có **nhiều phiên/refresh token cùng lúc** (ví dụ HR trên 2 máy). Đăng nhập mới **không** thu hồi phiên trên thiết bị khác — chỉ dọn các refresh token đã hết hạn (`delete_expired`). Thu hồi riêng lẻ xảy ra khi: logout (xoá refresh token tương ứng) hoặc Admin khoá HR.
+
+**Ghi chú (S-04):** tài liệu API tự sinh (Swagger `/docs`, OpenAPI `/openapi.json`, ReDoc `/redoc`) **bị tắt ở production** (`ENV=production`) để không lộ đặc tả API/credential public.
 
 ## 4. Authorization
 
@@ -71,12 +75,10 @@ Google authentication không bypass HR approval.
 
 Vì authentication sử dụng cookie, các request thay đổi trạng thái cần CSRF protection phù hợp với kiến trúc đã chọn.
 
-Tối thiểu:
-- sử dụng SameSite policy phù hợp
-- triển khai CSRF token protection cho unsafe cross-site requests khi cần
-- xác minh Origin/Referer khi thích hợp trong production
-
-Không coi CORS là CSRF protection.
+Đã triển khai (L-02):
+- sử dụng SameSite policy phù hợp (`SameSite=lax`)
+- **xác minh Origin/Referer** cho request unsafe (POST/PUT/PATCH/DELETE) ở **production** — nếu có Origin/Referer không thuộc allowlist (`CORS_ORIGINS`/`FRONTEND_URL`) thì trả `403`. (Bỏ qua khi không có Origin để không chặn CLI/tool nội bộ.)
+- không coi CORS là CSRF protection.
 
 ## 7. CORS
 

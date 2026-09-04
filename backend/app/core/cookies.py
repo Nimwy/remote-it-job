@@ -8,11 +8,19 @@ if TYPE_CHECKING:
 settings = get_settings()
 
 
-def set_session_cookie(response: "Response", token: str) -> None:
-    """Đặt cookie session HTTP-only; Secure bật khi production (cookie_secure)."""
+def set_auth_cookies(response: "Response", access_token: str, refresh_token: str) -> None:
+    """Đặt cookie HTTP-only cho access + refresh token; Secure bật khi production."""
     response.set_cookie(
-        key=settings.session_cookie_name,
-        value=token,
+        key=settings.access_cookie_name,
+        value=access_token,
+        max_age=settings.access_token_ttl_seconds,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite="lax",
+    )
+    response.set_cookie(
+        key=settings.refresh_cookie_name,
+        value=refresh_token,
         max_age=settings.session_max_age_seconds,
         httponly=True,
         secure=settings.cookie_secure,
@@ -20,5 +28,6 @@ def set_session_cookie(response: "Response", token: str) -> None:
     )
 
 
-def clear_session_cookie(response: "Response") -> None:
-    response.delete_cookie(settings.session_cookie_name)
+def clear_auth_cookies(response: "Response") -> None:
+    response.delete_cookie(settings.access_cookie_name)
+    response.delete_cookie(settings.refresh_cookie_name)

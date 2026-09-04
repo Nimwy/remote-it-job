@@ -11,9 +11,7 @@ import {
   useDeactivateTag,
 } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/Button";
-
-const inputClass =
-  "w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-md focus:border-primary focus:outline-none";
+import { Input } from "@/components/ui/Input";
 
 export function AdminCatalog() {
   const t = useTranslations("admin");
@@ -35,11 +33,10 @@ export function AdminCatalog() {
         <section>
           <h2 className="mb-4 font-display text-headline-md">{t("categories")}</h2>
           <div className="mb-4 flex gap-2">
-            <input
+            <Input
               value={categoryName}
               onChange={(e) => setCategoryName(e.target.value)}
               placeholder={t("newCategory")}
-              className={inputClass}
             />
             <Button
               onClick={() => {
@@ -80,7 +77,6 @@ export function AdminCatalog() {
               value={tagName}
               onChange={(e) => setTagName(e.target.value)}
               placeholder={t("newTag")}
-              className={inputClass}
             />
             <Button
               onClick={() => {

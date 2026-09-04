@@ -15,7 +15,7 @@ from app.schemas.admin import (
     TagResponse,
     TagUpdate,
 )
-from app.schemas.common import PaginatedResponse
+from app.schemas.common import PaginatedResponse, paginated
 from app.services import admin_service
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -42,13 +42,7 @@ def list_jobs(
     jobs, total, total_pages = admin_service.list_jobs(
         db, status_filter, q, hr_id, category_id, page, page_size
     )
-    return {
-        "items": [admin_service.serialize_admin_job(job) for job in jobs],
-        "page": page,
-        "page_size": page_size,
-        "total": total,
-        "total_pages": total_pages,
-    }
+    return paginated([admin_service.serialize_admin_job(job) for job in jobs], page, page_size, total, total_pages)
 
 
 @router.get(
@@ -64,13 +58,7 @@ def list_pending_jobs(
     _: User = Depends(require_admin),
 ):
     jobs, total, total_pages = admin_service.list_pending_jobs(db, page, page_size)
-    return {
-        "items": [admin_service.serialize_admin_job(job) for job in jobs],
-        "page": page,
-        "page_size": page_size,
-        "total": total,
-        "total_pages": total_pages,
-    }
+    return paginated([admin_service.serialize_admin_job(job) for job in jobs], page, page_size, total, total_pages)
 
 
 @router.post(
@@ -115,7 +103,7 @@ def hide_job(job_id: int, db: Session = Depends(get_db), _: User = Depends(requi
     "/jobs/{job_id}/unhide",
     response_model=AdminJobResponse,
     summary="Bỏ ẩn job",
-    description="Đưa job từ `hidden` về `approved` để hiển thị lại. Yêu cầu Admin.",
+    description="Đưa job từ `hidden` về `approved` để hiển thị lại. Chỉ áp dụng cho job đang `hidden`. Yêu cầu Admin.",
 )
 def unhide_job(job_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     job = admin_service.unhide_job(db, job_id)
@@ -147,13 +135,7 @@ def list_users(
     _: User = Depends(require_admin),
 ):
     items, total, total_pages = admin_service.list_users(db, search, status_filter, page, page_size)
-    return {
-        "items": items,
-        "page": page,
-        "page_size": page_size,
-        "total": total,
-        "total_pages": total_pages,
-    }
+    return paginated(items, page, page_size, total, total_pages)
 
 
 @router.post(

@@ -58,3 +58,15 @@ def test_admin_service_category_and_tag(db):
 
     deactivated_tag = admin_service.deactivate_tag(db, tag.id)
     assert deactivated_tag.is_active is False
+
+
+def test_admin_category_tag_slug_unique_and_fallback(db):
+    # A-06: tên khác nhau nhưng slug trùng -> tự thêm hậu tố, không 409
+    tag1 = admin_service.create_tag(db, TagCreate(name="C++"))
+    tag2 = admin_service.create_tag(db, TagCreate(name="C#"))
+    assert tag1.slug == "c"
+    assert tag2.slug == "c-2"
+
+    # tên toàn ký tự không Latin -> fallback, không tạo slug rỗng
+    category = admin_service.create_category(db, CategoryCreate(name="###"))
+    assert category.slug == "muc"

@@ -7,6 +7,7 @@ from app.core.exceptions import APIError
 from app.models.job import Job, JobType
 from app.models.job_view import JobView
 from app.repositories import job_repository, job_view_repository
+from app.schemas.job import CategoryInfo, ContactInfo, JobDetailResponse, JobListItem
 
 JOB_TYPES = [t.value for t in JobType]
 
@@ -39,23 +40,27 @@ def search_jobs(
     )
 
 
-def serialize_job_list_item(job: Job) -> dict:
-    return {
-        "id": job.id,
-        "title": job.title,
-        "slug": job.slug,
-        "company_name": job.hr.company_name or job.hr.name,
-        "category": {"id": job.category.id, "name": job.category.name, "slug": job.category.slug},
-        "job_type": job.job_type.value,
-        "location": job.location,
-        "timezone": job.timezone,
-        "salary_min": float(job.salary_min) if job.salary_min is not None else None,
-        "salary_max": float(job.salary_max) if job.salary_max is not None else None,
-        "currency": job.currency,
-        "tags": [jt.tag.name for jt in job.job_tags],
-        "tag_slugs": [jt.tag.slug for jt in job.job_tags],
-        "created_at": job.created_at,
-    }
+def _category_info(job: Job) -> CategoryInfo:
+    return CategoryInfo(id=job.category.id, name=job.category.name, slug=job.category.slug)
+
+
+def serialize_job_list_item(job: Job) -> JobListItem:
+    return JobListItem(
+        id=job.id,
+        title=job.title,
+        slug=job.slug,
+        company_name=job.hr.company_name or job.hr.name,
+        category=_category_info(job),
+        job_type=job.job_type.value,
+        location=job.location,
+        timezone=job.timezone,
+        salary_min=float(job.salary_min) if job.salary_min is not None else None,
+        salary_max=float(job.salary_max) if job.salary_max is not None else None,
+        currency=job.currency,
+        tags=[jt.tag.name for jt in job.job_tags],
+        tag_slugs=[jt.tag.slug for jt in job.job_tags],
+        created_at=job.created_at,
+    )
 
 
 def get_public_job(db: Session, job_id: int) -> Job:
@@ -65,14 +70,16 @@ def get_public_job(db: Session, job_id: int) -> Job:
     return job
 
 
-def serialize_job_detail(job: Job) -> dict:
+def serialize_job_detail(job: Job) -> JobDetailResponse:
     item = serialize_job_list_item(job)
-    item["description"] = job.description
-    item["requirements"] = job.requirements
-    item["views"] = job.views
-    item["expires_at"] = job.expires_at
-    item["contacts"] = [{"channel": c.channel.value, "value": c.value} for c in job.hr.contacts]
-    return item
+    return JobDetailResponse(
+        **item.model_dump(),
+        description=job.description,
+        requirements=job.requirements,
+        views=job.views,
+        expires_at=job.expires_at,
+        contacts=[ContactInfo(channel=c.channel.value, value=c.value) for c in job.hr.contacts],
+    )
 
 
 def record_view(db: Session, job: Job, visitor_key: str) -> None:

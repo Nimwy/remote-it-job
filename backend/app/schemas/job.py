@@ -95,6 +95,18 @@ class JobUpdate(BaseModel):
     expires_at: datetime | None = None
     tag_ids: list[int] | None = None
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "title": "React Developer (cập nhật)",
+                    "salary_min": 2000,
+                    "salary_max": 3500,
+                }
+            ]
+        }
+    )
+
 
 class HrJobResponse(BaseModel):
     id: int

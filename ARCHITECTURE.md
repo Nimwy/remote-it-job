@@ -140,25 +140,24 @@ Google OAuth không tự động biến user thành active HR.
 
 ## 5. Session
 
-Server-side session.
+Xác thực bằng **access token (JWT, 15 phút, HS256)** + **refresh token (opaque, lưu hash SHA-256)** qua cookie HTTP-only.
 
-Browser nhận session cookie.
-Session record nằm trong PostgreSQL.
+Browser nhận access + refresh cookie. Refresh token record nằm trong bảng `sessions` (PostgreSQL).
 
 Cookie production:
 - HttpOnly
 - Secure
 - SameSite được cấu hình phù hợp
 
-Không dùng JWT làm authentication chính của MVP.
+JWT access token dùng làm authentication chính (Q-01); refresh token opaque giữ khả năng thu hồi và hỗ trợ nhiều phiên/thiết bị.
 
 Session tối thiểu cần:
-- session id/token identifier
+- token identifier (refresh token hash)
 - user id
 - created_at
 - expires_at
 
-Không bắt buộc `updated_at` khi session không dùng sliding expiration.
+Bổ sung index cho `user_id`, `expires_at` (migration 0009); refresh token xoay vòng khi dùng.
 
 ## 6. Authorization
 

@@ -12,7 +12,12 @@ class Settings(BaseSettings):
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
     frontend_url: str = "http://localhost:3000"
     session_cookie_name: str = "session"
+    access_cookie_name: str = "access_token"
+    refresh_cookie_name: str = "refresh_token"
+    jwt_algorithm: str = "HS256"
+    access_token_ttl_seconds: int = 60 * 15
     session_max_age_seconds: int = 60 * 60 * 24 * 7
+    env: str = "development"
     visitor_cookie_name: str = "visitor_id"
     cookie_secure: bool = False
     rate_limit_enabled: bool = True

@@ -41,9 +41,10 @@ def test_auth_create_and_delete_session(db):
     user = create_user(db, "hr@example.com")
     db.commit()
 
-    token = auth_service.create_session(db, user)
-    assert token
-    auth_service.delete_session(db, token)
+    access_token, refresh_token = auth_service.create_session(db, user)
+    assert access_token
+    assert refresh_token
+    auth_service.delete_session(db, refresh_token)
 
 
 def test_auth_change_password(db):

@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listCategories, listTags } from "../services/jobs";
 import type { HrJob } from "../types";
 import { Button } from "./ui/Button";
+import { Input, inputClass } from "./ui/Input";
 
 export type JobFormData = {
   title: string;
@@ -30,8 +31,6 @@ interface JobFormProps {
   submitLabel: string;
 }
 
-const inputClass =
-  "w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-md focus:border-primary focus:outline-none";
 
 export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) {
   const t = useTranslations("jobForm");
@@ -126,7 +125,7 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-label-sm text-secondary">{t("title")} *</label>
-            <input {...register("title")} className={inputClass} />
+            <Input {...register("title")} />
             {errors.title && <p className="mt-1 text-body-sm text-error">{errors.title.message}</p>}
           </div>
           <div>
@@ -154,11 +153,11 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
           </div>
           <div>
             <label className="mb-1 block text-label-sm text-secondary">{t("location")}</label>
-            <input {...register("location")} className={inputClass} />
+            <Input {...register("location")} />
           </div>
           <div>
             <label className="mb-1 block text-label-sm text-secondary">{t("timezone")}</label>
-            <input {...register("timezone")} className={inputClass} placeholder="UTC+7" />
+            <Input {...register("timezone")} placeholder="UTC+7" />
           </div>
         </div>
       </section>
@@ -168,18 +167,16 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
             <label className="mb-1 block text-label-sm text-secondary">{t("salaryFrom")}</label>
-            <input
+            <Input
               type="number"
               {...register("salary_min", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
-              className={inputClass}
             />
           </div>
           <div>
             <label className="mb-1 block text-label-sm text-secondary">{t("salaryTo")}</label>
-            <input
+            <Input
               type="number"
               {...register("salary_max", { setValueAs: (v) => (v === "" ? null : Number(v)) })}
-              className={inputClass}
             />
           </div>
           <div>

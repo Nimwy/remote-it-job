@@ -9,6 +9,19 @@ class UserCreate(BaseModel):
     password: str
     company_name: str
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "name": "Nguyễn Văn A",
+                    "email": "hr@example.com",
+                    "password": "your-password",
+                    "company_name": "Công ty ABC",
+                }
+            ]
+        }
+    )
+
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -16,7 +29,7 @@ class UserLogin(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [{"email": "demo.hr@remoteit.vn", "password": "demo123"}]
+            "examples": [{"email": "hr@example.com", "password": "your-password"}]
         }
     )
 
@@ -43,3 +56,9 @@ class UserProfileUpdate(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [{"current_password": "old-password", "new_password": "new-password"}]
+        }
+    )

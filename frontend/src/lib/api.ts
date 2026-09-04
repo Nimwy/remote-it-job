@@ -8,10 +8,32 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(
-  path: string,
-  options?: RequestInit,
-): Promise<T> {
+let refreshPromise: Promise<boolean> | null = null;
+
+/**
+ * Gọi /auth/refresh MỘT lần và cho nhiều request cùng hết hạn dùng chung một
+ * promise (gom lại) — không thì refresh token bị xoay đè nhau làm văng người dùng.
+ */
+async function refreshSession(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const res = await fetch("/api/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+        });
+        return res.ok;
+      } catch {
+        return false;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+  return refreshPromise;
+}
+
+async function rawFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     credentials: "include",
     headers: {
@@ -40,4 +62,22 @@ export async function apiFetch<T>(
   }
 
   return data as T;
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options?: RequestInit,
+): Promise<T> {
+  try {
+    return await rawFetch<T>(path, options);
+  } catch (err) {
+    // Access token hết hạn -> refresh một lần rồi thử lại request gốc.
+    if (err instanceof ApiError && err.code === "auth.token_expired") {
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        return rawFetch<T>(path, options);
+      }
+    }
+    throw err;
+  }
 }

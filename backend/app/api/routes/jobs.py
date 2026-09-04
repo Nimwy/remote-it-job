@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
 from app.core.config import get_settings
-from app.schemas.common import PaginatedResponse
+from app.schemas.common import PaginatedResponse, paginated
 from app.schemas.job import JobDetailResponse, JobListItem
 from app.services import job_service
 
@@ -51,13 +51,7 @@ def list_jobs(
     )
 
     items = [job_service.serialize_job_list_item(job) for job in jobs]
-    return {
-        "items": items,
-        "page": page,
-        "page_size": page_size,
-        "total": total,
-        "total_pages": total_pages,
-    }
+    return paginated(items, page, page_size, total, total_pages)
 
 
 @router.get(

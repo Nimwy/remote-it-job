@@ -4,18 +4,20 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user, get_db
 from app.core.config import get_settings
-from app.core.cookies import clear_session_cookie, set_session_cookie
+from app.core.cookies import clear_auth_cookies, set_auth_cookies
 from app.core.exceptions import APIError
 from app.core.logging import logger
 from app.core.oauth import oauth
 from app.core.rate_limit import RateLimiter, rate_limit_dependency
 from app.models.user import User
+from app.schemas.common import ErrorResponse, MessageResponse
 from app.schemas.user import ChangePasswordRequest, UserCreate, UserLogin, UserResponse
 from app.services.auth_service import (
     authenticate_user,
     change_password,
     create_session,
     delete_session,
+    refresh_session,
     register_user,
     resolve_google_user,
 )
@@ -55,14 +57,19 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
 )
 def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):
     user = authenticate_user(db, data.email, data.password)
-    raw_token = create_session(db, user)
+    access_token, refresh_token = create_session(db, user)
 
-    set_session_cookie(response, raw_token)
+    set_auth_cookies(response, access_token, refresh_token)
     return user
 
 
 @router.get(
     "/google/login",
+    status_code=status.HTTP_302_FOUND,
+    response_class=RedirectResponse,
+    responses={
+        status.HTTP_501_NOT_IMPLEMENTED: {"model": ErrorResponse, "description": "Google OAuth chưa được cấu hình"}
+    },
     summary="Bắt đầu đăng nhập Google",
     description="Chuyển hướng tới Google OAuth. Trả về `501` nếu `GOOGLE_CLIENT_ID` chưa được cấu hình.",
     dependencies=[Depends(rate_limit_dependency(google_limiter))],
@@ -75,6 +82,8 @@ async def google_login(request: Request):
 
 @router.get(
     "/google/callback",
+    status_code=status.HTTP_302_FOUND,
+    response_class=RedirectResponse,
     summary="Callback đăng nhập Google",
     description="Nhận code từ Google, trao đổi lấy access token, tạo phiên và redirect về `FRONTEND_URL`.",
 )
@@ -97,19 +106,43 @@ async def google_callback(request: Request, response: Response, db: Session = De
         raise APIError(status.HTTP_400_BAD_REQUEST, "auth.google_missing_identity", "Thiếu thông tin Google identity")
 
     user = resolve_google_user(db, google_id, email, name)
-    raw_token = create_session(db, user)
+    access_token, refresh_token = create_session(db, user)
 
-    set_session_cookie(response, raw_token)
+    set_auth_cookies(response, access_token, refresh_token)
     return RedirectResponse(url=settings.frontend_url)
 
 
-@router.post("/logout", summary="Đăng xuất", description="Thu hồi phiên hiện tại và xoá cookie `session`.")
+@router.post(
+    "/refresh",
+    response_model=MessageResponse,
+    summary="Làm mới phiên",
+    description=(
+        "Đọc refresh token từ cookie, cấp access token mới và xoay refresh token. "
+        "Trả về `401` (`auth.invalid_session`/`auth.session_expired`) nếu phiên không hợp lệ/hết hạn."
+    ),
+)
+def refresh(response: Response, request: Request, db: Session = Depends(get_db)):
+    refresh_token = request.cookies.get(settings.refresh_cookie_name)
+    if not refresh_token:
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.invalid_session", "Phiên đăng nhập không hợp lệ")
+
+    access_token, new_refresh, _ = refresh_session(db, refresh_token)
+    set_auth_cookies(response, access_token, new_refresh)
+    return {"detail": "Đã làm mới phiên"}
+
+
+@router.post(
+    "/logout",
+    response_model=MessageResponse,
+    summary="Đăng xuất",
+    description="Thu hồi phiên hiện tại và xoá cả hai cookie token.",
+)
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
-    token = request.cookies.get(settings.session_cookie_name)
+    token = request.cookies.get(settings.refresh_cookie_name)
     if token:
         delete_session(db, token)
 
-    clear_session_cookie(response)
+    clear_auth_cookies(response)
     return {"detail": "Đã đăng xuất"}
 
 
@@ -117,7 +150,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     "/me",
     response_model=UserResponse,
     summary="Thông tin người dùng hiện tại",
-    description="Trả về người dùng của phiên cookie `session`. Yêu cầu đăng nhập.",
+    description="Trả về người dùng của access token (cookie `access_token`). Yêu cầu đăng nhập.",
 )
 def me(current_user: User = Depends(get_current_user)):
     return current_user
@@ -125,6 +158,7 @@ def me(current_user: User = Depends(get_current_user)):
 
 @router.post(
     "/change-password",
+    response_model=MessageResponse,
     summary="Đổi mật khẩu",
     description="Đổi mật khẩu bằng mật khẩu hiện tại. Yêu cầu đăng nhập; bị giới hạn tốc độ.",
     dependencies=[Depends(rate_limit_dependency(password_limiter))],
