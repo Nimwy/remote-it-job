@@ -75,9 +75,10 @@ Google authentication không bypass HR approval.
 
 Vì authentication sử dụng cookie, các request thay đổi trạng thái cần CSRF protection phù hợp với kiến trúc đã chọn.
 
-Đã triển khai (L-02):
+Đã triển khai (L-02, R-01):
 - sử dụng SameSite policy phù hợp (`SameSite=lax`)
-- **xác minh Origin/Referer** cho request unsafe (POST/PUT/PATCH/DELETE) ở **production** — nếu có Origin/Referer không thuộc allowlist (`CORS_ORIGINS`/`FRONTEND_URL`) thì trả `403`. (Bỏ qua khi không có Origin để không chặn CLI/tool nội bộ.)
+- **xác minh Origin/Referer** cho request unsafe (POST/PUT/PATCH/DELETE) ở **production** — so khớp **tuyệt đối** `scheme://host[:port]` với allowlist (`CORS_ORIGINS`/`FRONTEND_URL`). Không dùng `startswith` để tránh bypass bằng domain hậu tố (`remoteit.vn.evil.com`), cổng dài (`:30000`) hay `userinfo@host` (`localhost:3000@evil.com`). Với `Referer`, chỉ lấy phần origin trước khi so.
+- Bỏ qua khi request không có Origin/Referer (CLI/tool nội bộ) — **quyết định có chủ đích**: trình duyệt hiện đại luôn gửi `Origin` cho POST cross-site nên khoảng an toàn này chấp nhận được.
 - không coi CORS là CSRF protection.
 
 ## 7. CORS

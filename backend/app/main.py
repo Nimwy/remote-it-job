@@ -1,6 +1,7 @@
 import time
 import uuid
 from contextlib import asynccontextmanager
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -78,22 +79,53 @@ app.add_middleware(
 app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
 
+def _extract_origin(value: str) -> str | None:
+    """Rút gọn header Origin/Referer về dạng chuẩn `scheme://host[:port]`.
+
+    Loại bỏ path (Referer), userinfo (`user@host`), xuống thường host, bỏ default port.
+    Trả về None nếu không parse được.
+    """
+    try:
+        if "://" not in value:
+            return None
+        parsed = urlsplit(value)
+        if not parsed.scheme or not parsed.hostname:
+            return None
+        host = parsed.hostname.lower()
+        port = parsed.port
+        default_port = (parsed.scheme == "http" and port == 80) or (parsed.scheme == "https" and port == 443)
+        netloc = host if port is None or default_port else f"{host}:{port}"
+        return f"{parsed.scheme}://{netloc}"
+    except ValueError:
+        return None
+
+
 @app.middleware("http")
 async def origin_verification_middleware(request: Request, call_next):
-    """L-02: xác minh Origin/Referer cho request thay đổi trạng thái ở production.
+    """CSRF (R-01): xác minh Origin/Referer cho request thay đổi trạng thái ở production.
 
-    Không coi CORS là CSRF protection. Chỉ kiểm tra khi môi trường production;
-    nếu có Origin và không thuộc allowlist -> 403. Bỏ qua khi không có Origin
-    (cli/tool nội bộ) để không chặn nhầm.
+    So khớp Tuyệt ĐỐI scheme://host:port (không dùng startswith — tránh bypass bằng
+    domain hậu tố / cổng dài / userinfo). Bỏ qua khi không có Origin/Referer (CLI/tool
+    nội bộ) — đây là quyết định có chủ đích, ghi trong SECURITY.md.
     """
     if _is_production and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
-        origin = request.headers.get("origin") or request.headers.get("referer")
-        if origin:
-            allowed = set(settings.cors_origins) | {settings.frontend_url}
-            if not origin.rstrip("/").startswith(tuple(allowed)):
+        header = request.headers.get("origin") or request.headers.get("referer")
+        origin = _extract_origin(header) if header else None
+        if origin is not None:
+            allowed = {
+                o.rstrip("/")
+                for o in set(settings.cors_origins) | {settings.frontend_url}
+                if _extract_origin(o)
+            }
+            if origin not in allowed:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={"error": {"code": "csrf_origin_blocked", "message": "Nguồn gốc request không hợp lệ"}},
+                    content={
+                        "error": {
+                            "code": "security.csrf_origin_blocked",
+                            "message": "Nguồn gốc request không hợp lệ",
+                        }
+                    },
                 )
     return await call_next(request)
 
