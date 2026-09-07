@@ -106,9 +106,9 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
 
   const toggleTag = (id: number) => {
     if (selectedTags.includes(id)) {
-      setValue("tag_ids", selectedTags.filter((tg) => tg !== id));
+      setValue("tag_ids", selectedTags.filter((tg) => tg !== id), { shouldDirty: true });
     } else {
-      setValue("tag_ids", [...selectedTags, id]);
+      setValue("tag_ids", [...selectedTags, id], { shouldDirty: true });
     }
   };
 
