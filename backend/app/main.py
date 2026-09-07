@@ -1,6 +1,7 @@
 import time
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request, status
@@ -17,6 +18,19 @@ from app.core.logging import logger
 from app.schemas.common import ErrorResponse
 
 settings = get_settings()
+
+
+def _read_version() -> str:
+    """R-11: lấy version từ pyproject.toml thay vì hardcode."""
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    try:
+        import tomllib
+
+        with pyproject.open("rb") as f:
+            data = tomllib.load(f)
+        return str(data["project"]["version"])
+    except Exception:
+        return "0.1.0"
 
 # S-04: ẩn tài liệu API (Swagger/openapi/redoc) ở production để không phơi spec + credential.
 _is_production = settings.env.strip().lower() == "production"
@@ -75,7 +89,7 @@ app = FastAPI(
         "`/api/auth/login` trong cùng phiên (browser/cookie) — thao tác "
         "`Try it out` sẽ gửi kèm cookie."
     ),
-    version="0.1.0",
+    version=_read_version(),
     openapi_tags=openapi_tags,
     lifespan=lifespan,
     docs_url=_docs_url,
@@ -141,6 +155,12 @@ async def origin_verification_middleware(request: Request, call_next):
                             "code": "security.csrf_origin_blocked",
                             "message": "Nguồn gốc request không hợp lệ",
                         }
+                    },
+                    # R-19: kèm header CORS để trình duyệt đọc được 403 thay vì lỗi CORS mờ mịt
+                    headers={
+                        "Access-Control-Allow-Origin": origin,
+                        "Access-Control-Allow-Credentials": "true",
+                        "Vary": "Origin",
                     },
                 )
     return await call_next(request)

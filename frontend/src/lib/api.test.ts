@@ -108,4 +108,30 @@ describe("apiFetch refresh handling", () => {
     expect(b.ok).toBe(true);
     expect(refreshCalls).toBe(1);
   });
+
+  it("on refresh failure logs out and redirects to login (R-21)", async () => {
+    const calls: string[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes("/api/auth/refresh")) {
+        return new Response(null, { status: 401 });
+      }
+      if (url.includes("/api/auth/logout")) {
+        return new Response(null, { status: 200 });
+      }
+      return jsonResponse({ error: { code: "auth.token_expired", message: "expired" } }, 401);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    // stub window để kiểm tra redirect (test chạy trong env node)
+    const fakeWindow = { location: { href: "" } };
+    vi.stubGlobal("window", fakeWindow);
+
+    await expect(apiFetch("/jobs")).rejects.toMatchObject({ code: "auth.token_expired" });
+
+    expect(calls.some((c) => c.includes("/api/auth/refresh"))).toBe(true);
+    expect(calls.some((c) => c.includes("/api/auth/logout"))).toBe(true);
+    expect(fakeWindow.location.href).toBe("/login");
+  });
 });

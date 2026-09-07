@@ -33,6 +33,21 @@ async function refreshSession(): Promise<boolean> {
   return refreshPromise;
 }
 
+/**
+ * R-21: refresh thất bại -> thu hồi phiên (best-effort) và đưa người dùng về trang đăng nhập,
+ * tránh việc mỗi 401 tiếp theo lại bắn thêm một lần refresh hỏng.
+ */
+async function handleSessionExpired(): Promise<void> {
+  try {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+  } catch {
+    // bỏ qua lỗi logout
+  }
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+}
+
 async function rawFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     credentials: "include",
@@ -77,6 +92,7 @@ export async function apiFetch<T>(
       if (refreshed) {
         return rawFetch<T>(path, options);
       }
+      await handleSessionExpired();
     }
     throw err;
   }

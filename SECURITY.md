@@ -41,6 +41,8 @@ Phiên phải có thời hạn; refresh token xoay vòng khi dùng và có thể
 
 **R-02:** refresh token cũng bị chặn ngay khi tài khoản không còn `active` — `refresh_session` trả `401 auth.user_blocked`, nên tài khoản bị khoá không thể xoay token để giữ phiên sống vô hạn.
 
+**R-13 (đánh đổi cố hữu của JWT):** access token vẫn có hiệu lực **tối đa 15 phút** sau khi logout/khoá tài khoản (JWT stateless, không thu hồi tức thời). Đây là đánh đổi chấp nhận được; refresh token thì bị thu hồi ngay nên phiên không thể kéo dài.
+
 **Ghi chú (S-04):** tài liệu API tự sinh (Swagger `/docs`, OpenAPI `/openapi.json`, ReDoc `/redoc`) **bị tắt ở production** (`ENV=production`) để không lộ đặc tả API/credential public.
 
 ## 4. Authorization
