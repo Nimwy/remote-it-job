@@ -36,6 +36,17 @@ def test_error_response_shape_matches_schema(client):
     assert parsed.error.message
 
 
+def test_validation_error_has_details(client):
+    # R-20: lỗi validation liệt kê từng field trong error.details
+    res = client.post("/api/auth/register", json={"email": "bad", "password": ""})
+    assert res.status_code == 422
+    body = res.json()
+    assert body["error"]["code"] == "validation_error"
+    assert isinstance(body["error"].get("details"), list)
+    assert len(body["error"]["details"]) >= 1
+    assert "field" in body["error"]["details"][0]
+
+
 def test_router_error_format(client):
     # S-02: 404/405 cũng về dạng {error:{code,message}}
     res = client.get("/api/nope")

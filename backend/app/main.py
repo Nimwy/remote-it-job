@@ -172,15 +172,22 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def request_validation_handler(request: Request, exc: RequestValidationError):
-    """Đồng bộ lỗi 422 về dạng {error:{code,message}} (S-02)."""
+    """Đồng bộ lỗi 422 về dạng {error:{code,message}} (S-02), kèm `details` từng field (R-20)."""
     errors = exc.errors()
     first = errors[0] if errors else {}
     field = ".".join(str(x) for x in first.get("loc", []) if x not in ("body", "query", "path"))
     message = f"Dữ liệu không hợp lệ{f' cho trường {field}' if field else ''}"
+    details = [
+        {
+            "field": ".".join(str(x) for x in e.get("loc", []) if x not in ("body", "query", "path")),
+            "reason": e.get("msg", ""),
+        }
+        for e in errors
+    ]
     logger.warning("Validation error %s %s -> %s", request.method, request.url.path, message)
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"error": {"code": "validation_error", "message": message}},
+        content={"error": {"code": "validation_error", "message": message, "details": details}},
     )
 
 

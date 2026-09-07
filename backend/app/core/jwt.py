@@ -1,3 +1,4 @@
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -16,6 +17,7 @@ def create_access_token(user_id: int, role: str) -> str:
         "sub": str(user_id),
         "role": role,
         "type": "access",
+        "jti": uuid.uuid4().hex,
         "iat": now,
         "exp": now + timedelta(seconds=settings.access_token_ttl_seconds),
     }

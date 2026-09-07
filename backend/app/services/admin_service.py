@@ -214,9 +214,14 @@ def list_categories(db: Session):
 
 
 def create_category(db: Session, data: CategoryCreate) -> Category:
-    # A-06: thống nhất với HR — slug rỗng có fallback + unique_slug tự thêm hậu tố
-    base = data.slug or slugify(data.name) or "muc"
-    slug = unique_slug(base, {c.slug for c in category_repository.list_all(db)})
+    # R-18: slug chỉ định tường minh -> giữ 409 nếu trùng; sinh từ name -> auto-suffix (A-06)
+    if data.slug:
+        if category_repository.get_by_slug(db, data.slug):
+            raise APIError(status.HTTP_409_CONFLICT, "catalog.category_slug_exists", "Slug category đã tồn tại")
+        slug = data.slug
+    else:
+        base = slugify(data.name) or "muc"
+        slug = unique_slug(base, category_repository.existing_slugs(db))
     category = Category(name=data.name, slug=slug, sort_order=data.sort_order)
     category_repository.create(db, category)
     db.commit()
@@ -262,9 +267,14 @@ def list_tags(db: Session):
 
 
 def create_tag(db: Session, data: TagCreate) -> Tag:
-    # A-06: thống nhất — slug rỗng có fallback + unique_slug tự thêm hậu tố
-    base = data.slug or slugify(data.name) or "the"
-    slug = unique_slug(base, {t.slug for t in tag_repository.list_all(db)})
+    # R-18: slug chỉ định -> giữ 409; sinh từ name -> auto-suffix (A-06)
+    if data.slug:
+        if tag_repository.get_by_slug(db, data.slug):
+            raise APIError(status.HTTP_409_CONFLICT, "catalog.tag_slug_exists", "Slug tag đã tồn tại")
+        slug = data.slug
+    else:
+        base = slugify(data.name) or "the"
+        slug = unique_slug(base, tag_repository.existing_slugs(db))
     tag = Tag(name=data.name, slug=slug)
     tag_repository.create(db, tag)
     db.commit()

@@ -1,3 +1,6 @@
+import pytest
+
+from app.core.exceptions import APIError
 from app.models.job import JobStatus
 from app.models.user import UserStatus
 from app.schemas.admin import CategoryCreate, TagCreate
@@ -70,3 +73,12 @@ def test_admin_category_tag_slug_unique_and_fallback(db):
     # tên toàn ký tự không Latin -> fallback, không tạo slug rỗng
     category = admin_service.create_category(db, CategoryCreate(name="###"))
     assert category.slug == "muc"
+
+
+def test_admin_category_explicit_slug_conflict_409(db):
+    # R-18: slug chỉ định tường minh trùng -> 409 (không âm thầm đổi thành c-3)
+    admin_service.create_category(db, CategoryCreate(name="A", slug="c"))
+    with pytest.raises(APIError) as exc:
+        admin_service.create_category(db, CategoryCreate(name="B", slug="c"))
+    assert exc.value.status_code == 409
+    assert exc.value.code == "catalog.category_slug_exists"
