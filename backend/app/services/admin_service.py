@@ -8,7 +8,14 @@ from app.models.category import Category
 from app.models.job import Job, JobStatus
 from app.models.tag import Tag
 from app.models.user import User, UserStatus
-from app.repositories import category_repository, job_repository, job_view_repository, tag_repository, user_repository
+from app.repositories import (
+    category_repository,
+    job_repository,
+    job_view_repository,
+    session_repository,
+    tag_repository,
+    user_repository,
+)
 from app.schemas.admin import (
     AdminJobResponse,
     AdminUserResponse,
@@ -172,6 +179,8 @@ def approve_user(db: Session, user_id: int) -> User:
 def block_user(db: Session, user_id: int) -> User:
     user = get_hr_user(db, user_id)
     user.status = UserStatus.blocked
+    # R-02: khoá tài khoản -> gỡ ngay mọi refresh token để thu hồi phiên đang có
+    session_repository.delete_for_user(db, user.id)
     db.commit()
     logger.info("Admin blocked user id=%s", user.id)
     db.refresh(user)

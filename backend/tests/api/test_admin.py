@@ -28,6 +28,35 @@ def test_admin_endpoints_require_auth(client, db):
     assert res.status_code == 401
 
 
+def test_block_user_revokes_sessions_and_refresh(client, db):
+    # R-02: khoá HR -> thu hồi phiên (delete_for_user) + refresh bị chặn
+    create_admin(db)
+    hr = create_user(db, "hr@example.com", status=UserStatus.active)
+    hr.password_hash = hash_password("secret123")
+    db.commit()
+
+    admin_login = login_admin(client)  # admin cookie
+    admin_cookies = admin_login.cookies
+
+    # HR đăng nhập trên "thiết bị 2" (cookie riêng)
+    hr_login = client.post("/api/auth/login", json={"email": "hr@example.com", "password": "secret123"})
+    assert hr_login.status_code == 200
+    hr_cookies = hr_login.cookies
+
+    # Admin khoá HR
+    res = client.post(f"/api/admin/users/{hr.id}/block", cookies=admin_cookies)
+    assert res.status_code == 200
+    assert res.json()["status"] == "blocked"
+
+    # HR request bị chặn ngay (access token còn hạn nhưng status=blocked)
+    res = client.get("/api/hr/jobs", cookies=hr_cookies)
+    assert res.status_code == 403
+
+    # Refresh token bị thu hồi (delete_for_user) -> không xoay được token mới
+    res = client.post("/api/auth/refresh", cookies=hr_cookies)
+    assert res.status_code == 401
+
+
 def test_hr_cannot_access_admin(client, db):
     hr = create_user(db, "hr@example.com", status=UserStatus.active)
     hr.password_hash = hash_password("secret123")

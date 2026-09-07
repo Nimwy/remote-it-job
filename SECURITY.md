@@ -37,7 +37,9 @@ Khi logout:
 
 Phiên phải có thời hạn; refresh token xoay vòng khi dùng và có thể thu hồi.
 
-**Chính sách nhiều phiên (L-01):** mỗi tài khoản có thể có **nhiều phiên/refresh token cùng lúc** (ví dụ HR trên 2 máy). Đăng nhập mới **không** thu hồi phiên trên thiết bị khác — chỉ dọn các refresh token đã hết hạn (`delete_expired`). Thu hồi riêng lẻ xảy ra khi: logout (xoá refresh token tương ứng) hoặc Admin khoá HR.
+**Chính sách nhiều phiên (L-01):** mỗi tài khoản có thể có **nhiều phiên/refresh token cùng lúc** (ví dụ HR trên 2 máy). Đăng nhập mới **không** thu hồi phiên trên thiết bị khác — chỉ dọn các refresh token đã hết hạn (`delete_expired`). Thu hồi riêng lẻ xảy ra khi: logout (xoá refresh token tương ứng) và **Admin khoá HR** (`block_user` gọi `delete_for_user` để gỡ toàn bộ phiên).
+
+**R-02:** refresh token cũng bị chặn ngay khi tài khoản không còn `active` — `refresh_session` trả `401 auth.user_blocked`, nên tài khoản bị khoá không thể xoay token để giữ phiên sống vô hạn.
 
 **Ghi chú (S-04):** tài liệu API tự sinh (Swagger `/docs`, OpenAPI `/openapi.json`, ReDoc `/redoc`) **bị tắt ở production** (`ENV=production`) để không lộ đặc tả API/credential public.
 

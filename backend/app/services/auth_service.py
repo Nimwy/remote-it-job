@@ -97,6 +97,10 @@ def refresh_session(db: Session, refresh_token: str) -> tuple[str, str, int]:
     if not user:
         raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.user_not_found", "Người dùng không tồn tại")
 
+    # R-02: tài khoản bị KHOÁ không được xoay token tiếp — phiên không sống vô hạn
+    if user.status == UserStatus.blocked:
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.user_blocked", "Tài khoản đã bị khoá")
+
     # Xoay refresh token
     session_repository.delete_by_token_hash(db, token_hash)
     access_token, raw_refresh = create_session(db, user)
