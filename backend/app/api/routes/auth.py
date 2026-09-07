@@ -52,7 +52,10 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
     "/login",
     response_model=UserResponse,
     summary="Đăng nhập bằng email/password",
-    description="Xác thực bằng email + password, tạo phiên phía server và đặt cookie HTTP-only `session`.",
+    description=(
+        "Xác thực bằng email + password, cấp access token (JWT) + refresh token và đặt "
+        "cookie HTTP-only `access_token`, `refresh_token`."
+    ),
     dependencies=[Depends(rate_limit_dependency(login_limiter))],
 )
 def login(data: UserLogin, response: Response, db: Session = Depends(get_db)):

@@ -24,14 +24,30 @@ _docs_url = None if _is_production else "/docs"
 _openapi_url = None if _is_production else "/openapi.json"
 _redoc_url = None if _is_production else "/redoc"
 
-# Mã lỗi dùng chung khai báo cho mọi endpoint (S-03) — máy đọc được từ spec.
-ERROR_RESPONSES = {
+# Mã lỗi khai báo theo mức bảo vệ thực tế (R-08) — tránh gắn "mù" cho endpoint công khai.
+BASIC_ERROR_RESPONSES = {
+    status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Không tìm thấy tài nguyên"},
+    status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse, "description": "Dữ liệu không hợp lệ"},
+}
+
+# auth: có public (login/register) + protected (me/change-password) + rate limit + email exists
+AUTH_ERROR_RESPONSES = {
+    status.HTTP_401_UNAUTHORIZED: {
+        "model": ErrorResponse,
+        "description": "Chưa đăng nhập / thông tin sai / token không hợp lệ",
+    },
+    status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Không tìm thấy tài nguyên"},
+    status.HTTP_409_CONFLICT: {"model": ErrorResponse, "description": "Xung đột dữ liệu (email/slug đã tồn tại)"},
+    status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse, "description": "Dữ liệu không hợp lệ"},
+    status.HTTP_429_TOO_MANY_REQUESTS: {"model": ErrorResponse, "description": "Vượt giới hạn tốc độ"},
+}
+
+# hr/admin: yêu cầu đăng nhập + quyền
+PROTECTED_ERROR_RESPONSES = {
     status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse, "description": "Chưa đăng nhập / token không hợp lệ"},
     status.HTTP_403_FORBIDDEN: {"model": ErrorResponse, "description": "Không có quyền truy cập"},
     status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Không tìm thấy tài nguyên"},
-    status.HTTP_409_CONFLICT: {"model": ErrorResponse, "description": "Xung đột dữ liệu"},
     status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse, "description": "Dữ liệu không hợp lệ"},
-    status.HTTP_429_TOO_MANY_REQUESTS: {"model": ErrorResponse, "description": "Vượt giới hạn tốc độ"},
 }
 
 
@@ -219,8 +235,8 @@ async def request_logging_middleware(request: Request, call_next):
     return response
 
 
-app.include_router(auth.router, prefix="/api", responses=ERROR_RESPONSES)
-app.include_router(jobs.router, prefix="/api", responses=ERROR_RESPONSES)
-app.include_router(catalog.router, prefix="/api", responses=ERROR_RESPONSES)
-app.include_router(hr.router, prefix="/api", responses=ERROR_RESPONSES)
-app.include_router(admin.router, prefix="/api", responses=ERROR_RESPONSES)
+app.include_router(auth.router, prefix="/api", responses=AUTH_ERROR_RESPONSES)
+app.include_router(jobs.router, prefix="/api", responses=BASIC_ERROR_RESPONSES)
+app.include_router(catalog.router, prefix="/api", responses=BASIC_ERROR_RESPONSES)
+app.include_router(hr.router, prefix="/api", responses=PROTECTED_ERROR_RESPONSES)
+app.include_router(admin.router, prefix="/api", responses=PROTECTED_ERROR_RESPONSES)

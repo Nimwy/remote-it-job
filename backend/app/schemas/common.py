@@ -14,10 +14,14 @@ class PaginatedResponse[T](BaseModel):
     total_pages: int
 
 
-class ErrorResponse(BaseModel):
+class ErrorDetail(BaseModel):
     code: str
     message: str
     request_id: str | None = None
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
 
 
 class MessageResponse(BaseModel):

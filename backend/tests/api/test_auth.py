@@ -26,6 +26,16 @@ def test_validation_error_format(client):
     assert body["error"]["message"]
 
 
+def test_error_response_shape_matches_schema(client):
+    # R-03: body lỗi thật phải parse được bằng ErrorResponse (bọc lớp `error`)
+    from app.schemas.common import ErrorResponse
+
+    res = client.post("/api/auth/login", json={"email": "bad", "password": ""})
+    parsed = ErrorResponse.model_validate(res.json())
+    assert parsed.error.code == "validation_error"
+    assert parsed.error.message
+
+
 def test_router_error_format(client):
     # S-02: 404/405 cũng về dạng {error:{code,message}}
     res = client.get("/api/nope")
