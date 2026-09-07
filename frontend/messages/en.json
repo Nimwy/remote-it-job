@@ -44,6 +44,7 @@
     "all": "All",
     "jobType": "Job type",
     "location": "Location",
+    "locationPlaceholder": "Vietnam, Singapore...",
     "timezone": "Timezone",
     "tags": "Skills",
     "salaryMin": "Min salary",

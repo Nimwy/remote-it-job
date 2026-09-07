@@ -58,6 +58,8 @@ export default async function JobDetailPage({
         : t("monthlyPayment");
 
   const similar = await serverListJobs({ category: job.category.slug, page_size: 4 });
+  // N-02: lọc job hiện tại trước, rồi mới quyết định hiển thị — tránh section rỗng khi chỉ có 1 job
+  const similarJobs = (similar?.items ?? []).filter((s) => s.id !== job.id).slice(0, 3);
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-8">
@@ -154,14 +156,11 @@ export default async function JobDetailPage({
             </section>
           )}
 
-          {similar && similar.items.length > 0 && (
+          {similarJobs.length > 0 && (
             <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-6">
               <h2 className="mb-3 font-display text-headline-md">{t("similarJobs")}</h2>
               <div className="space-y-3">
-                {similar.items
-                  .filter((s) => s.id !== job.id)
-                  .slice(0, 3)
-                  .map((s) => (
+                {similarJobs.map((s) => (
                     <Link
                       key={s.id}
                       href={`/jobs/${s.slug}-${s.id}`}

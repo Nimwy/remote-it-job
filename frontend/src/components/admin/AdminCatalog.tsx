@@ -73,7 +73,7 @@ export function AdminCatalog() {
         <section>
           <h2 className="mb-4 font-display text-headline-md">{t("tags")}</h2>
           <div className="mb-4 flex gap-2">
-            <input
+            <Input
               value={tagName}
               onChange={(e) => setTagName(e.target.value)}
               placeholder={t("newTag")}

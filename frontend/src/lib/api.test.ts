@@ -1,10 +1,52 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apiFetch } from "./api";
+import { ApiError, apiFetch } from "./api";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
+
+describe("apiFetch basic behavior", () => {
+  const originalFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it("returns data for a successful response", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ ok: true, id: 1 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const data = await apiFetch<{ ok: true; id: number }>("/jobs");
+    expect(data).toEqual({ ok: true, id: 1 });
+  });
+
+  it("returns undefined for 204 no-content", async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const data = await apiFetch<void>("/jobs/1");
+    expect(data).toBeUndefined();
+  });
+
+  it("throws ApiError with code/message from {error:{code,message}}", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ error: { code: "job.not_found", message: "Không tìm thấy" } }, 404));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(apiFetch("/jobs/999")).rejects.toMatchObject({
+      name: "ApiError",
+      code: "job.not_found",
+      message: "Không tìm thấy",
+    });
+  });
+
+  it("throws a fallback ApiError on error without detail", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse("boom", 500));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(apiFetch("/jobs")).rejects.toBeInstanceOf(ApiError);
+  });
+});
 
 describe("apiFetch refresh handling", () => {
   const originalFetch = globalThis.fetch;
