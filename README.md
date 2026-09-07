@@ -72,7 +72,7 @@ Backend docs tự sinh:
 - Đặc tả OpenAPI (source of truth): http://localhost:8000/openapi.json
 - ReDoc (bản đọc gọn): http://localhost:8000/redoc
 
-Để thử các endpoint cần đăng nhập (HR/Admin) trong Swagger: đăng nhập trước qua `POST /api/auth/login` trong cùng phiên (cookie `session`) rồi bấm "Try it out". Tài khoản mẫu: `admin@remoteit.vn / admin123`, `demo.hr@remoteit.vn / demo123`.
+Để thử các endpoint cần đăng nhập (HR/Admin) trong Swagger: đăng nhập trước qua `POST /api/auth/login` trong cùng phiên (cookie `access_token` + `refresh_token`) rồi bấm "Try it out". Tài khoản mẫu: `admin@remoteit.vn / admin123`, `demo.hr@remoteit.vn / demo123`.
 
 ### 2. Frontend
 

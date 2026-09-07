@@ -9,7 +9,7 @@ Browser
 Next.js (React + TypeScript, SSR)
    │
    │ REST / JSON
-   │ HTTP-only session cookie
+   │ HTTP-only access (JWT) + refresh cookie
    ▼
 FastAPI
    │
@@ -217,7 +217,7 @@ Không dùng Elasticsearch/OpenSearch trong MVP.
 
 Mỗi session chỉ tăng view của một job tối đa một lần trong 24 giờ.
 
-Backend xác định session từ server-side session cookie.
+Backend xác định người dùng từ access token (JWT) dạng cookie, kèm visitor cookie riêng cho đếm view.
 
 Không tin `user_id` hoặc counter do frontend gửi.
 

@@ -32,13 +32,13 @@ Mọi lỗi (APIError, validation, 404...) trả về cùng dạng `{ "error": {
 | 201 | Tạo mới thành công | — |
 | 204 | Thành công, không có body | — |
 | 422 | Dữ liệu không hợp lệ / validation | `validation_error` |
-| 400 | Dữ liệu không hợp lệ | `invalid_input` |
-| 401 | Chưa đăng nhập / phiên hết hạn | `not_authenticated` |
-| 403 | Không có quyền | `forbidden` / `require_admin` |
-| 404 | Không tìm thấy | `not_found` |
-| 409 | Xung đột (email/slug đã tồn tại) | `email_exists`, `slug_exists` |
+| 400 | Dữ liệu không hợp lệ | `auth.invalid_current_password`, `auth.no_password`, `job.category_invalid`, `job.tag_invalid`, `job.salary_invalid`, `user.only_pending_can_approve` |
+| 401 | Chưa đăng nhập / token không hợp lệ / hết hạn | `auth.unauthorized`, `auth.invalid_credentials`, `auth.token_expired`, `auth.invalid_token`, `auth.invalid_session`, `auth.session_expired`, `auth.user_blocked` |
+| 403 | Không có quyền / tài khoản chưa active | `auth.forbidden_hr`, `auth.forbidden_admin`, `auth.hr_not_active`, `auth.admin_not_active`, `security.csrf_origin_blocked` |
+| 404 | Không tìm thấy | `job.not_found`, `user.hr_not_found`, `catalog.category_not_found`, `catalog.tag_not_found`, `http_404` |
+| 409 | Xung đột (email/slug đã tồn tại) | `auth.email_exists`, `catalog.category_slug_exists`, `catalog.tag_slug_exists` |
 | 429 | Vượt giới hạn rate limit | `rate_limit_exceeded` |
-| 501 | Tính năng chưa cấu hình (Google OAuth) | `oauth_not_configured` |
+| 501 | Tính năng chưa cấu hình (Google OAuth) | `auth.google_not_configured` |
 
 ### 1.2 Phân trang
 
@@ -448,7 +448,7 @@ Gửi job `draft`/`rejected` để duyệt → `pending`.
 
 ## 5. Admin (role=admin)
 
-Tất cả endpoint yêu cầu session admin.
+Tất cả endpoint yêu cầu đăng nhập với vai trò admin.
 
 ### 5.1 Quản lý job
 
