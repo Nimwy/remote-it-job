@@ -129,7 +129,7 @@ export default async function JobsPage({
             <input
               name="location"
               defaultValue={location}
-              placeholder="Việt Nam, Singapore..."
+              placeholder={t("locationPlaceholder")}
               className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md focus:border-primary focus:outline-none"
             />
           </div>

@@ -70,7 +70,6 @@ def create_session(db: Session, user: User) -> tuple[str, str]:
     )
     session_repository.create(db, session)
     db.commit()
-    db.flush()
     return access_token, raw_refresh
 
 
@@ -81,9 +80,7 @@ def refresh_session(db: Session, refresh_token: str) -> tuple[str, str, int]:
     Xoay token: xoá bản ghi cũ, tạo bản ghi mới (cho phép nhiều phiên trên nhiều thiết bị).
     Trả về (access_token, refresh_token, user_id).
     """
-    from hashlib import sha256
-
-    token_hash = sha256(refresh_token.encode()).hexdigest()
+    token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
     session = session_repository.find_by_token_hash(db, token_hash)
     if not session:
         raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.invalid_session", "Phiên đăng nhập không hợp lệ")
@@ -96,6 +93,10 @@ def refresh_session(db: Session, refresh_token: str) -> tuple[str, str, int]:
     user = user_repository.find_by_id(db, session.user_id)
     if not user:
         raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.user_not_found", "Người dùng không tồn tại")
+
+    # R-02: tài khoản bị KHOÁ không được xoay token tiếp — phiên không sống vô hạn
+    if user.status == UserStatus.blocked:
+        raise APIError(status.HTTP_401_UNAUTHORIZED, "auth.user_blocked", "Tài khoản đã bị khoá")
 
     # Xoay refresh token
     session_repository.delete_by_token_hash(db, token_hash)

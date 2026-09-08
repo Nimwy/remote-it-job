@@ -20,7 +20,10 @@ def delete_by_token_hash(db: Session, token_hash: str) -> None:
 
 
 def delete_for_user(db: Session, user_id: int) -> None:
-    """Xoá toàn bộ session của user (dùng khi login lại để chỉ giữ 1 session)."""
+    """Xoá toàn bộ session/refresh token của một user.
+
+    Được dùng khi Admin khoá tài khoản (R-02) để thu hồi toàn bộ phiên đang hoạt động.
+    """
     db.query(SessionModel).filter(SessionModel.user_id == user_id).delete()
 
 

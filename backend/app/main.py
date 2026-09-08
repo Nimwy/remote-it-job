@@ -1,6 +1,8 @@
 import time
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -17,20 +19,49 @@ from app.schemas.common import ErrorResponse
 
 settings = get_settings()
 
+
+def _read_version() -> str:
+    """R-11: lấy version từ pyproject.toml thay vì hardcode."""
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    try:
+        import tomllib
+
+        with pyproject.open("rb") as f:
+            data = tomllib.load(f)
+        return str(data["project"]["version"])
+    except Exception:
+        return "0.1.0"
+
 # S-04: ẩn tài liệu API (Swagger/openapi/redoc) ở production để không phơi spec + credential.
 _is_production = settings.env.strip().lower() == "production"
 _docs_url = None if _is_production else "/docs"
 _openapi_url = None if _is_production else "/openapi.json"
 _redoc_url = None if _is_production else "/redoc"
 
-# Mã lỗi dùng chung khai báo cho mọi endpoint (S-03) — máy đọc được từ spec.
-ERROR_RESPONSES = {
+# Mã lỗi khai báo theo mức bảo vệ thực tế (R-08) — tránh gắn "mù" cho endpoint công khai.
+BASIC_ERROR_RESPONSES = {
+    status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Không tìm thấy tài nguyên"},
+    status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse, "description": "Dữ liệu không hợp lệ"},
+}
+
+# auth: có public (login/register) + protected (me/change-password) + rate limit + email exists
+AUTH_ERROR_RESPONSES = {
+    status.HTTP_401_UNAUTHORIZED: {
+        "model": ErrorResponse,
+        "description": "Chưa đăng nhập / thông tin sai / token không hợp lệ",
+    },
+    status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Không tìm thấy tài nguyên"},
+    status.HTTP_409_CONFLICT: {"model": ErrorResponse, "description": "Xung đột dữ liệu (email/slug đã tồn tại)"},
+    status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse, "description": "Dữ liệu không hợp lệ"},
+    status.HTTP_429_TOO_MANY_REQUESTS: {"model": ErrorResponse, "description": "Vượt giới hạn tốc độ"},
+}
+
+# hr/admin: yêu cầu đăng nhập + quyền
+PROTECTED_ERROR_RESPONSES = {
     status.HTTP_401_UNAUTHORIZED: {"model": ErrorResponse, "description": "Chưa đăng nhập / token không hợp lệ"},
     status.HTTP_403_FORBIDDEN: {"model": ErrorResponse, "description": "Không có quyền truy cập"},
     status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Không tìm thấy tài nguyên"},
-    status.HTTP_409_CONFLICT: {"model": ErrorResponse, "description": "Xung đột dữ liệu"},
     status.HTTP_422_UNPROCESSABLE_ENTITY: {"model": ErrorResponse, "description": "Dữ liệu không hợp lệ"},
-    status.HTTP_429_TOO_MANY_REQUESTS: {"model": ErrorResponse, "description": "Vượt giới hạn tốc độ"},
 }
 
 
@@ -58,7 +89,7 @@ app = FastAPI(
         "`/api/auth/login` trong cùng phiên (browser/cookie) — thao tác "
         "`Try it out` sẽ gửi kèm cookie."
     ),
-    version="0.1.0",
+    version=_read_version(),
     openapi_tags=openapi_tags,
     lifespan=lifespan,
     docs_url=_docs_url,
@@ -78,22 +109,59 @@ app.add_middleware(
 app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
 
+def _extract_origin(value: str) -> str | None:
+    """Rút gọn header Origin/Referer về dạng chuẩn `scheme://host[:port]`.
+
+    Loại bỏ path (Referer), userinfo (`user@host`), xuống thường host, bỏ default port.
+    Trả về None nếu không parse được.
+    """
+    try:
+        if "://" not in value:
+            return None
+        parsed = urlsplit(value)
+        if not parsed.scheme or not parsed.hostname:
+            return None
+        host = parsed.hostname.lower()
+        port = parsed.port
+        default_port = (parsed.scheme == "http" and port == 80) or (parsed.scheme == "https" and port == 443)
+        netloc = host if port is None or default_port else f"{host}:{port}"
+        return f"{parsed.scheme}://{netloc}"
+    except ValueError:
+        return None
+
+
 @app.middleware("http")
 async def origin_verification_middleware(request: Request, call_next):
-    """L-02: xác minh Origin/Referer cho request thay đổi trạng thái ở production.
+    """CSRF (R-01): xác minh Origin/Referer cho request thay đổi trạng thái ở production.
 
-    Không coi CORS là CSRF protection. Chỉ kiểm tra khi môi trường production;
-    nếu có Origin và không thuộc allowlist -> 403. Bỏ qua khi không có Origin
-    (cli/tool nội bộ) để không chặn nhầm.
+    So khớp Tuyệt ĐỐI scheme://host:port (không dùng startswith — tránh bypass bằng
+    domain hậu tố / cổng dài / userinfo). Bỏ qua khi không có Origin/Referer (CLI/tool
+    nội bộ) — đây là quyết định có chủ đích, ghi trong SECURITY.md.
     """
     if _is_production and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
-        origin = request.headers.get("origin") or request.headers.get("referer")
-        if origin:
-            allowed = set(settings.cors_origins) | {settings.frontend_url}
-            if not origin.rstrip("/").startswith(tuple(allowed)):
+        header = request.headers.get("origin") or request.headers.get("referer")
+        origin = _extract_origin(header) if header else None
+        if origin is not None:
+            allowed = {
+                o.rstrip("/")
+                for o in set(settings.cors_origins) | {settings.frontend_url}
+                if _extract_origin(o)
+            }
+            if origin not in allowed:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={"error": {"code": "csrf_origin_blocked", "message": "Nguồn gốc request không hợp lệ"}},
+                    content={
+                        "error": {
+                            "code": "security.csrf_origin_blocked",
+                            "message": "Nguồn gốc request không hợp lệ",
+                        }
+                    },
+                    # R-19: kèm header CORS để trình duyệt đọc được 403 thay vì lỗi CORS mờ mịt
+                    headers={
+                        "Access-Control-Allow-Origin": origin,
+                        "Access-Control-Allow-Credentials": "true",
+                        "Vary": "Origin",
+                    },
                 )
     return await call_next(request)
 
@@ -124,15 +192,22 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def request_validation_handler(request: Request, exc: RequestValidationError):
-    """Đồng bộ lỗi 422 về dạng {error:{code,message}} (S-02)."""
+    """Đồng bộ lỗi 422 về dạng {error:{code,message}} (S-02), kèm `details` từng field (R-20)."""
     errors = exc.errors()
     first = errors[0] if errors else {}
     field = ".".join(str(x) for x in first.get("loc", []) if x not in ("body", "query", "path"))
     message = f"Dữ liệu không hợp lệ{f' cho trường {field}' if field else ''}"
+    details = [
+        {
+            "field": ".".join(str(x) for x in e.get("loc", []) if x not in ("body", "query", "path")),
+            "reason": e.get("msg", ""),
+        }
+        for e in errors
+    ]
     logger.warning("Validation error %s %s -> %s", request.method, request.url.path, message)
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"error": {"code": "validation_error", "message": message}},
+        content={"error": {"code": "validation_error", "message": message, "details": details}},
     )
 
 
@@ -187,8 +262,8 @@ async def request_logging_middleware(request: Request, call_next):
     return response
 
 
-app.include_router(auth.router, prefix="/api", responses=ERROR_RESPONSES)
-app.include_router(jobs.router, prefix="/api", responses=ERROR_RESPONSES)
-app.include_router(catalog.router, prefix="/api", responses=ERROR_RESPONSES)
-app.include_router(hr.router, prefix="/api", responses=ERROR_RESPONSES)
-app.include_router(admin.router, prefix="/api", responses=ERROR_RESPONSES)
+app.include_router(auth.router, prefix="/api", responses=AUTH_ERROR_RESPONSES)
+app.include_router(jobs.router, prefix="/api", responses=BASIC_ERROR_RESPONSES)
+app.include_router(catalog.router, prefix="/api", responses=BASIC_ERROR_RESPONSES)
+app.include_router(hr.router, prefix="/api", responses=PROTECTED_ERROR_RESPONSES)
+app.include_router(admin.router, prefix="/api", responses=PROTECTED_ERROR_RESPONSES)

@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
     frontend_url: str = "http://localhost:3000"
-    session_cookie_name: str = "session"
     access_cookie_name: str = "access_token"
     refresh_cookie_name: str = "refresh_token"
     jwt_algorithm: str = "HS256"

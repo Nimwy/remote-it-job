@@ -31,6 +31,11 @@ def list_all(db: Session) -> list[Tag]:
     return db.query(Tag).order_by(Tag.name).all()
 
 
+def existing_slugs(db: Session) -> set[str]:
+    """R-17: chỉ lấy các slug đang tồn tại (không load cả ORM)."""
+    return {slug for (slug,) in db.query(Tag.slug).all()}
+
+
 def create(db: Session, tag: Tag) -> Tag:
     db.add(tag)
     db.flush()

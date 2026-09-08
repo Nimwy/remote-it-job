@@ -1,10 +1,52 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apiFetch } from "./api";
+import { ApiError, apiFetch } from "./api";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
+
+describe("apiFetch basic behavior", () => {
+  const originalFetch = globalThis.fetch;
+
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it("returns data for a successful response", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ ok: true, id: 1 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const data = await apiFetch<{ ok: true; id: number }>("/jobs");
+    expect(data).toEqual({ ok: true, id: 1 });
+  });
+
+  it("returns undefined for 204 no-content", async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const data = await apiFetch<void>("/jobs/1");
+    expect(data).toBeUndefined();
+  });
+
+  it("throws ApiError with code/message from {error:{code,message}}", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ error: { code: "job.not_found", message: "Không tìm thấy" } }, 404));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(apiFetch("/jobs/999")).rejects.toMatchObject({
+      name: "ApiError",
+      code: "job.not_found",
+      message: "Không tìm thấy",
+    });
+  });
+
+  it("throws a fallback ApiError on error without detail", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse("boom", 500));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(apiFetch("/jobs")).rejects.toBeInstanceOf(ApiError);
+  });
+});
 
 describe("apiFetch refresh handling", () => {
   const originalFetch = globalThis.fetch;
@@ -65,5 +107,31 @@ describe("apiFetch refresh handling", () => {
     expect(a.ok).toBe(true);
     expect(b.ok).toBe(true);
     expect(refreshCalls).toBe(1);
+  });
+
+  it("on refresh failure logs out and redirects to login (R-21)", async () => {
+    const calls: string[] = [];
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes("/api/auth/refresh")) {
+        return new Response(null, { status: 401 });
+      }
+      if (url.includes("/api/auth/logout")) {
+        return new Response(null, { status: 200 });
+      }
+      return jsonResponse({ error: { code: "auth.token_expired", message: "expired" } }, 401);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    // stub window để kiểm tra redirect (test chạy trong env node)
+    const fakeWindow = { location: { href: "" } };
+    vi.stubGlobal("window", fakeWindow);
+
+    await expect(apiFetch("/jobs")).rejects.toMatchObject({ code: "auth.token_expired" });
+
+    expect(calls.some((c) => c.includes("/api/auth/refresh"))).toBe(true);
+    expect(calls.some((c) => c.includes("/api/auth/logout"))).toBe(true);
+    expect(fakeWindow.location.href).toBe("/login");
   });
 });

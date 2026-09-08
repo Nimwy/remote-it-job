@@ -14,19 +14,23 @@ class PaginatedResponse[T](BaseModel):
     total_pages: int
 
 
-class ErrorResponse(BaseModel):
+class ErrorDetail(BaseModel):
     code: str
     message: str
     request_id: str | None = None
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
 
 
 class MessageResponse(BaseModel):
     detail: str
 
 
-def paginated(items: list, page: int, page_size: int, total: int, total_pages: int) -> PaginatedResponse:
+def paginated[T](items: list[T], page: int, page_size: int, total: int, total_pages: int) -> PaginatedResponse[T]:
     """Dựng response phân trang chuẩn (A-05)."""
-    return PaginatedResponse(
+    return PaginatedResponse[T](
         items=items,
         page=page,
         page_size=page_size,

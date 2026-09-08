@@ -37,7 +37,11 @@ Khi logout:
 
 Phiên phải có thời hạn; refresh token xoay vòng khi dùng và có thể thu hồi.
 
-**Chính sách nhiều phiên (L-01):** mỗi tài khoản có thể có **nhiều phiên/refresh token cùng lúc** (ví dụ HR trên 2 máy). Đăng nhập mới **không** thu hồi phiên trên thiết bị khác — chỉ dọn các refresh token đã hết hạn (`delete_expired`). Thu hồi riêng lẻ xảy ra khi: logout (xoá refresh token tương ứng) hoặc Admin khoá HR.
+**Chính sách nhiều phiên (L-01):** mỗi tài khoản có thể có **nhiều phiên/refresh token cùng lúc** (ví dụ HR trên 2 máy). Đăng nhập mới **không** thu hồi phiên trên thiết bị khác — chỉ dọn các refresh token đã hết hạn (`delete_expired`). Thu hồi riêng lẻ xảy ra khi: logout (xoá refresh token tương ứng) và **Admin khoá HR** (`block_user` gọi `delete_for_user` để gỡ toàn bộ phiên).
+
+**R-02:** refresh token cũng bị chặn ngay khi tài khoản không còn `active` — `refresh_session` trả `401 auth.user_blocked`, nên tài khoản bị khoá không thể xoay token để giữ phiên sống vô hạn.
+
+**R-13 (đánh đổi cố hữu của JWT):** access token vẫn có hiệu lực **tối đa 15 phút** sau khi logout/khoá tài khoản (JWT stateless, không thu hồi tức thời). Đây là đánh đổi chấp nhận được; refresh token thì bị thu hồi ngay nên phiên không thể kéo dài.
 
 **Ghi chú (S-04):** tài liệu API tự sinh (Swagger `/docs`, OpenAPI `/openapi.json`, ReDoc `/redoc`) **bị tắt ở production** (`ENV=production`) để không lộ đặc tả API/credential public.
 
@@ -75,9 +79,10 @@ Google authentication không bypass HR approval.
 
 Vì authentication sử dụng cookie, các request thay đổi trạng thái cần CSRF protection phù hợp với kiến trúc đã chọn.
 
-Đã triển khai (L-02):
+Đã triển khai (L-02, R-01):
 - sử dụng SameSite policy phù hợp (`SameSite=lax`)
-- **xác minh Origin/Referer** cho request unsafe (POST/PUT/PATCH/DELETE) ở **production** — nếu có Origin/Referer không thuộc allowlist (`CORS_ORIGINS`/`FRONTEND_URL`) thì trả `403`. (Bỏ qua khi không có Origin để không chặn CLI/tool nội bộ.)
+- **xác minh Origin/Referer** cho request unsafe (POST/PUT/PATCH/DELETE) ở **production** — so khớp **tuyệt đối** `scheme://host[:port]` với allowlist (`CORS_ORIGINS`/`FRONTEND_URL`). Không dùng `startswith` để tránh bypass bằng domain hậu tố (`remoteit.vn.evil.com`), cổng dài (`:30000`) hay `userinfo@host` (`localhost:3000@evil.com`). Với `Referer`, chỉ lấy phần origin trước khi so.
+- Bỏ qua khi request không có Origin/Referer (CLI/tool nội bộ) — **quyết định có chủ đích**: trình duyệt hiện đại luôn gửi `Origin` cho POST cross-site nên khoảng an toàn này chấp nhận được.
 - không coi CORS là CSRF protection.
 
 ## 7. CORS

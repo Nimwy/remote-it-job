@@ -47,6 +47,18 @@ def test_auth_create_and_delete_session(db):
     auth_service.delete_session(db, refresh_token)
 
 
+def test_auth_refresh_blocked_user(db):
+    # R-02: tài khoản bị khoá (session còn tồn tại) -> refresh trả auth.user_blocked
+    user = create_user(db, "hr@example.com", status=UserStatus.blocked)
+    db.commit()
+
+    _, refresh_token = auth_service.create_session(db, user)
+    with pytest.raises(APIError) as exc:
+        auth_service.refresh_session(db, refresh_token)
+    assert exc.value.status_code == 401
+    assert exc.value.code == "auth.user_blocked"
+
+
 def test_auth_change_password(db):
     user = User(
         name="HR", email="hr@example.com", password_hash=hash_password("secret123"),
