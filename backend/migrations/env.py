@@ -3,12 +3,18 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from app.core.config import get_settings
 from app.db.session import Base
 from app.models import *  # noqa: F403
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Dùng đúng DATABASE_URL của ứng dụng (.env) thay vì URL hardcode trong alembic.ini
+# để Alembic chạy được ở mọi môi trường (Docker, VPS, CI).
+# Escape '%' vì alembic.ini được đọc qua configparser (interpolation).
+config.set_main_option("sqlalchemy.url", get_settings().database_url.replace("%", "%%"))
 
 target_metadata = Base.metadata
 
