@@ -82,6 +82,20 @@ jobs:
       - name: Build backend-e2e image
         run: docker compose build backend-e2e
 
+      # Pre-start backend-e2e để Playwright reuseExistingServer (nếu không,
+      # webServer `docker compose up -d` thoát ngay -> "exited early").
+      - name: Start backend-e2e and wait
+        run: |
+          docker compose up -d backend-e2e
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8001/api/jobs >/dev/null 2>&1; then
+              echo "backend-e2e ready"
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://localhost:8001/api/jobs >/dev/null
+
       - name: Install Playwright browser
         working-directory: frontend
         run: npx playwright install --with-deps chromium
