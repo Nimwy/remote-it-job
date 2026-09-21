@@ -1,0 +1,76 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+# Không cho 2 deploy chạy chồng nhau trên cùng môi trường production.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build-test:
+    name: build-test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: remoteit
+          POSTGRES_PASSWORD: remoteit
+          POSTGRES_DB: remoteit_test
+        ports:
+          - "5433:5432"
+        options: >-
+          --health-cmd "pg_isready -U remoteit"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg2://remoteit:remoteit@localhost:5433/remoteit_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+        working-directory: backend
+      - run: ruff check .
+        working-directory: backend
+      - run: pytest -q
+        working-directory: backend
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run lint
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+
+  deploy:
+    name: deploy
+    needs: build-test
+    runs-on: [self-hosted, linux, x64]
+    environment: production
+    steps:
+      - name: Pull latest and deploy
+        run: |
+          cd ~/remoteit
+          git fetch origin
+          git reset --hard origin/main
+          bash deploy/deploy.sh
