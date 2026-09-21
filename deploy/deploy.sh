@@ -24,6 +24,14 @@ pm2 restart remoteit-frontend
 sudo systemctl restart remoteit-backend
 
 echo "==> Health check"
-sleep 2
-curl -fsS https://devremote.cc/api/jobs >/dev/null
-echo "Deploy OK"
+# Backend vừa restart có thể cần vài giây mới sẵn sàng -> thử lại tối đa ~60s
+for i in $(seq 1 30); do
+  if curl -fsS https://devremote.cc/api/jobs >/dev/null 2>&1; then
+    echo "Deploy OK"
+    exit 0
+  fi
+  echo "  chưa sẵn sàng (lần $i/30), thử lại sau 2s..."
+  sleep 2
+done
+echo "Health check thất bại sau 60s"
+exit 1
