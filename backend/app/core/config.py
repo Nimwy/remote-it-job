@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     access_token_ttl_seconds: int = 60 * 15
     session_max_age_seconds: int = 60 * 60 * 24 * 7
     env: str = "development"
+    # Tài khoản admin tạo bởi seed.py — production override qua .env (không commit credential thật)
+    admin_email: str = "admin@remoteit.vn"
+    admin_password: str = "admin123"
     visitor_cookie_name: str = "visitor_id"
     cookie_secure: bool = False
     rate_limit_enabled: bool = True

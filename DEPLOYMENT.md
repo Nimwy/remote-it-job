@@ -16,6 +16,7 @@
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Bắt buộc để bật Google OAuth; thiếu thì endpoint trả 501. |
 | `RATE_LIMIT_ENABLED` | `true` | Có thể tắt (vd khi test). |
 | `ENV` | `development` | `production` sẽ ẩn Swagger (`/docs`), OpenAPI (`/openapi.json`) và ReDoc (`/redoc`) — tránh phơi spec/credential công khai. |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | dev defaults | Tài khoản admin do `seed.py` tạo. **Production đặt giá trị riêng** và **không lưu credential thật trong repo/tài liệu** — giữ ở file cục bộ trên máy quản trị. |
 
 ### Frontend (`frontend/`)
 - `BACKEND_URL` — mặc định `http://localhost:8000`. Khi deploy đặt về URL backend production (dùng chung cho SSR và rewrite `/api`).

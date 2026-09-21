@@ -1,23 +1,25 @@
 from argon2 import PasswordHasher
 
+from app.core.config import get_settings
 from app.db.session import SessionLocal, engine
 from app.models import Base, Category, Tag, User
 from app.models.user import UserRole, UserStatus
 
 ph = PasswordHasher()
+settings = get_settings()
 
 
 def seed():
     Base.metadata.create_all(bind=engine)
 
     with SessionLocal() as db:
-        admin = db.query(User).filter(User.email == "admin@remoteit.vn").first()
+        admin = db.query(User).filter(User.email == settings.admin_email).first()
         if not admin:
             admin = User(
                 role=UserRole.admin,
                 name="Admin",
-                email="admin@remoteit.vn",
-                password_hash=ph.hash("admin123"),
+                email=settings.admin_email,
+                password_hash=ph.hash(settings.admin_password),
                 status=UserStatus.active,
             )
             db.add(admin)
