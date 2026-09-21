@@ -2,9 +2,9 @@
 
 ## Giai đoạn hiện tại
 
-**MVP đã triển khai xong — đang xử lý review vòng 2 (branch `fix/review-round2`)**
+**Đã triển khai production lên VPS + thiết lập CI/CD (GitHub Actions).**
 
-Toàn bộ backend, frontend, test và tài liệu đã hoàn thành theo yêu cầu review của người hướng dẫn. Vòng review thứ hai đang được xử lý tuần tự theo `yeucau.md` (tách test theo tầng, i18n, cô lập DB e2e, tài liệu màn hình...).
+MVP đã hoàn thành và đang chạy thật tại **https://devremote.cc** (VPS Ubuntu 24.04, không Docker). CI chạy trên PR, CD tự động deploy khi merge vào `main` (self-hosted runner trên VPS).
 
 ## Quyết định đã chốt
 
@@ -26,8 +26,7 @@ Toàn bộ backend, frontend, test và tài liệu đã hoàn thành theo yêu c
 - Đăng ký/đăng nhập bằng email/password.
 - Đăng nhập Google OAuth.
 - Tài khoản HR mới cần Admin duyệt.
-- Session phía server.
-- Session lưu trong PostgreSQL.
+- Xác thực bằng access token (JWT) + refresh token (opaque) lưu hash trong PostgreSQL.
 - Cookie HTTP-only.
 - Hash password bằng Argon2id.
 - Tài khoản Admin được tạo bằng seed/CLI.
@@ -39,10 +38,10 @@ Toàn bộ backend, frontend, test và tài liệu đã hoàn thành theo yêu c
 - Alembic (mỗi bảng 1 file migration riêng).
 
 ### Triển khai / runtime
-- Backend chạy trong Docker.
-- PostgreSQL chạy qua Docker Compose.
-- Frontend Next.js chạy trực tiếp bằng Node.js/npm trong WSL2.
-- Domain/hosting được xử lý riêng và nằm ngoài phạm vi triển khai hiện tại.
+- **Production:** VPS Ubuntu 24.04, **không Docker** — PostgreSQL + FastAPI (systemd) + Next.js (PM2) + Nginx + Certbot.
+- Domain: `https://devremote.cc` (Nginx proxy `/` → Next :3000, `/api` → FastAPI :8000).
+- **CI/CD:** GitHub Actions — CI (build-test) trên PR; CD (deploy) trên self-hosted runner khi push `main`.
+- Local dev: backend + PostgreSQL qua Docker Compose; frontend chạy bằng Node/npm trong WSL2.
 
 ### Vòng đời job
 ```text
@@ -100,21 +99,19 @@ HR bị blocked không bị hard-delete và job của họ không hiển thị c
 - i18n EN/VI (next-intl) + slug URL cho SEO.
 - Trang category + tag + thời gian tương đối.
 - Test backend/frontend/e2e (số lượng lấy từ lệnh chạy test — xem `TESTING.md`; không ghi con số cố định ở đây để tránh đóng băng theo ngày).
-- Tài liệu: API_REFERENCE.md, DIAGRAMS.md, SCREENS.md, TESTING.md.
+- Tài liệu: API_REFERENCE.md, DIAGRAMS.md, SCREENS.md, TESTING.md, DEPLOYMENT.md.
+- Production trên VPS + HTTPS (Certbot) + CI/CD (GitHub Actions, self-hosted runner) — xem `DEPLOYMENT.md`.
 
 ## Chưa triển khai / tồn đọng
 
 - Google OAuth cần config credentials thật (hiện trả 501 khi chưa cấu hình).
-- Deploy production (domain/hosting).
 - Email verification / password reset (ngoài MVP).
 
 ## Bước tiếp theo
 
-1. Hoàn tất các mục còn lại của review vòng 2 trong `yeucau.md` (tài liệu màn hình, quy trình, API).
-2. Review branch `fix/review-round2`, tạo PR để người hướng dẫn kiểm tra (mỗi task tách nhánh riêng, review qua PR — xem `CONTRIBUTING.md`).
-3. Merge PR vào `main` sau khi review OK.
-4. Config Google OAuth credentials thật.
-5. Cân nhắc deploy thử lên hosting (xem `DEPLOYMENT.md`).
+1. Bật required reviewers cho GitHub Environment `production` khi có người duyệt thứ 2.
+2. Config Google OAuth credentials thật (nếu cần).
+3. Theo dõi/ bảo trì: backup DB định kỳ, gia hạn cert (tự động), xem log.
 
 ## Ràng buộc quan trọng
 
