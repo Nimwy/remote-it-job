@@ -72,7 +72,7 @@ Backend docs tự sinh:
 - Đặc tả OpenAPI (source of truth): http://localhost:8000/openapi.json
 - ReDoc (bản đọc gọn): http://localhost:8000/redoc
 
-Để thử các endpoint cần đăng nhập (HR/Admin) trong Swagger: đăng nhập trước qua `POST /api/auth/login` trong cùng phiên (cookie `access_token` + `refresh_token`) rồi bấm "Try it out". Tài khoản mẫu: `admin@remoteit.vn / admin123`, `demo.hr@remoteit.vn / demo123`.
+Để thử các endpoint cần đăng nhập (HR/Admin) trong Swagger: đăng nhập trước qua `POST /api/auth/login` trong cùng phiên (cookie `access_token` + `refresh_token`) rồi bấm "Try it out". Tài khoản admin do `seed.py` tạo từ `ADMIN_EMAIL`/`ADMIN_PASSWORD` (xem mục "Tài khoản mặc định").
 
 ### 2. Frontend
 
@@ -97,12 +97,12 @@ cd frontend && npm test
 cd frontend && npm run test:e2e
 ```
 
-## Tài khoản mặc định
+## Tài khoản mặc định (chỉ cho môi trường dev)
 
-| Vai trò | Email | Mật khẩu |
-|---------|-------|----------|
-| Admin | `admin@remoteit.vn` | `admin123` |
-| HR (demo) | `demo.hr@remoteit.vn` | `demo123` |
+Tài khoản admin tạo bởi `seed.py` lấy từ biến môi trường `ADMIN_EMAIL` / `ADMIN_PASSWORD`
+(mặc định dev: `admin@remoteit.vn` / `admin123`). **Production phải đặt giá trị riêng trong `.env`
+trên server và không lưu credential thật trong repo.** Dữ liệu demo (HR + job mẫu) do `seed_demo.py`
+tạo chỉ dùng cho dev/e2e.
 
 ## Documentation
 
