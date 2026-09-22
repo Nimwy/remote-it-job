@@ -1,0 +1,4 @@
+# File chạy/cài trên Linux (VPS, CI) phải giữ LF kể cả khi checkout trên máy có core.autocrlf=true
+# (sudoers / systemd unit / script có CRLF sẽ hỏng).
+*.sh      text eol=lf
+deploy/** text eol=lf
