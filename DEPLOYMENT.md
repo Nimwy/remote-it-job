@@ -1,65 +1,128 @@
 # Triển khai & vận hành (DEPLOYMENT) — Remote IT Job
 
-> **Lưu ý (D-03):** Deploy production nằm ngoài phạm vi MVP hiện tại. README chỉ hướng dẫn chạy local. Tài liệu này ghi lại **biến môi trường**, **cách chạy migration khi deploy**, **nơi xem log** và **sao lưu DB** để khi bước sang giai đoạn deploy có sẵn quyết định `không bỏ quên`.
+Production chạy trên **VPS Ubuntu 24.04** (không Docker), domain **https://devremote.cc**.
 
-## Biến môi trường production
+## Kiến trúc production
 
-### Backend (`backend/app/core/config.py`)
-
-| Biến | Mặc định | Mô tả / yêu cầu production |
-|------|----------|-------|
-| `DATABASE_URL` | — | `postgresql+psycopg2://user:pass@host:5432/db` (bắt buộc, không có mặc định hợp lệ). |
-| `SECRET_KEY` | — | Bắt buộc set giá trị ngẫu nhiên mạnh; không dùng `dev-secret-key-not-for-production`. |
-| `CORS_ORIGINS` | `["http://localhost:3000"]` | Liệt kê origin frontend production, vd `["https://jobs.example.vn"]`. |
-| `FRONTEND_URL` | `http://localhost:3000` | URL frontend production, dùng cho OAuth redirect/session. |
-| `COOKIE_SECURE` | `true` | Yêu cầu bật (HTTPS) ở production; tắt khi dev qua HTTP. |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Bắt buộc để bật Google OAuth; thiếu thì endpoint trả 501. |
-| `RATE_LIMIT_ENABLED` | `true` | Có thể tắt (vd khi test). |
-| `ENV` | `development` | `production` sẽ ẩn Swagger (`/docs`), OpenAPI (`/openapi.json`) và ReDoc (`/redoc`) — tránh phơi spec/credential công khai. |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | dev defaults | Tài khoản admin do `seed.py` tạo. **Production đặt giá trị riêng** và **không lưu credential thật trong repo/tài liệu** — giữ ở file cục bộ trên máy quản trị. |
-
-### Frontend (`frontend/`)
-- `BACKEND_URL` — mặc định `http://localhost:8000`. Khi deploy đặt về URL backend production (dùng chung cho SSR và rewrite `/api`).
-
-## Chạy migration khi deploy
-
-```bash
-# Khởi tạo/migrate schema trước khi mở traffic
-docker compose run --rm backend alembic upgrade head
+```
+Internet → Nginx :443 (TLS Certbot)
+             ├── /            → Next.js :3000   (PM2: remoteit-frontend)
+             └── /api         → FastAPI :8000   (systemd: remoteit-backend)
+PostgreSQL 16 (local) — database `remoteit`
 ```
 
-- Migration do Alembic quản lý (`backend/alembic/`), mỗi bảng một file.
-- Chạy migration **trước** khi khởi động bản backend mới để tránh lệch schema.
-- Seed admin/categories/tags nếu cần: `docker compose run --rm backend python seed.py`.
+- Mã nguồn đặt tại `/home/deploy/remoteit` (user `deploy`).
+- Backend: venv `backend/.venv`, chạy `uvicorn`, quản lý bằng **systemd**.
+- Frontend: build `next build`, chạy `next start` qua **PM2**.
+- Nginx làm reverse proxy + HTTPS.
 
-## Xem log
+## Biến môi trường
+
+### Backend — `/home/deploy/remoteit/backend/.env` (không commit, `chmod 600`)
+
+| Biến | Ghi chú |
+|------|---------|
+| `DATABASE_URL` | `postgresql+psycopg2://remoteit:<pass>@127.0.0.1:5432/remoteit` |
+| `SECRET_KEY` | Chuỗi mạnh (`openssl rand -hex 32`) |
+| `CORS_ORIGINS` | `["https://devremote.cc"]` |
+| `FRONTEND_URL` | `https://devremote.cc` |
+| `COOKIE_SECURE` | `true` (bắt buộc khi HTTPS) |
+| `ENV` | `production` (ẩn `/docs`, `/openapi.json`, `/redoc`) |
+| `RATE_LIMIT_ENABLED` | `true` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Để trống nếu chưa dùng Google OAuth (endpoint trả 501) |
+| `GOOGLE_REDIRECT_URI` | `https://devremote.cc/api/auth/google/callback` |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Tài khoản admin do `seed.py` tạo — **không lưu trong repo** |
+
+### Frontend — `/home/deploy/remoteit/frontend/.env.production`
+
+| Biến | Ghi chú |
+|------|---------|
+| `BACKEND_URL` | `http://127.0.0.1:8000` (SSR gọi backend nội bộ) |
+
+## HTTPS (Certbot)
 
 ```bash
-# Log container backend (ví dụ)
-docker compose logs -f backend
+sudo certbot --nginx -d devremote.cc
+sudo certbot renew --dry-run        # kiểm tra gia hạn tự động
+sudo systemctl list-timers | grep certbot
 ```
 
-- Backend có middleware ghi mỗi request (method, path, status, duration, request_id, user_id) — xem `app/main.py`.
-- Lỗi không xử lý được ghi kèm `request_id` để truy vết; trả về `{error:{code,message,request_id}}`.
+- Cert: `/etc/letsencrypt/live/devremote.cc/fullchain.pem`; tự gia hạn qua `certbot.timer`.
+
+## CI/CD (GitHub Actions)
+
+Repo **public** → dùng **CI trên GitHub-hosted**, **CD trên self-hosted runner** (chỉ deploy khi push `main`).
+
+| Workflow | Trigger | Việc làm |
+|----------|---------|----------|
+| `.github/workflows/ci.yml` | `pull_request` → `main` | backend `ruff`+`pytest` (Postgres service), frontend `lint`+`vitest`+`build`, e2e Playwright |
+| `.github/workflows/deploy.yml` | `push` → `main` (+ `workflow_dispatch`) | `build-test` (không e2e) → `deploy` trên self-hosted runner |
+
+**Branch protection `main`:** require PR + 1 approval + status check `build-test` (admin được phép bypass).
+
+**Self-hosted runner** (trên VPS, user `deploy`):
+- Label: `self-hosted, linux, x64`.
+- Cài service: `sudo ./svc.sh install deploy && sudo ./svc.sh start`.
+
+**Sudoers tối thiểu** (`/etc/sudoers.d/remoteit-deploy`):
+```
+deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart remoteit-backend
+```
+
+### Quy trình deploy
+`deploy/deploy.sh` (chạy bởi job deploy): `pip install` → `alembic upgrade head` → `npm ci` + `npm run build` → `pm2 restart` + `systemctl restart` → health check (retry ~60s).
+
+## Migration
+
+```bash
+cd /home/deploy/remoteit/backend
+source .venv/bin/activate
+alembic upgrade head
+```
+
+- Alembic đọc `DATABASE_URL` từ `.env` (xem `migrations/env.py`).
+- Migration chạy **tự động mỗi lần deploy** (trong `deploy.sh`).
+
+## Seed
+
+```bash
+cd /home/deploy/remoteit/backend && source .venv/bin/activate
+python seed.py        # tạo admin (ADMIN_EMAIL/ADMIN_PASSWORD) + categories + tags
+```
+
+- **Không** tích hợp vào CI/CD (chạy tay 1 lần khi cần).
 
 ## Sao lưu DB
 
 ```bash
-# Dump toàn bộ database
-docker compose exec db pg_dump -U remoteit remoteit > backup_$(date +%F).sql
-
-# Khôi phục
-cat backup_2026-01-01.sql | docker compose exec -T db psql -U remoteit remoteit
+/home/deploy/remoteit/deploy/backup.sh    # pg_dump -Fc, giữ 7 bản gần nhất ở /home/deploy/backups
 ```
 
-- Volume Postgres bền qua container: `pgdata` (xem `docker-compose.yml`).
-- Nên lên lịch sao lưu định kỳ và kiểm thử khôi phục trước khi dùng production.
+Cron (user `deploy`, `crontab -e`):
+```
+0 3 * * * /home/deploy/remoteit/deploy/backup.sh >> /home/deploy/backups/backup.log 2>&1
+```
 
-## Build production
+Khôi phục:
+```bash
+pg_restore -d "postgresql://remoteit:<pass>@127.0.0.1:5432/remoteit" --clean /home/deploy/backups/remoteit_YYYY-MM-DD_HHMMSS.dump
+```
 
-- Backend có `backend/Dockerfile` cho môi trường runtime; dev dùng volume mount `./backend:/app` và `--reload`.
-- Frontend build static: `cd frontend && npm run build`.
+## Log
 
-## Kiến trúc khuyến nghị khi deploy (ngoài MVP)
-- Đặt một reverse proxy (Nginx/Traefik) trước backend để xử lý HTTPS, CORS và rate limit tầng edge — quyết định này được chốt có chủ đích (P2 trong review), không bỏ quên.
-- Tách DB production khỏi DB dev; dùng secret quản lý (không commit).
+```bash
+journalctl -u remoteit-backend -f      # FastAPI
+pm2 logs remoteit-frontend             # Next.js
+sudo tail -f /var/log/nginx/access.log /var/log/nginx/error.log
+```
+
+## Rollback
+
+- Chưa cần cơ chế release/tag. Khi cần: `git revert <commit>` → merge → deploy tự chạy lại; hoặc `git reset --hard <commit-cũ>` trên VPS rồi chạy `deploy/deploy.sh`.
+
+## Ghi chú bảo mật
+
+- **Không** commit `.env` hay credential thật; admin credential lưu ở file cục bộ.
+- `SECRET_KEY` production phải mạnh; cookie `Secure` + `HttpOnly` + `SameSite=Lax`.
+- Ẩn tài liệu API ở production (`ENV=production`).
+- Firewall `ufw`: chỉ mở 22/80/443.
