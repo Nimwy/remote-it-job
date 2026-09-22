@@ -10,6 +10,9 @@ from app.core.exceptions import APIError
 
 settings = get_settings()
 
+# Cố định thuật toán trong code — không cho cấu hình qua env (tránh 'none' / lệch thuật toán).
+JWT_ALGORITHM = "HS256"
+
 
 def create_access_token(user_id: int, role: str) -> str:
     now = datetime.now(UTC)
@@ -21,7 +24,7 @@ def create_access_token(user_id: int, role: str) -> str:
         "iat": now,
         "exp": now + timedelta(seconds=settings.access_token_ttl_seconds),
     }
-    return pyjwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)
+    return pyjwt.encode(payload, settings.secret_key.get_secret_value(), algorithm=JWT_ALGORITHM)
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
@@ -34,8 +37,8 @@ def decode_access_token(token: str) -> dict[str, Any]:
     try:
         payload = pyjwt.decode(
             token,
-            settings.secret_key,
-            algorithms=[settings.jwt_algorithm],
+            settings.secret_key.get_secret_value(),
+            algorithms=[JWT_ALGORITHM],
             options={"require": ["exp", "sub", "type"]},
         )
     except pyjwt.ExpiredSignatureError as exc:

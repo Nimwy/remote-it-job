@@ -20,10 +20,18 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql+psycopg2://remoteit:remoteit@db:5432/remoteit
+    # Giá trị dev/e2e — KHÔNG phải secret, không dùng cho production.
+    environment: &backend-env
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: remoteit
+      DB_USER: remoteit
+      DB_PASSWORD: remoteit
       SECRET_KEY: dev-secret-key-not-for-production
       CORS_ORIGINS: '["http://localhost:3000"]'
+      FRONTEND_URL: http://localhost:3000
+      ADMIN_EMAIL: admin@remoteit.vn
+      ADMIN_PASSWORD: admin123
     depends_on:
       db:
         condition: service_healthy
@@ -32,7 +40,8 @@ services:
 
   # Backend cô lập cho e2e (T-04): DB riêng remoteit_e2e, port 8001.
   # Khởi động: docker compose up -d backend-e2e
-  # Lệnh này tự tạo DB, chạy migration schema rồi seed dữ liệu demo idempotent.
+  # Lệnh này tự tạo DB, dựng schema bằng metadata.create_all (KHÔNG qua Alembic —
+  # migration được kiểm tra riêng ở CI) rồi seed dữ liệu demo idempotent.
   backend-e2e:
     build: ./backend
     user: "1000:1000"
@@ -40,9 +49,11 @@ services:
     ports:
       - "8001:8001"
     environment:
-      DATABASE_URL: postgresql+psycopg2://remoteit:remoteit@db:5432/remoteit_e2e
+      <<: *backend-env
+      DB_NAME: remoteit_e2e
       SECRET_KEY: e2e-secret-key-not-for-production
       CORS_ORIGINS: '["http://localhost:3100", "http://localhost:3000"]'
+      FRONTEND_URL: http://localhost:3100
     depends_on:
       db:
         condition: service_healthy

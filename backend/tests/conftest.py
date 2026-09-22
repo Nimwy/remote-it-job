@@ -2,6 +2,18 @@ import os
 
 os.environ["RATE_LIMIT_ENABLED"] = "false"
 
+# Settings không còn default cho biến bắt buộc -> cấp giá trị test (không phải secret)
+# nếu môi trường chưa đặt, để pytest chạy được ở mọi nơi (docker compose, CI, máy dev).
+os.environ.setdefault("DB_HOST", "db")
+os.environ.setdefault("DB_NAME", "remoteit_test")
+os.environ.setdefault("DB_USER", "remoteit")
+os.environ.setdefault("DB_PASSWORD", "remoteit")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production")
+os.environ.setdefault("CORS_ORIGINS", '["http://localhost:3000"]')
+os.environ.setdefault("FRONTEND_URL", "http://localhost:3000")
+os.environ.setdefault("ADMIN_EMAIL", "admin@remoteit.vn")
+os.environ.setdefault("ADMIN_PASSWORD", "admin123")
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
