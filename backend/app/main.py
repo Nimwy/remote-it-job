@@ -4,13 +4,16 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from fastapi import FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
+from app.api.dependencies import get_db
 from app.api.routes import admin, auth, catalog, hr, jobs
 from app.core.config import get_settings
 from app.core.exceptions import APIError
@@ -33,7 +36,7 @@ def _read_version() -> str:
         return "0.1.0"
 
 # S-04: ẩn tài liệu API (Swagger/openapi/redoc) ở production để không phơi spec + credential.
-_is_production = settings.env.strip().lower() == "production"
+_is_production = settings.is_production
 _docs_url = None if _is_production else "/docs"
 _openapi_url = None if _is_production else "/openapi.json"
 _redoc_url = None if _is_production else "/redoc"
@@ -76,6 +79,7 @@ openapi_tags = [
     {"name": "catalog", "description": "Danh mục (category) và thẻ (tag) công khai."},
     {"name": "hr", "description": "Các thao tác dành cho HR: quản lý job, hồ sơ và kênh liên hệ."},
     {"name": "admin", "description": "Quản trị: duyệt tin/HR, quản lý job, danh mục và tag."},
+    {"name": "health", "description": "Health check cho vận hành."},
 ]
 
 
@@ -106,7 +110,7 @@ app.add_middleware(
 )
 
 # Cần cho Google OAuth state; dùng SECRET_KEY (B-12)
-app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
+app.add_middleware(SessionMiddleware, secret_key=settings.secret_key.get_secret_value())
 
 
 def _extract_origin(value: str) -> str | None:
@@ -260,6 +264,25 @@ async def request_logging_middleware(request: Request, call_next):
         f" user={user_id}" if user_id else "",
     )
     return response
+
+
+@app.get(
+    "/api/health",
+    tags=["health"],
+    summary="Health check",
+    description="Kiểm tra app và kết nối DB (`SELECT 1`). Dùng cho health check khi deploy.",
+    responses={status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ErrorResponse, "description": "DB không kết nối được"}},
+)
+def health(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("Health check: DB không kết nối được")
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"error": {"code": "health.db_unavailable", "message": "Database không sẵn sàng"}},
+        )
+    return {"status": "ok"}
 
 
 app.include_router(auth.router, prefix="/api", responses=AUTH_ERROR_RESPONSES)

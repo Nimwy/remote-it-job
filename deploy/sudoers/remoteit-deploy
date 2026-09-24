@@ -1,0 +1,6 @@
+# /etc/sudoers.d/remoteit-deploy — quyền tối thiểu cho self-hosted runner (user deploy):
+# chỉ được restart backend, không gì khác.
+# Cài (kiểm tra cú pháp trước — sudoers hỏng là mất quyền sudo):
+#   sudo visudo -cf deploy/sudoers/remoteit-deploy \
+#     && sudo install -m 440 deploy/sudoers/remoteit-deploy /etc/sudoers.d/remoteit-deploy
+deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart remoteit-backend

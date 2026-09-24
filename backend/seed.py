@@ -19,7 +19,7 @@ def seed():
                 role=UserRole.admin,
                 name="Admin",
                 email=settings.admin_email,
-                password_hash=ph.hash(settings.admin_password),
+                password_hash=ph.hash(settings.admin_password.get_secret_value()),
                 status=UserStatus.active,
             )
             db.add(admin)

@@ -8,15 +8,18 @@ on:
 permissions:
   contents: read
 
-# Không cho 2 deploy chạy chồng nhau trên cùng môi trường production.
+# Không cho 2 deploy chạy chồng nhau: xếp hàng thay vì huỷ (deploy dở còn tệ hơn deploy chậm).
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
+  # Cổng chặn: push thẳng vào main (admin bypass) và workflow_dispatch không đi qua CI của PR.
+  # Không chạy e2e (đã chạy ở PR) để deploy nhanh hơn.
   build-test:
     name: build-test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16
@@ -31,8 +34,19 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+    # Giá trị test — KHÔNG phải secret.
     env:
       TEST_DATABASE_URL: postgresql+psycopg2://remoteit:remoteit@localhost:5433/remoteit_test
+      DB_HOST: localhost
+      DB_PORT: "5433"
+      DB_NAME: remoteit_migrate
+      DB_USER: remoteit
+      DB_PASSWORD: remoteit
+      SECRET_KEY: ci-secret-key-not-for-production
+      CORS_ORIGINS: '["http://localhost:3000"]'
+      FRONTEND_URL: http://localhost:3000
+      ADMIN_EMAIL: admin@remoteit.vn
+      ADMIN_PASSWORD: admin123
     steps:
       - uses: actions/checkout@v4
 
@@ -45,6 +59,15 @@ jobs:
         working-directory: backend
       - run: ruff check .
         working-directory: backend
+      - name: Alembic migrations
+        working-directory: backend
+        run: |
+          PGPASSWORD=remoteit psql -h localhost -p 5433 -U remoteit -d remoteit_test \
+            -c "CREATE DATABASE remoteit_migrate"
+          alembic upgrade head
+          alembic check
+          alembic downgrade base
+          alembic upgrade head
       - run: pytest -q
         working-directory: backend
 
@@ -65,12 +88,58 @@ jobs:
   deploy:
     name: deploy
     needs: build-test
+    # workflow_dispatch từ branch khác main KHÔNG được deploy lên production.
+    if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, linux, x64]
     environment: production
+    timeout-minutes: 20
+    env:
+      APP_DIR: ${{ vars.APP_DIR || '/home/deploy/remoteit' }}
+
     steps:
-      - name: Pull latest and deploy
+      # Deploy đúng commit đã qua `build-test` — không lấy origin/main tại thời điểm chạy.
+      - name: Check out tested commit
         run: |
-          cd ~/remoteit
-          git fetch origin
-          git reset --hard origin/main
-          bash deploy/deploy.sh
+          cd "$APP_DIR"
+          git fetch origin --prune
+          git checkout --force --detach "$GITHUB_SHA"
+
+      # deploy/.env.deploy (config backend production) -> backend/.env.
+      # Key backend/frontend để trống trong file = secret, lấy từ GitHub Secret cùng tên.
+      # Secret truyền qua env: (không nhúng ${{ secrets.* }} vào script -> không vỡ khi secret chứa ').
+      - name: Create .env from deploy/.env.deploy + GitHub Secrets
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        run: |
+          cd "$APP_DIR"
+          umask 077
+          : > backend/.env.tmp
+
+          while IFS= read -r line || [ -n "$line" ]; do
+            [[ "$line" =~ ^([A-Z][A-Z0-9_]*)=(.*)$ ]] || continue
+            key="${BASH_REMATCH[1]}"
+            val="${BASH_REMATCH[2]}"
+
+            [ -n "$val" ] || val="${!key-}"   # để trống -> GitHub Secret cùng tên
+            [ -n "$val" ] || continue         # vẫn trống -> app dùng default (step Validate bắt biến thiếu)
+            # python-dotenv thay thế "${...}" và xử lý "\" kể cả trong nháy đơn -> không cho phép
+            # shellcheck disable=SC1003,SC2016
+            case "$val" in
+              *"'"* | *'\'* | *'${'*) echo "❌ $key chứa dấu ', dấu \\ hoặc \${"; exit 1 ;;
+            esac
+            printf "%s='%s'\n" "$key" "$val" >> backend/.env.tmp
+          done < deploy/.env.deploy
+
+          mv backend/.env.tmp backend/.env
+          echo "✅ .env created"
+          sed -E "s/^((DB_PASSWORD|SECRET_KEY|ADMIN_PASSWORD|GOOGLE_CLIENT_SECRET)=).*/\1***/" backend/.env
+
+      # Các bước trên server (deps, kiểm tra config, backup + migrate, build, restart,
+      # health check) nằm trong deploy/deploy.sh — chạy tay được trên VPS khi cần.
+      - name: Deploy
+        run: bash "$APP_DIR/deploy/deploy.sh"

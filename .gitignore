@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# Cấu hình vận hành (không chứa secret) — được commit
+!deploy/.env.deploy
 
 # Python
 __pycache__/

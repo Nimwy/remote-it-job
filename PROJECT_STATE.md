@@ -87,13 +87,13 @@ HR bị blocked không bị hard-delete và job của họ không hiển thị c
 - Không cho phép HR tự do tạo tag trong MVP.
 
 ### Lượt xem
-- Một server-side session chỉ được tính view cho cùng một job tối đa một lần trong 24 giờ.
+- Một người xem (cookie `visitor_id`) chỉ được tính view cho cùng một job tối đa một lần trong 24 giờ.
 - Backend kiểm soát việc đếm, không phải frontend.
 
 ## Đã triển khai
 
-- Backend FastAPI (auth, jobs, HR, admin) — chạy Docker.
-- 8 file migration (mỗi bảng 1 file).
+- Backend FastAPI (auth, jobs, HR, admin) — production chạy systemd; dev local dùng Docker.
+- 9 file migration (mỗi bảng 1 file + index cho sessions).
 - Repository layer tách khỏi services.
 - Frontend Next.js (SSR) — public, HR, Admin.
 - i18n EN/VI (next-intl) + slug URL cho SEO.
