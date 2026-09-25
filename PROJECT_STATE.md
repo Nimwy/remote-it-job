@@ -16,6 +16,7 @@ MVP đã hoàn thành và đang chạy thật tại **https://devremote.cc** (VP
 - Job seeker không cần tài khoản.
 - Không nộp/upload CV qua nền tảng.
 - URL dùng slug cho SEO (job `/jobs/{slug}-{id}`, category `/category/{slug}`, tag `/tag/{slug}`).
+- URL có **tiền tố locale** (`localePrefix: "always"`): `/vi/...` (mặc định) và `/en/...`; `/` redirect 307 → `/vi`. Chọn "always" để tránh lỗi middleware-rewrite của Next 16 khi bind hostname (cho phép `next start -H 127.0.0.1`).
 
 ### Vai trò
 - Job seeker: truy cập công khai.

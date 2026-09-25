@@ -7,6 +7,8 @@ Chú thích trạng thái dùng chung:
 - **Lỗi** — request fail / dữ liệu không tìm thấy.
 - **Mobile** — < 768px; dùng hamburger menu (U-01), card xếp dọc, bảng một cột.
 
+> **Lưu ý về URL (locale prefix):** app dùng next-intl với `localePrefix: "always"` — mọi URL đều có tiền tố locale: `/vi/...` (mặc định) và `/en/...`. Ví dụ `/vi/jobs`, `/en/login`. Truy cập `/` sẽ **redirect (307) sang `/vi`**. Các route dưới đây ghi ở dạng **bỏ tiền tố locale** cho gọn; khi chạy thực tế thêm `/vi` hoặc `/en` ở đầu. Riêng `/api/*` (API backend) **không** có tiền tố locale.
+
 ---
 
 ## Nhóm Public

@@ -38,6 +38,14 @@ Tuỳ chọn thêm Variable `APP_DIR` (mặc định `/home/deploy/remoteit`).
 - Giá trị **không được chứa** dấu `'`, dấu `\` hoặc chuỗi `${` (python-dotenv sẽ đọc sai).
 - Frontend không cần `.env` ở production: SSR gọi backend qua default `http://localhost:8000` (cùng VPS).
 
+### Locale prefix (URL)
+
+Frontend dùng next-intl với **`localePrefix: "always"`** (`frontend/src/i18n/routing.ts`): mọi URL có tiền tố locale `/vi/...` (mặc định) hoặc `/en/...`; `/` **redirect 307 → `/vi`**. Điều này cũng để tránh lỗi Next 16 khi bind hostname (xem mục bên dưới), cho phép PM2 chạy `next start -H 127.0.0.1`.
+
+**Vì sao bind `-H 127.0.0.1`:** Next 16, khi bind hostname cụ thể + `X-Forwarded-Proto: https`, sẽ sinh middleware-rewrite **tuyệt đối** (`https://localhost:3000/...`) và tự proxy HTTPS tới server HTTP → `500`. Với `localePrefix: "always"`, `/` **redirect** (không rewrite) nên tránh được; khi đó bind `127.0.0.1` an toàn (2 lớp bảo vệ: bind localhost + `ufw`).
+
+> Khi đổi `deploy/pm2/ecosystem.config.js`, `pm2 restart` **không** tự áp args mới — cần `pm2 delete remoteit-frontend && pm2 start deploy/pm2/ecosystem.config.js && pm2 save`.
+
 ## Cài đặt server (lần đầu / khi đổi hạ tầng)
 
 Cấu hình server nằm trong repo (lấy từ VPS ngày 2026-09-22), cài **bằng tay** — deploy tự động không đụng vào `/etc`:
