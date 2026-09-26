@@ -4,10 +4,14 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { CompanyLogo } from "@/components/CompanyLogo";
+import { JsonLd } from "@/components/JsonLd";
 import { RichText } from "@/components/RichText";
 import { serverGetJob, serverListJobs } from "@/services/jobs";
 import { parseJobId } from "@/lib/url";
 import { timeAgo, timeLeft } from "@/lib/date";
+import { breadcrumbJsonLd, jobPostingJsonLd } from "@/lib/structured-data";
+import { alternates } from "@/lib/site";
+import type { Locale } from "@/i18n/routing";
 
 const contactIcons: Record<string, string> = {
   zalo: "chat",
@@ -23,11 +27,13 @@ export async function generateMetadata({
   params: Promise<{ slugId: string }>;
 }): Promise<Metadata> {
   const { slugId } = await params;
+  const locale = (await getLocale()) as Locale;
   const job = await serverGetJob(parseJobId(slugId));
   if (!job) notFound();
   return {
     title: `${job.title} - ${job.company_name} | Remote IT`,
     description: job.description.slice(0, 160),
+    alternates: alternates(locale, `/jobs/${job.slug}-${job.id}`),
   };
 }
 
@@ -43,7 +49,7 @@ export default async function JobDetailPage({
   const t = await getTranslations("jobDetail");
   const jt = await getTranslations("jobType");
   const ct = await getTranslations("contact");
-  const locale = await getLocale();
+  const locale = (await getLocale()) as Locale;
 
   const salary =
     job.salary_min || job.salary_max
@@ -63,6 +69,17 @@ export default async function JobDetailPage({
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-8">
+      <JsonLd data={jobPostingJsonLd(job, locale)} />
+      <JsonLd
+        data={breadcrumbJsonLd(
+          [
+            { name: t("home"), path: "/" },
+            { name: t("backToList"), path: "/jobs" },
+            { name: job.title, path: `/jobs/${job.slug}-${job.id}` },
+          ],
+          locale,
+        )}
+      />
       <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-body-sm text-secondary">
         <Link href="/" className="hover:text-primary">
           {t("home")}
