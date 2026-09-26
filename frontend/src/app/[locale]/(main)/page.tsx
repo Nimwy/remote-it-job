@@ -1,11 +1,22 @@
-import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { JobCard } from "@/components/JobCard";
+import { JsonLd } from "@/components/JsonLd";
 import { Icon } from "@/components/ui/Icon";
 import { serverListCategories, serverListJobs, serverListTags } from "@/services/jobs";
+import { websiteJsonLd } from "@/lib/structured-data";
+import { alternates } from "@/lib/site";
+import type { Locale } from "@/i18n/routing";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = (await getLocale()) as Locale;
+  return { alternates: alternates(locale, "/") };
+}
 
 export default async function HomePage() {
   const t = await getTranslations("home");
+  const locale = (await getLocale()) as Locale;
   const [jobsData, categories, tags] = await Promise.all([
     serverListJobs({ page: 1, page_size: 9 }),
     serverListCategories(),
@@ -14,6 +25,7 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 py-8">
+      <JsonLd data={websiteJsonLd(locale)} />
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-tertiary px-6 py-10 text-center md:py-20">
         <div className="pointer-events-none absolute inset-0 opacity-10">
           <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-white" />

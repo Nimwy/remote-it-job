@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Inter } from "next/font/google";
 import { getLocale, getTranslations } from "next-intl/server";
+import { getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geist = Geist({
@@ -16,6 +17,7 @@ const inter = Inter({
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata");
   return {
+    metadataBase: new URL(getSiteUrl()),
     title: t("siteTitle"),
     description: t("siteDescription"),
   };
