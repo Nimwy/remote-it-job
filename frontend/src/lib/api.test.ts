@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch } from "./api";
+import { ApiError, apiFetch, setSessionExpiredHandler } from "./api";
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -109,7 +109,7 @@ describe("apiFetch refresh handling", () => {
     expect(refreshCalls).toBe(1);
   });
 
-  it("on refresh failure logs out and redirects to login (R-21)", async () => {
+  it("on refresh failure logs out and invokes the session-expired handler (R-21)", async () => {
     const calls: string[] = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
@@ -124,14 +124,15 @@ describe("apiFetch refresh handling", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    // stub window để kiểm tra redirect (test chạy trong env node)
-    const fakeWindow = { location: { href: "" } };
-    vi.stubGlobal("window", fakeWindow);
+    const onExpired = vi.fn();
+    setSessionExpiredHandler(onExpired);
 
     await expect(apiFetch("/jobs")).rejects.toMatchObject({ code: "auth.token_expired" });
 
     expect(calls.some((c) => c.includes("/api/auth/refresh"))).toBe(true);
     expect(calls.some((c) => c.includes("/api/auth/logout"))).toBe(true);
-    expect(fakeWindow.location.href).toBe("/login");
+    expect(onExpired).toHaveBeenCalledTimes(1);
+
+    setSessionExpiredHandler(null);
   });
 });

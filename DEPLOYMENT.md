@@ -49,7 +49,8 @@ Frontend dùng next-intl với **`localePrefix: "always"`** (`frontend/src/i18n/
 ### SEO (JSON-LD, canonical, hreflang)
 
 - `SITE_URL` (server-side, **không** phải `NEXT_PUBLIC_`) quyết định origin tuyệt đối cho JSON-LD / `canonical` / `hreflang`. Mặc định: `https://devremote.cc` ở production, `http://localhost:3000` khi dev. Override bằng `env: { SITE_URL: "..." }` trong `deploy/pm2/ecosystem.config.js` (rồi re-apply PM2 như mục trên).
-- Mỗi trang render JSON-LD **server-side** (`frontend/src/lib/structured-data.ts`): Home `WebSite`; category/tag `CollectionPage` + `ItemList` + `BreadcrumbList`; job detail `JobPosting` + `BreadcrumbList`. Kèm `<link rel="canonical">` + `hreflang` (`vi`, `en`, `x-default`) qua `generateMetadata` (`frontend/src/lib/site.ts`).
+- Mỗi trang render JSON-LD **server-side** (`frontend/src/lib/structured-data.ts`): Home `WebSite`; category/tag `CollectionPage` + `ItemList` + `BreadcrumbList`; job detail `JobPosting` + `BreadcrumbList`. `<link rel="canonical">` đặt qua `generateMetadata` (`frontend/src/lib/site.ts`).
+- `hreflang` do **middleware next-intl** tự sinh (`alternateLinks`, mặc định bật) dưới dạng HTTP `Link` header cho mọi route — không khai báo lại trong metadata để tránh hai bộ hreflang trùng/lệch `x-default`.
 - JSON-LD chỉ có trong HTML render từ server. Điều hướng client-side (`next/link`) không chèn lại inline `<script>`; crawler đọc HTML SSR nên vẫn đúng.
 - Kiểm tra sau deploy: `curl -s https://devremote.cc/vi | grep -o '"@type":"[A-Za-z]*"'` và Google Rich Results Test.
 
