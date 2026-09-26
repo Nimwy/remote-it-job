@@ -312,6 +312,22 @@ Chú thích trạng thái dùng chung:
 
 ---
 
+## SEO — Structured data (JSON-LD) & canonical
+
+Mỗi trang public render JSON-LD **server-side** (`frontend/src/lib/structured-data.ts` + `frontend/src/components/JsonLd.tsx`) và `<link rel="canonical">` + `hreflang` (`frontend/src/lib/site.ts`):
+
+| Trang | JSON-LD | canonical / hreflang |
+|---|---|---|
+| Trang chủ `/` | `WebSite` | `/vi`, `/en`, `x-default` |
+| Danh mục `/category/{slug}` | `CollectionPage` + `ItemList` + `BreadcrumbList` | `/vi/category/{slug}` |
+| Tag `/tag/{slug}` | `CollectionPage` + `ItemList` + `BreadcrumbList` | `/vi/tag/{slug}` |
+| Chi tiết `/jobs/{slug}-{id}` | `JobPosting` + `BreadcrumbList` | `/vi/jobs/{slug}-{id}` |
+
+- `JobPosting` gồm `datePosted`, `validThrough` (nếu có), `employmentType`, `hiringOrganization`, `jobLocationType: TELECOMMUTE`, `applicantLocationRequirements`, `baseSalary` (chỉ fulltime/parttime), `identifier`, `url`.
+- Origin tuyệt đối lấy từ `SITE_URL` (mặc định `https://devremote.cc` ở production).
+- JSON-LD chỉ có trong HTML render từ server; điều hướng client-side không chèn lại inline `<script>` (crawler đọc HTML SSR nên vẫn đúng).
+- Kiểm tra: Google Rich Results Test hoặc Schema Markup Validator.
+
 ## Hành trình người dùng (tham chiếu cùng DIAGRAMS.md)
 
 - **Job seeker:** Trang chủ `/` → tìm kiếm `/jobs` → bộ lọc → xem chi tiết `/jobs/{slug}-{id}` → liên hệ HR (kênh liên hệ) → quay lại / đi hướng khác. **Nhánh lỗi:** job không public → 404 "việc làm không tồn tại". **Trạng thái rỗng:** không có kết quả tìm kiếm/chuyên mục trống.

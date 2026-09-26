@@ -16,6 +16,7 @@ MVP đã hoàn thành và đang chạy thật tại **https://devremote.cc** (VP
 - Job seeker không cần tài khoản.
 - Không nộp/upload CV qua nền tảng.
 - URL dùng slug cho SEO (job `/jobs/{slug}-{id}`, category `/category/{slug}`, tag `/tag/{slug}`).
+- SEO: JSON-LD (`WebSite`, `CollectionPage`/`ItemList`, `JobPosting`, `BreadcrumbList`) + `canonical`/`hreflang` render server-side; origin lấy từ `SITE_URL` (xem `SCREENS.md` § SEO, `DEPLOYMENT.md` § SEO).
 - URL có **tiền tố locale** (`localePrefix: "always"`): `/vi/...` (mặc định) và `/en/...`; `/` redirect 307 → `/vi`. Chọn "always" để tránh lỗi middleware-rewrite của Next 16 khi bind hostname (cho phép `next start -H 127.0.0.1`).
 
 ### Vai trò
@@ -98,6 +99,7 @@ HR bị blocked không bị hard-delete và job của họ không hiển thị c
 - Repository layer tách khỏi services.
 - Frontend Next.js (SSR) — public, HR, Admin.
 - i18n EN/VI (next-intl) + slug URL cho SEO.
+- SEO: JSON-LD + canonical/hreflang server-side cho home/category/tag/job detail (`frontend/src/lib/structured-data.ts`, `site.ts`).
 - Trang category + tag + thời gian tương đối.
 - Test backend/frontend/e2e (số lượng lấy từ lệnh chạy test — xem `TESTING.md`; không ghi con số cố định ở đây để tránh đóng băng theo ngày).
 - Tài liệu: API_REFERENCE.md, DIAGRAMS.md, SCREENS.md, TESTING.md, DEPLOYMENT.md.

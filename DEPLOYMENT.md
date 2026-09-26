@@ -46,6 +46,13 @@ Frontend dùng next-intl với **`localePrefix: "always"`** (`frontend/src/i18n/
 
 > Khi đổi `deploy/pm2/ecosystem.config.js`, `pm2 restart` **không** tự áp args mới — cần `pm2 delete remoteit-frontend && pm2 start deploy/pm2/ecosystem.config.js && pm2 save`.
 
+### SEO (JSON-LD, canonical, hreflang)
+
+- `SITE_URL` (server-side, **không** phải `NEXT_PUBLIC_`) quyết định origin tuyệt đối cho JSON-LD / `canonical` / `hreflang`. Mặc định: `https://devremote.cc` ở production, `http://localhost:3000` khi dev. Override bằng `env: { SITE_URL: "..." }` trong `deploy/pm2/ecosystem.config.js` (rồi re-apply PM2 như mục trên).
+- Mỗi trang render JSON-LD **server-side** (`frontend/src/lib/structured-data.ts`): Home `WebSite`; category/tag `CollectionPage` + `ItemList` + `BreadcrumbList`; job detail `JobPosting` + `BreadcrumbList`. Kèm `<link rel="canonical">` + `hreflang` (`vi`, `en`, `x-default`) qua `generateMetadata` (`frontend/src/lib/site.ts`).
+- JSON-LD chỉ có trong HTML render từ server. Điều hướng client-side (`next/link`) không chèn lại inline `<script>`; crawler đọc HTML SSR nên vẫn đúng.
+- Kiểm tra sau deploy: `curl -s https://devremote.cc/vi | grep -o '"@type":"[A-Za-z]*"'` và Google Rich Results Test.
+
 ## Cài đặt server (lần đầu / khi đổi hạ tầng)
 
 Cấu hình server nằm trong repo (lấy từ VPS ngày 2026-09-22), cài **bằng tay** — deploy tự động không đụng vào `/etc`:
