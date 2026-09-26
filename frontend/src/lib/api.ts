@@ -33,6 +33,16 @@ async function refreshSession(): Promise<boolean> {
   return refreshPromise;
 }
 
+let sessionExpiredHandler: (() => void) | null = null;
+
+/**
+ * Cho tầng UI (client component) đăng ký cách điều hướng khi phiên hết hạn.
+ * Dùng router locale-aware (`@/i18n/navigation`) để giữ tiền tố `/vi`/`/en`.
+ */
+export function setSessionExpiredHandler(handler: (() => void) | null): void {
+  sessionExpiredHandler = handler;
+}
+
 /**
  * R-21: refresh thất bại -> thu hồi phiên (best-effort) và đưa người dùng về trang đăng nhập,
  * tránh việc mỗi 401 tiếp theo lại bắn thêm một lần refresh hỏng.
@@ -43,9 +53,7 @@ async function handleSessionExpired(): Promise<void> {
   } catch {
     // bỏ qua lỗi logout
   }
-  if (typeof window !== "undefined") {
-    window.location.href = "/login";
-  }
+  sessionExpiredHandler?.();
 }
 
 async function rawFetch<T>(path: string, options?: RequestInit): Promise<T> {
