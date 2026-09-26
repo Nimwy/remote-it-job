@@ -314,11 +314,11 @@ Chú thích trạng thái dùng chung:
 
 ## SEO — Structured data (JSON-LD) & canonical
 
-Mỗi trang public render JSON-LD **server-side** (`frontend/src/lib/structured-data.ts` + `frontend/src/components/JsonLd.tsx`) và `<link rel="canonical">` + `hreflang` (`frontend/src/lib/site.ts`):
+Mỗi trang public render JSON-LD **server-side** (`frontend/src/lib/structured-data.ts` + `frontend/src/components/JsonLd.tsx`) và `<link rel="canonical">` (`frontend/src/lib/site.ts`). `hreflang` do middleware next-intl tự sinh (HTTP `Link` header) cho mọi route:
 
-| Trang | JSON-LD | canonical / hreflang |
+| Trang | JSON-LD | canonical |
 |---|---|---|
-| Trang chủ `/` | `WebSite` | `/vi`, `/en`, `x-default` |
+| Trang chủ `/` | `WebSite` | `/vi` |
 | Danh mục `/category/{slug}` | `CollectionPage` + `ItemList` + `BreadcrumbList` | `/vi/category/{slug}` |
 | Tag `/tag/{slug}` | `CollectionPage` + `ItemList` + `BreadcrumbList` | `/vi/tag/{slug}` |
 | Chi tiết `/jobs/{slug}-{id}` | `JobPosting` + `BreadcrumbList` | `/vi/jobs/{slug}-{id}` |
