@@ -183,7 +183,8 @@ Chú thích trạng thái dùng chung:
 | Tiêu đề*  [________________]                               |
 | Chuyên mục* [Select (Chọn chuyên mục)]                     |
 | Loại*      [ ( )Toàn thời gian ( )Hợp đồng ... ]           |
-| Địa điểm   [______________]  Múi giờ [UTC+7]               |
+| Địa điểm*  [______________]  Múi giờ [UTC+7]               |
+| Hạn nộp    [__/__/____]  (tuỳ chọn)                        |
 | Lương      [min] - [max]   Tiền tệ [USD]                   |
 | Mô tả*     [_______________________________________]       |
 | Yêu cầu*   [_______________________________________]       |
@@ -192,7 +193,7 @@ Chú thích trạng thái dùng chung:
 +------------------------------------------------------------+
 ```
 
-- **Thành phần chính:** `JobForm` (title, category, job_type, location, timezone, salary, currency, description, requirements, tags), nút "Lưu nháp".
+- **Thành phần chính:** `JobForm` (title, category, job_type, location*, timezone, expires_at, salary, currency, description, requirements, tags), nút "Lưu nháp".
 - **Rỗng:** danh mục/tag chưa có (admin chưa tạo) → hiện cảnh báo "Chưa có chuyên mục/tag, liên hệ quản trị viên".
 - **Lỗi:** validate fail → highlight field lỗi + thông báo lỗi field. Gửi fail (network) → toast.
 - **Mobile:** form 1 cột, chọn tag gọn lại.
@@ -323,7 +324,7 @@ Mỗi trang public render JSON-LD **server-side** (`frontend/src/lib/structured-
 | Tag `/tag/{slug}` | `CollectionPage` + `ItemList` + `BreadcrumbList` | `/vi/tag/{slug}` |
 | Chi tiết `/jobs/{slug}-{id}` | `JobPosting` + `BreadcrumbList` | `/vi/jobs/{slug}-{id}` |
 
-- `JobPosting` gồm `datePosted`, `validThrough` (nếu có), `employmentType`, `hiringOrganization`, `jobLocationType: TELECOMMUTE`, `applicantLocationRequirements`, `baseSalary` (chỉ fulltime/parttime), `identifier`, `url`.
+- `JobPosting` gồm `datePosted`, `validThrough` (hạn nộp hoặc mặc định +60 ngày), `employmentType`, `hiringOrganization`, `jobLocationType: TELECOMMUTE`, `applicantLocationRequirements` (từ `location` bắt buộc), `baseSalary` (chỉ fulltime/parttime), `identifier`, `url`; `description` = mô tả + yêu cầu dạng HTML.
 - Origin tuyệt đối lấy từ `SITE_URL` (mặc định `https://devremote.cc` ở production).
 - JSON-LD chỉ có trong HTML render từ server; điều hướng client-side không chèn lại inline `<script>` (crawler đọc HTML SSR nên vẫn đúng).
 - Kiểm tra: Google Rich Results Test hoặc Schema Markup Validator.
