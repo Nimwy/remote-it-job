@@ -27,6 +27,7 @@ test("HR can create and submit a new job for approval", async ({ page }) => {
 
   await page.locator('input[name="title"]').fill("Công việc mới từ e2e");
   await page.locator('select[name="category_id"]').selectOption({ index: 1 });
+  await page.locator('input[name="location"]').fill("Việt Nam");
   await page.locator('textarea[name="description"]').fill("Mô tả công việc e2e.");
   await page.locator('textarea[name="requirements"]').fill("Yêu cầu công việc e2e.");
 

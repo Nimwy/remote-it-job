@@ -15,13 +15,14 @@ export type JobFormData = {
   title: string;
   category_id: number;
   job_type: "fulltime" | "parttime" | "freelance" | "contract";
-  location?: string;
+  location: string;
   timezone?: string;
   salary_min?: number | null;
   salary_max?: number | null;
   currency?: string;
   description: string;
   requirements: string;
+  expires_at?: string;
   tag_ids: number[];
 };
 
@@ -44,13 +45,14 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
         title: z.string().min(1, "Required"),
         category_id: z.number().min(1, "Required"),
         job_type: z.enum(["fulltime", "parttime", "freelance", "contract"]),
-        location: z.string().optional(),
+        location: z.string().min(1, "Required"),
         timezone: z.string().optional(),
         salary_min: z.number().nullable().optional(),
         salary_max: z.number().nullable().optional(),
         currency: z.string().optional(),
         description: z.string().min(1, "Required"),
         requirements: z.string().min(1, "Required"),
+        expires_at: z.string().optional(),
         tag_ids: z.array(z.number()),
       }),
     [],
@@ -80,6 +82,9 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
           currency: initialValues.currency ?? "",
           description: initialValues.description,
           requirements: initialValues.requirements,
+          expires_at: initialValues.expires_at
+            ? initialValues.expires_at.slice(0, 10)
+            : "",
           tag_ids: defaultTags,
         }
       : {
@@ -152,12 +157,20 @@ export function JobForm({ initialValues, onSubmit, submitLabel }: JobFormProps) 
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-label-sm text-secondary">{t("location")}</label>
-            <Input {...register("location")} />
+            <label className="mb-1 block text-label-sm text-secondary">{t("location")} *</label>
+            <Input {...register("location")} placeholder={t("locationPlaceholder")} />
+            {errors.location && (
+              <p className="mt-1 text-body-sm text-error">{errors.location.message}</p>
+            )}
           </div>
           <div>
             <label className="mb-1 block text-label-sm text-secondary">{t("timezone")}</label>
             <Input {...register("timezone")} placeholder="UTC+7" />
+          </div>
+          <div>
+            <label className="mb-1 block text-label-sm text-secondary">{t("expiresAt")}</label>
+            <Input type="date" {...register("expires_at")} />
+            <p className="mt-1 text-body-sm text-secondary">{t("expiresAtHint")}</p>
           </div>
         </div>
       </section>

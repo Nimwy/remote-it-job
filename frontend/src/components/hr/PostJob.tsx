@@ -21,13 +21,16 @@ export function PostJob() {
         title: data.title,
         category_id: data.category_id,
         job_type: data.job_type,
-        location: data.location || null,
+        location: data.location,
         timezone: data.timezone || null,
         salary_min: data.salary_min ?? null,
         salary_max: data.salary_max ?? null,
         currency: data.currency || null,
         description: data.description,
         requirements: data.requirements,
+        expires_at: data.expires_at
+          ? new Date(`${data.expires_at}T00:00:00.000Z`).toISOString()
+          : null,
         tag_ids: data.tag_ids,
       });
       router.push("/hr");
