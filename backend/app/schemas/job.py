@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 JobTypeStr = Literal["fulltime", "parttime", "freelance", "contract"]
 
@@ -52,13 +52,22 @@ class JobCreate(BaseModel):
     job_type: JobTypeStr
     description: str = Field(min_length=1)
     requirements: str = Field(min_length=1)
-    location: str | None = None
+    location: str = Field(min_length=1, max_length=100)
     timezone: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None
     currency: str | None = None
     expires_at: datetime | None = None
     tag_ids: list[int] = []
+
+    @field_validator("expires_at")
+    @classmethod
+    def _expires_at_must_be_future(cls, value: datetime | None) -> datetime | None:
+        if value is not None:
+            aware = value if value.tzinfo else value.replace(tzinfo=UTC)
+            if aware <= datetime.now(UTC):
+                raise ValueError("expires_at phải ở tương lai")
+        return value
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -85,7 +94,7 @@ class JobUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     category_id: int | None = None
     job_type: JobTypeStr | None = None
-    location: str | None = None
+    location: str | None = Field(default=None, min_length=1, max_length=100)
     timezone: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None
@@ -94,6 +103,15 @@ class JobUpdate(BaseModel):
     requirements: str | None = None
     expires_at: datetime | None = None
     tag_ids: list[int] | None = None
+
+    @field_validator("expires_at")
+    @classmethod
+    def _expires_at_must_be_future(cls, value: datetime | None) -> datetime | None:
+        if value is not None:
+            aware = value if value.tzinfo else value.replace(tzinfo=UTC)
+            if aware <= datetime.now(UTC):
+                raise ValueError("expires_at phải ở tương lai")
+        return value
 
     model_config = ConfigDict(
         json_schema_extra={

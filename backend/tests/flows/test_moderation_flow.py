@@ -53,6 +53,7 @@ def test_full_moderation_flow(client, db):
             "job_type": "fulltime",
             "description": "d",
             "requirements": "r",
+            "location": "Vietnam",
             "tag_ids": [],
         },
     )

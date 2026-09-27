@@ -18,7 +18,7 @@ def test_hr_service_create_job_generates_slug(db):
         db, hr,
         JobCreate(
             title="React Developer", category_id=category.id, job_type="fulltime",
-            description="Build apps", requirements="React", tag_ids=[tag.id],
+            description="Build apps", requirements="React", location="Vietnam", tag_ids=[tag.id],
         ),
     )
     assert job.status == JobStatus.draft
@@ -34,7 +34,7 @@ def test_hr_service_create_job_invalid_category(db):
             db, hr,
             JobCreate(
                 title="X", category_id=999, job_type="fulltime",
-                description="d", requirements="r", tag_ids=[],
+                description="d", requirements="r", location="Vietnam", tag_ids=[],
             ),
         )
 
@@ -52,7 +52,7 @@ def test_hr_service_update_job_substantive_reaapproval(db):
 def test_hr_service_submit_and_close(db):
     hr = create_user(db, "hr@example.com")
     category = create_category(db)
-    job = create_job(db, hr, category, title="Draft", status=JobStatus.draft)
+    job = create_job(db, hr, category, title="Draft", status=JobStatus.draft, location="Vietnam")
     db.commit()
 
     submitted = hr_service.submit_job(db, hr, job.id)
@@ -62,6 +62,16 @@ def test_hr_service_submit_and_close(db):
     db.commit()
     closed = hr_service.close_job(db, hr, job.id)
     assert closed.status == JobStatus.closed
+
+
+def test_hr_service_submit_requires_location(db):
+    hr = create_user(db, "hr@example.com")
+    category = create_category(db)
+    job = create_job(db, hr, category, title="Draft", status=JobStatus.draft)
+    db.commit()
+
+    with pytest.raises(APIError):
+        hr_service.submit_job(db, hr, job.id)
 
 
 def test_hr_service_delete_job(db):
@@ -84,7 +94,7 @@ def test_hr_service_generate_slug_unique(db):
         db, hr,
         JobCreate(
             title="React Developer", category_id=category.id, job_type="fulltime",
-            description="d", requirements="r", tag_ids=[],
+            description="d", requirements="r", location="Vietnam", tag_ids=[],
         ),
     )
     assert second.slug != "react-developer"

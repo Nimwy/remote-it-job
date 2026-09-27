@@ -174,6 +174,9 @@ def update_job(db: Session, user: User, job_id: int, data: JobUpdate) -> Job:
     data_dict = data.model_dump(exclude_unset=True)
     changed_substantive = bool(SUBSTANTIVE_FIELDS & set(data_dict.keys()))
 
+    if "location" in data_dict and not data_dict["location"]:
+        raise APIError(status.HTTP_400_BAD_REQUEST, "job.location_required", "Địa điểm không được để trống")
+
     if "category_id" in data_dict:
         _validate_category(db, data_dict["category_id"])
 
@@ -211,6 +214,10 @@ def submit_job(db: Session, user: User, job_id: int) -> Job:
             status.HTTP_400_BAD_REQUEST,
             "job.only_draft_or_rejected_can_submit",
             "Chỉ job ở trạng thái draft hoặc rejected mới được gửi duyệt",
+        )
+    if not job.location:
+        raise APIError(
+            status.HTTP_400_BAD_REQUEST, "job.location_required", "Vui lòng nhập địa điểm trước khi gửi duyệt"
         )
     job.status = JobStatus.pending
     job.rejection_reason = None
