@@ -382,12 +382,12 @@ Tạo draft job. `slug` tự sinh, có thể thêm hậu tố số nếu trùng.
 | `job_type` | string | ✔ | `fulltime` \| `parttime` \| `freelance` \| `contract` |
 | `description` | string | ✔ | ≥ 1 ký tự |
 | `requirements` | string | ✔ | ≥ 1 ký tự |
-| `location` | string | ✕ | Địa điểm |
+| `location` | string | ✔ | 1–100 ký tự (quốc gia/khu vực — dùng cho `applicantLocationRequirements`) |
 | `timezone` | string | ✕ | Múi giờ |
 | `salary_min` | number | ✕ | ≤ `salary_max` |
 | `salary_max` | number | ✕ | ≥ `salary_min` |
 | `currency` | string | ✕ | ≤ 10 ký tự |
-| `expires_at` | datetime | ✕ | Thời hạn tin |
+| `expires_at` | datetime | ✕ | Hạn nộp; nếu gửi phải **ở tương lai** (mặc định JSON-LD +60 ngày) |
 | `tag_ids` | int[] | ✕ | Mảng id tag, mặc định `[]` |
 
 ```json
@@ -423,6 +423,8 @@ Tạo draft job. `slug` tự sinh, có thể thêm hậu tố số nếu trùng.
 ### PATCH /api/hr/jobs/{job_id}
 
 Cập nhật job (field optional). Nếu job đang `approved` mà sửa field substantive (title, description, requirements, salary, location, job_type, category, tags) → status quay về `pending`.
+
+`location` nếu gửi phải không rỗng (1–100 ký tự); `expires_at` nếu gửi phải ở tương lai.
 
 **Response 200:** `HrJobResponse`
 

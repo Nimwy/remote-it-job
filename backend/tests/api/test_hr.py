@@ -31,6 +31,7 @@ def job_payload(category_id, tag_ids=None, **kwargs):
         "job_type": "fulltime",
         "description": "Build web apps",
         "requirements": "2+ years React",
+        "location": "Vietnam",
     }
     if tag_ids:
         payload["tag_ids"] = tag_ids
@@ -208,3 +209,38 @@ def test_hr_cannot_access_other_hr_job(client, db):
     login(client, "hr2@example.com")
     res = client.get(f"/api/hr/jobs/{job_id}")
     assert res.status_code == 404
+
+
+def test_create_job_requires_location(client, db):
+    create_hr(db)
+    category = create_category(db)
+    db.commit()
+    login(client)
+
+    payload = job_payload(category.id)
+    del payload["location"]
+    res = client.post("/api/hr/jobs", json=payload)
+    assert res.status_code == 422
+
+
+def test_create_job_rejects_past_expiry(client, db):
+    create_hr(db)
+    category = create_category(db)
+    db.commit()
+    login(client)
+
+    res = client.post(
+        "/api/hr/jobs", json=job_payload(category.id, expires_at="2020-01-01T00:00:00Z")
+    )
+    assert res.status_code == 422
+
+
+def test_update_job_rejects_blank_location(client, db):
+    create_hr(db)
+    category = create_category(db)
+    db.commit()
+    login(client)
+
+    created = client.post("/api/hr/jobs", json=job_payload(category.id)).json()
+    res = client.patch(f"/api/hr/jobs/{created['id']}", json={"location": ""})
+    assert res.status_code == 422

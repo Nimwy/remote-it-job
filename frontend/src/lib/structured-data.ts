@@ -29,6 +29,25 @@ const EMPLOYMENT_TYPE: Record<JobDetail["job_type"], string> = {
   freelance: "CONTRACTOR",
 };
 
+// Google yêu cầu description dạng HTML (tối thiểu có ngắt đoạn). Escape ký tự HTML
+// của người dùng rồi biến newline thành <br> — chỉ <br> do ta tạo mới là thẻ thật.
+function toHtmlParagraphs(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+}
+
+// Khi HR không đặt hạn, dùng validThrough = created_at + 60 ngày (Google khuyến nghị).
+const DEFAULT_VALIDITY_DAYS = 60;
+
+function addDays(iso: string, days: number): string {
+  const date = new Date(iso);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString();
+}
+
 export function jobPostingJsonLd(
   job: JobDetail,
   locale: Locale,
@@ -37,8 +56,9 @@ export function jobPostingJsonLd(
     "@context": "https://schema.org",
     "@type": "JobPosting",
     title: job.title,
-    description: job.description,
+    description: `${toHtmlParagraphs(job.description)}<br><br>${toHtmlParagraphs(job.requirements)}`,
     datePosted: job.created_at,
+    validThrough: job.expires_at ?? addDays(job.created_at, DEFAULT_VALIDITY_DAYS),
     employmentType: EMPLOYMENT_TYPE[job.job_type],
     hiringOrganization: {
       "@type": "Organization",
@@ -52,10 +72,6 @@ export function jobPostingJsonLd(
     },
     url: absUrl(locale, `/jobs/${job.slug}-${job.id}`),
   };
-
-  if (job.expires_at) {
-    posting.validThrough = job.expires_at;
-  }
 
   if (job.location) {
     posting.applicantLocationRequirements = {

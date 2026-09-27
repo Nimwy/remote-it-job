@@ -38,13 +38,17 @@ export function EditJob() {
     if (dirtyFields.includes("title")) payload.title = data.title;
     if (dirtyFields.includes("category_id")) payload.category_id = data.category_id;
     if (dirtyFields.includes("job_type")) payload.job_type = data.job_type;
-    if (dirtyFields.includes("location")) payload.location = data.location || null;
+    if (dirtyFields.includes("location")) payload.location = data.location;
     if (dirtyFields.includes("timezone")) payload.timezone = data.timezone || null;
     if (dirtyFields.includes("salary_min")) payload.salary_min = data.salary_min ?? null;
     if (dirtyFields.includes("salary_max")) payload.salary_max = data.salary_max ?? null;
     if (dirtyFields.includes("currency")) payload.currency = data.currency || null;
     if (dirtyFields.includes("description")) payload.description = data.description;
     if (dirtyFields.includes("requirements")) payload.requirements = data.requirements;
+    if (dirtyFields.includes("expires_at"))
+      payload.expires_at = data.expires_at
+        ? new Date(`${data.expires_at}T00:00:00.000Z`).toISOString()
+        : null;
     if (dirtyFields.includes("tag_ids")) payload.tag_ids = data.tag_ids;
 
     if (Object.keys(payload).length === 0) {

@@ -86,6 +86,13 @@ test("job detail exposes JobPosting and Breadcrumb JSON-LD", async ({ page }) =>
   expect(posting?.title).toBe("Fullstack Developer");
   expect(posting?.jobLocationType).toBe("TELECOMMUTE");
   expect(posting?.datePosted).toBeTruthy();
+  expect(posting?.validThrough).toBeTruthy();
+  expect(posting?.applicantLocationRequirements).toEqual({
+    "@type": "Country",
+    name: "Việt Nam",
+  });
+  expect(String(posting?.description)).toContain("<br><br>");
+  expect(String(posting?.description)).toContain("3+ năm kinh nghiệm fullstack");
   expect(blocks.some((block) => block["@type"] === "BreadcrumbList")).toBe(true);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",

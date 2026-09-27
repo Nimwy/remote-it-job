@@ -17,6 +17,7 @@ MVP đã hoàn thành và đang chạy thật tại **https://devremote.cc** (VP
 - Không nộp/upload CV qua nền tảng.
 - URL dùng slug cho SEO (job `/jobs/{slug}-{id}`, category `/category/{slug}`, tag `/tag/{slug}`).
 - SEO: JSON-LD (`WebSite`, `CollectionPage`/`ItemList`, `JobPosting`, `BreadcrumbList`) + `canonical`/`hreflang` render server-side; origin lấy từ `SITE_URL` (xem `SCREENS.md` § SEO, `DEPLOYMENT.md` § SEO).
+- `JobPosting` đầy đủ theo Google: `location` **bắt buộc** khi đăng tin (→ `applicantLocationRequirements` cho job remote), `description` = mô tả + yêu cầu dạng HTML, `validThrough` = hạn nộp (HR nhập, tuỳ chọn) hoặc mặc định `created_at + 60 ngày`.
 - URL có **tiền tố locale** (`localePrefix: "always"`): `/vi/...` (mặc định) và `/en/...`; `/` redirect 307 → `/vi`. Chọn "always" để tránh lỗi middleware-rewrite của Next 16 khi bind hostname (cho phép `next start -H 127.0.0.1`).
 
 ### Vai trò
