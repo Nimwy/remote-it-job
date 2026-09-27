@@ -80,7 +80,7 @@ describe("jobPostingJsonLd", () => {
     const ld = jobPostingJsonLd(makeJob(), "vi");
     expect(ld["@type"]).toBe("JobPosting");
     expect(ld.title).toBe("React Developer");
-    expect(ld.description).toBe("Build things");
+    expect(ld.description).toBe("Build things<br><br>3 years");
     expect(ld.datePosted).toBe("2026-09-01T00:00:00Z");
     expect(ld.validThrough).toBe("2026-10-01T00:00:00Z");
     expect(ld.jobLocationType).toBe("TELECOMMUTE");
@@ -102,9 +102,22 @@ describe("jobPostingJsonLd", () => {
     );
   });
 
-  it("omits validThrough when the job has no expiry", () => {
+  it("falls back to created_at + 60 days when the job has no expiry", () => {
     const ld = jobPostingJsonLd(makeJob({ expires_at: null }), "vi");
-    expect(ld.validThrough).toBeUndefined();
+    expect(ld.validThrough).toBe("2026-10-31T00:00:00.000Z");
+  });
+
+  it("escapes HTML in the description and keeps paragraph breaks", () => {
+    const ld = jobPostingJsonLd(
+      makeJob({
+        description: "A <b>bold</b> & <script>",
+        requirements: "line1\nline2",
+      }),
+      "vi",
+    );
+    expect(ld.description).toBe(
+      "A &lt;b&gt;bold&lt;/b&gt; &amp; &lt;script&gt;<br><br>line1<br>line2",
+    );
   });
 
   it("omits applicantLocationRequirements when location is unknown", () => {
